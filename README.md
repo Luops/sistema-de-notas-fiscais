@@ -345,8 +345,8 @@ git push origin feature/nome-da-feature
 
 ## 📞 Contato
 
-- **Fabrício Lopes** - [GitHub](https://github.com/fabricio)
-- **Gabriel Francisco** - [GitHub](https://github.com/gabriel)
+- **Fabrício Lopes** - [GitHub](https://github.com/Luops)
+- **Gabriel Francisco** - [GitHub](https://github.com/gabeFrancisco)
 
 ## 📄 Licença
 
