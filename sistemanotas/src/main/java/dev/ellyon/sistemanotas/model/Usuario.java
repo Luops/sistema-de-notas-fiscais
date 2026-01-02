@@ -2,6 +2,12 @@ package dev.ellyon.sistemanotas.model;
 
 import java.time.Instant;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table
+
 public final class Usuario extends Entidade {
   private String nome;
   private String email;

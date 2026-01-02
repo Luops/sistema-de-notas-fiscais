@@ -3,35 +3,46 @@ package dev.ellyon.sistemanotas.model;
 import java.time.Instant;
 
 import dev.ellyon.sistemanotas.model.enums.Perfil;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
+@Entity
+@Table
 public class EmpresaUsuario extends Entidade{
-  private Long empresaId;
-  private Long usuarioId;
+
+  @OneToOne
+  @JoinColumn(name = "empresa_id")
+  private Empresa empresa;
+
+  @JoinColumn(name = "usuario_id")
+  private Usuario usuario;
   private Perfil perfil;
 
-  public EmpresaUsuario(Long id, Long empresaId, Long usuarioId, Perfil perfil, Instant createdAt, Instant updatedAt) {
+  public EmpresaUsuario(Long id, Empresa empresa, Usuario usuario, Perfil perfil, Instant createdAt, Instant updatedAt) {
     this.id = id;
-    this.empresaId = empresaId;
-    this.usuarioId = usuarioId;
+    this.empresa = empresa;
+    this.usuario = usuario;
     this.perfil = perfil;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
 
-  public Long getEmpresaId() {
-    return this.empresaId;
+  public Empresa getEmpresa() {
+    return this.empresa;
   }
 
-  public void setEmpresaId(Long empresaId) {
-    this.empresaId = empresaId;
+  public void setEmpresa(Empresa empresa) {
+    this.empresa = empresa;
   }
 
-  public Long getUsuarioId() {
-    return this.usuarioId;
+  public Usuario getUsuario() {
+    return this.usuario;
   }
 
-  public void setUsuarioId(Long usuarioId) {
-    this.usuarioId = usuarioId;
+  public void setUsuario(Usuario usuario) {
+    this.usuario = usuario;
   }
 
   public Perfil getPerfil() {
@@ -45,8 +56,8 @@ public class EmpresaUsuario extends Entidade{
   @Override
   public String toString() {
     return "{" +
-      " empresaId='" + getEmpresaId() + "'" +
-      ", usuarioId='" + getUsuarioId() + "'" +
+      " empresa='" + getEmpresa() + "'" +
+      ", usuario='" + getUsuario() + "'" +
       ", perfil='" + getPerfil() + "'" +
       "}";
   }
