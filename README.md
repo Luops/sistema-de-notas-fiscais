@@ -1,4 +1,22 @@
-# sistema-de-notas-fiscais
+# Sistema de Notas Fiscais - v1.0
+
+Sistema para emissão e gerenciamento de notas fiscais.
+
+## Tecnologias
+- Java 17
+- Spring Boot 4.0.1
+- PostgreSQL
+- Flyway
+- Lombok
+
+## Como Rodar
+1. Criar banco de dados: `createdb notas_fiscais`
+2. Configurar application.yml
+3. Executar: `./mvnw spring-boot:run`
+
+## Equipe
+- Fabrício Lopes
+- Gabriel Francisco
 
 🎯 Ordem de Prioridade
 Críticas (Fazer primeiro):
