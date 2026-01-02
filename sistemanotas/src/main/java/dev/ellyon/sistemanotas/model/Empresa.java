@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table
+@Table (name = "empresa")
 
 public final class Empresa extends Entidade{
   private String razaoSocial;
