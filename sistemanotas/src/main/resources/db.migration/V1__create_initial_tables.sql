@@ -9,7 +9,7 @@
 -- 1. TIPO_PRODUTO
 -- ============================================
 CREATE TABLE tipo_produto (
-    id BIGSERIAL PRIMARY KEY,
+    id_tipo_produto BIGSERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL UNIQUE,
     is_ativo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,7 +23,7 @@ COMMENT ON COLUMN tipo_produto.nome IS 'Nome do tipo de produto (único)';
 -- 2. EMPRESA
 -- ============================================
 CREATE TABLE empresa (
-    id BIGSERIAL PRIMARY KEY,
+    id_empresa BIGSERIAL PRIMARY KEY,
     razao_social VARCHAR(255) NOT NULL,
     nome_fantasia VARCHAR(255),
     cnpj VARCHAR(18) NOT NULL UNIQUE,
@@ -48,7 +48,7 @@ COMMENT ON COLUMN empresa.estado IS 'Sigla do estado (UF)';
 -- 3. CLIENTE
 -- ============================================
 CREATE TABLE cliente (
-    id BIGSERIAL PRIMARY KEY,
+    id_cliente BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     tipo_pessoa VARCHAR(20) NOT NULL CHECK (tipo_pessoa IN ('FISICA', 'JURIDICA', 'CONSUMIDOR_FINAL')),
     cpf_cnpj VARCHAR(18) UNIQUE,
@@ -73,8 +73,8 @@ COMMENT ON COLUMN cliente.cpf_cnpj IS 'CPF ou CNPJ (pode ser NULL para consumido
 -- 4. PRODUTO
 -- ============================================
 CREATE TABLE produto (
-    id BIGSERIAL PRIMARY KEY,
-    tipo_produto_id BIGINT NOT NULL,
+    id_produto BIGSERIAL PRIMARY KEY,
+    id_tipo_produto BIGINT NOT NULL,
     codigo VARCHAR(50) NOT NULL UNIQUE,
     nome VARCHAR(255) NOT NULL,
     descricao TEXT,
@@ -88,7 +88,7 @@ CREATE TABLE produto (
     is_ativo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_produto_tipo FOREIGN KEY (tipo_produto_id) REFERENCES tipo_produto(id)
+    CONSTRAINT fk_produto_tipo FOREIGN KEY (id_tipo_produto) REFERENCES tipo_produto(id)
 );
 
 COMMENT ON TABLE produto IS 'Produtos comercializados';
@@ -97,7 +97,7 @@ COMMENT ON COLUMN produto.ncm IS 'Nomenclatura Comum do Mercosul (8 dígitos)';
 COMMENT ON COLUMN produto.cfop_padrao IS 'Código Fiscal de Operações e Prestações';
 
 -- Índices para performance
-CREATE INDEX idx_produto_tipo ON produto(tipo_produto_id);
+CREATE INDEX idx_produto_tipo ON produto(id_tipo_produto);
 CREATE INDEX idx_produto_ativo ON produto(is_ativo);
 CREATE INDEX idx_produto_nome ON produto(nome);
 
@@ -105,7 +105,7 @@ CREATE INDEX idx_produto_nome ON produto(nome);
 -- 5. USUARIO
 -- ============================================
 CREATE TABLE usuario (
-    id BIGSERIAL PRIMARY KEY,
+    id_usuario BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
@@ -121,15 +121,15 @@ COMMENT ON COLUMN usuario.senha IS 'Senha criptografada (BCrypt)';
 -- 6. EMPRESA_USUARIO (Relacionamento N:N)
 -- ============================================
 CREATE TABLE empresa_usuario (
-    id BIGSERIAL PRIMARY KEY,
-    empresa_id BIGINT NOT NULL,
-    usuario_id BIGINT NOT NULL,
+    id_empresa_usuario BIGSERIAL PRIMARY KEY,
+    id_empresa BIGINT NOT NULL,
+    id_usuario BIGINT NOT NULL,
     perfil VARCHAR(20) NOT NULL CHECK (perfil IN ('ADMIN', 'VENDEDOR', 'VISUALIZADOR')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_empresa_usuario_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-    CONSTRAINT fk_empresa_usuario_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
-    CONSTRAINT uk_empresa_usuario UNIQUE (empresa_id, usuario_id)
+    CONSTRAINT fk_empresa_usuario_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id),
+    CONSTRAINT fk_empresa_usuario_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+    CONSTRAINT uk_empresa_usuario UNIQUE (id_empresa, id_usuario)
 );
 
 COMMENT ON TABLE empresa_usuario IS 'Relacionamento N:N entre Empresa e Usuario com perfil';
@@ -143,13 +143,13 @@ CREATE INDEX idx_empresa_usuario_usuario ON empresa_usuario(usuario_id);
 -- 7. NOTA
 -- ============================================
 CREATE TABLE nota (
-    id BIGSERIAL PRIMARY KEY,
+    id_nota BIGSERIAL PRIMARY KEY,
     numero VARCHAR(20) NOT NULL,
     serie VARCHAR(10) DEFAULT '1',
     tipo VARCHAR(20) NOT NULL DEFAULT 'SAIDA' CHECK (tipo IN ('SAIDA', 'ENTRADA', 'NFE', 'NFCE', 'NFSE')),
     status VARCHAR(20) NOT NULL DEFAULT 'RASCUNHO' CHECK (status IN ('RASCUNHO', 'EMITIDA', 'CANCELADA')),
-    empresa_id BIGINT NOT NULL,
-    cliente_id BIGINT,
+    id_empresa BIGINT NOT NULL,
+    id_cliente BIGINT,
     data_emissao TIMESTAMP,
     data_cancelamento TIMESTAMP,
     valor_produtos DECIMAL(15, 2) NOT NULL DEFAULT 0,
@@ -161,10 +161,10 @@ CREATE TABLE nota (
     created_by_user_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_nota_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-    CONSTRAINT fk_nota_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+    CONSTRAINT fk_nota_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id),
+    CONSTRAINT fk_nota_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id),
     CONSTRAINT fk_nota_usuario FOREIGN KEY (created_by_user_id) REFERENCES usuario(id),
-    CONSTRAINT uk_nota_numero_empresa UNIQUE (numero, empresa_id)
+    CONSTRAINT uk_nota_numero_empresa UNIQUE (numero, id_empresa)
 );
 
 COMMENT ON TABLE nota IS 'Notas fiscais (documento principal)';
@@ -175,8 +175,8 @@ COMMENT ON COLUMN nota.cliente_id IS 'Pode ser NULL (consumidor final)';
 COMMENT ON COLUMN nota.chave_acesso IS 'Para integração NFe (v2)';
 
 -- Índices para performance
-CREATE INDEX idx_nota_empresa ON nota(empresa_id);
-CREATE INDEX idx_nota_cliente ON nota(cliente_id);
+CREATE INDEX idx_nota_empresa ON nota(id_empresa);
+CREATE INDEX idx_nota_cliente ON nota(id_cliente);
 CREATE INDEX idx_nota_status ON nota(status);
 CREATE INDEX idx_nota_tipo ON nota(tipo);
 CREATE INDEX idx_nota_data_emissao ON nota(data_emissao);
@@ -187,15 +187,15 @@ CREATE INDEX idx_nota_created_by ON nota(created_by_user_id);
 -- 8. ITEM_NOTA
 -- ============================================
 CREATE TABLE item_nota (
-    id BIGSERIAL PRIMARY KEY,
-    nota_id BIGINT NOT NULL,
-    produto_id BIGINT NOT NULL,
+    id_item_nota BIGSERIAL PRIMARY KEY,
+    id_nota BIGINT NOT NULL,
+    id_produto BIGINT NOT NULL,
     codigo_produto VARCHAR(50) NOT NULL,
     descricao_produto VARCHAR(255) NOT NULL,
     quantidade DECIMAL(15, 3) NOT NULL CHECK (quantidade > 0),
     unidade VARCHAR(10) NOT NULL,
     preco_unitario DECIMAL(15, 2) NOT NULL CHECK (preco_unitario > 0),
-    subtotal DECIMAL(15, 2) NOT NULL,
+    sub_total DECIMAL(15, 2) NOT NULL,
     ncm VARCHAR(8),
     cfop VARCHAR(4),
     aliquota_icms DECIMAL(5, 2) NOT NULL DEFAULT 0,
@@ -207,19 +207,19 @@ CREATE TABLE item_nota (
     valor_total_item DECIMAL(15, 2) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_item_nota_nota FOREIGN KEY (nota_id) REFERENCES nota(id) ON DELETE CASCADE,
-    CONSTRAINT fk_item_nota_produto FOREIGN KEY (produto_id) REFERENCES produto(id)
+    CONSTRAINT fk_item_nota_nota FOREIGN KEY (id_nota) REFERENCES nota(id) ON DELETE CASCADE,
+    CONSTRAINT fk_item_nota_produto FOREIGN KEY (id_produto) REFERENCES produto(id)
 );
 
 COMMENT ON TABLE item_nota IS 'Itens das notas fiscais';
 COMMENT ON COLUMN item_nota.codigo_produto IS 'Snapshot do código do produto (histórico)';
 COMMENT ON COLUMN item_nota.descricao_produto IS 'Snapshot da descrição (histórico)';
-COMMENT ON COLUMN item_nota.subtotal IS 'quantidade × preco_unitario';
+COMMENT ON COLUMN item_nota.sub_total IS 'quantidade × preco_unitario';
 COMMENT ON COLUMN item_nota.valor_total_item IS 'subtotal + impostos';
 
 -- Índices
-CREATE INDEX idx_item_nota_nota ON item_nota(nota_id);
-CREATE INDEX idx_item_nota_produto ON item_nota(produto_id);
+CREATE INDEX idx_item_nota_nota ON item_nota(id_nota);
+CREATE INDEX idx_item_nota_produto ON item_nota(id_produto);
 
 -- ============================================
 -- TRIGGERS PARA UPDATED_AT (Atualiza automaticamente)

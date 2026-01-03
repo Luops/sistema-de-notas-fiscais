@@ -1,21 +1,34 @@
 package dev.ellyon.sistemanotas.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table
-
-public final class Usuario extends Entidade {
+@Table(name = "usuario")
+public class Usuario extends Entidade {
+  @Column(name = "nome", nullable = false, length = 255)
   private String nome;
+
+  @Column(name = "email", nullable = false, unique = true, length = 255)
   private String email;
+
+  @Column(name = "senha", nullable = false, length = 255)
   private String senha;
+
+  @Column(name = "is_ativo", nullable = false)
   private Boolean isAtivo;
 
-  public Usuario(Long id, String nome, String email, String senha, Boolean isAtivo, Instant createdAt,
-      Instant updatedAt) {
+  // Construtor padrao
+  protected Usuario() {
+    super();
+  }
+
+  // Construtor com todos os atributos
+  public Usuario(Long id, String nome, String email, String senha, Boolean isAtivo, LocalDateTime createdAt,
+                 LocalDateTime updatedAt) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -23,6 +36,14 @@ public final class Usuario extends Entidade {
     this.isAtivo = isAtivo;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+  }
+
+  // Construtor sem id e timestamps
+  public Usuario(String nome, String email, String senha, Boolean isAtivo) {
+    this.nome = nome;
+    this.email = email;
+    this.senha = senha;
+    this.isAtivo = isAtivo;
   }
 
   public String getNome() {
@@ -49,10 +70,6 @@ public final class Usuario extends Entidade {
     this.senha = senha;
   }
 
-  public Boolean isIsAtivo() {
-    return this.isAtivo;
-  }
-
   public Boolean getIsAtivo() {
     return this.isAtivo;
   }
@@ -64,13 +81,14 @@ public final class Usuario extends Entidade {
 
   @Override
   public String toString() {
-    return "{" +
-      " nome='" + getNome() + "'" +
-      ", email='" + getEmail() + "'" +
-      ", senha='" + getSenha() + "'" +
-      ", isAtivo='" + isIsAtivo() + "'" +
-      "}";
+    return "Usuario{" +
+            "id=" + id +
+            ", nome='" + nome + '\'' +
+            ", email='" + email + '\'' +
+            ", senha='[PROTECTED]'" +
+            ", isAtivo=" + isAtivo +
+            ", createdAt=" + createdAt +
+            '}';
   }
-  
 
 }

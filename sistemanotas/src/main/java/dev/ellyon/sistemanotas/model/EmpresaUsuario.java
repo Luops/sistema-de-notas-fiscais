@@ -1,32 +1,46 @@
 package dev.ellyon.sistemanotas.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import dev.ellyon.sistemanotas.model.enums.Perfil;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
-@Table
+@Table(name = "empresa_usuario",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"id_empresa", "id_usuario"}))
 public class EmpresaUsuario extends Entidade{
-
-  @OneToOne
-  @JoinColumn(name = "empresa_id")
+  @ManyToOne
+  @JoinColumn(name = "id_empresa", nullable = false)
   private Empresa empresa;
 
-  @JoinColumn(name = "usuario_id")
+  @ManyToOne
+  @JoinColumn(name = "id_usuario", nullable = false)
   private Usuario usuario;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "perfil")
   private Perfil perfil;
 
-  public EmpresaUsuario(Long id, Empresa empresa, Usuario usuario, Perfil perfil, Instant createdAt, Instant updatedAt) {
+  // Construtor padrao
+  protected EmpresaUsuario() {
+    super();
+  }
+
+  // Construtor com todos os atributos
+  public EmpresaUsuario(Long id, Empresa empresa, Usuario usuario, Perfil perfil, LocalDateTime createdAt, LocalDateTime updatedAt) {
     this.id = id;
     this.empresa = empresa;
     this.usuario = usuario;
     this.perfil = perfil;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+  }
+
+  // Construtor sem id e timestamps
+  public EmpresaUsuario(Empresa empresa, Usuario usuario, Perfil perfil) {
+    this.empresa = empresa;
+    this.usuario = usuario;
+    this.perfil = perfil;
   }
 
   public Empresa getEmpresa() {
@@ -53,13 +67,16 @@ public class EmpresaUsuario extends Entidade{
     this.perfil = perfil;
   }
 
+
   @Override
   public String toString() {
-    return "{" +
-      " empresa='" + getEmpresa() + "'" +
-      ", usuario='" + getUsuario() + "'" +
-      ", perfil='" + getPerfil() + "'" +
-      "}";
+    return "EmpresaUsuario{" +
+            "id=" + id +
+            ", empresa=" + (empresa != null ? empresa.getId() : null) +
+            ", usuario=" + (usuario != null ? usuario.getId() : null) +
+            ", perfil=" + perfil +
+            ", createdAt=" + createdAt +
+            '}';
   }
 
 }

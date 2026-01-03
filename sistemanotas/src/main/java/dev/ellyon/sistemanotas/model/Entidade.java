@@ -1,27 +1,30 @@
 package dev.ellyon.sistemanotas.model;
 
 import java.io.Serializable;
-import java.time.Instant;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import java.time.LocalDateTime;
 
-@NoArgsConstructor
-@AllArgsConstructor
+import jakarta.persistence.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @SuperBuilder
 @MappedSuperclass
 public abstract class Entidade implements Serializable {
-  
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   protected Long id;
 
-  protected Instant createdAt;
-  protected Instant updatedAt;
+  @CreationTimestamp
+  @Column(name = "created_at", updatable = false, nullable = false)
+  protected LocalDateTime createdAt;
+
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  protected LocalDateTime updatedAt;
+
+  // Construtor padrão
+  public Entidade() {}
 
   protected Long getId() {
     return this.id;
@@ -31,19 +34,19 @@ public abstract class Entidade implements Serializable {
     this.id = id;
   }
 
-  protected Instant getCreatedAt() {
+  protected LocalDateTime getCreatedAt() {
     return this.createdAt;
   }
 
-  protected void setCreatedAt(Instant createdAt) {
+  protected void setCreatedAt(LocalDateTime createdAt) {
     this.createdAt = createdAt;
   }
 
-  protected Instant getUpdatedAt() {
+  protected LocalDateTime getUpdatedAt() {
     return this.updatedAt;
   }
 
-  protected void setUpdatedAt(Instant updatedAt) {
+  protected void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
   }
 

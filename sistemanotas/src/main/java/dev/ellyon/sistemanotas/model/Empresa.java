@@ -1,31 +1,58 @@
 package dev.ellyon.sistemanotas.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table (name = "empresa")
-
-public final class Empresa extends Entidade{
+public class Empresa extends Entidade{
+  @Column(name = "razao_social", nullable = false, length = 255)
   private String razaoSocial;
-  private String nomefantasia;
+
+  @Column(name = "nome_fantasia", nullable = false, length = 255)
+  private String nomeFantasia;
+
+  @Column(name = "cnpj", nullable = false, length = 20, unique = true)
   private String cnpj;
+
+  @Column(name = "inscricao_estadual", nullable = false, length = 20)
   private String inscricaoEstadual;
+
+  @Column(name = "endereco_completo", nullable = false, length = 500)
   private String enderecoCompleto;
+
+  @Column(name = "cidade", nullable = false, length = 100)
   private String cidade;
+
+  @Column(name = "estado", nullable = false, length = 100)
   private String estado;
+
+  @Column(name = "cep", nullable = false, length = 20)
   private String cep;
+
+  @Column(name = "telefone", nullable = false, length = 20)
   private String telefone;
+
+  @Column(name = "email", nullable = false, length = 255, unique = true)
   private String email;
+
+  @Column(name = "logo_url", length = 500)
   private String logoUrl;
+
+  @Column(name = "is_ativo", nullable = false)
   private Boolean isAtivo;
 
-  public Empresa(Long id, String razaoSocial, String nomefantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estado, String cep, String telefone, String email, String logoUrl, Boolean isAtivo, Instant createdAt, Instant updatedAt) {
+  // Construtor padrão
+  protected Empresa(){
+    super();
+  }
+
+  // Construtor com todos os atributos
+  public Empresa(Long id, String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estado, String cep, String telefone, String email, String logoUrl, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
     this.id = id;
     this.razaoSocial = razaoSocial;
-    this.nomefantasia = nomefantasia;
+    this.nomeFantasia = nomeFantasia;
     this.cnpj = cnpj;
     this.inscricaoEstadual = inscricaoEstadual;
     this.enderecoCompleto = enderecoCompleto;
@@ -40,24 +67,40 @@ public final class Empresa extends Entidade{
     this.updatedAt = updatedAt;
   }
 
+  // Constructor sem Id e timestamps
+  public Empresa(String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estado, String cep, String telefone, String email, String logoUrl, Boolean isAtivo) {
+    this.razaoSocial = razaoSocial;
+    this.nomeFantasia = nomeFantasia;
+    this.cnpj = cnpj;
+    this.inscricaoEstadual = inscricaoEstadual;
+    this.enderecoCompleto = enderecoCompleto;
+    this.cidade = cidade;
+    this.estado = estado;
+    this.cep = cep;
+    this.telefone = telefone;
+    this.email = email;
+    this.logoUrl = logoUrl;
+    this.isAtivo = isAtivo;
+  }
+
   public String getRazaoSocial() {
-    return this.razaoSocial;
+    return razaoSocial;
   }
 
   public void setRazaoSocial(String razaoSocial) {
     this.razaoSocial = razaoSocial;
   }
 
-  public String getNomefantasia() {
-    return this.nomefantasia;
+  public String getNomeFantasia() {
+    return nomeFantasia;
   }
 
-  public void setNomefantasia(String nomefantasia) {
-    this.nomefantasia = nomefantasia;
+  public void setNomeFantasia(String nomeFantasia) {
+    this.nomeFantasia = nomeFantasia;
   }
 
   public String getCnpj() {
-    return this.cnpj;
+    return cnpj;
   }
 
   public void setCnpj(String cnpj) {
@@ -65,7 +108,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getInscricaoEstadual() {
-    return this.inscricaoEstadual;
+    return inscricaoEstadual;
   }
 
   public void setInscricaoEstadual(String inscricaoEstadual) {
@@ -73,7 +116,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getEnderecoCompleto() {
-    return this.enderecoCompleto;
+    return enderecoCompleto;
   }
 
   public void setEnderecoCompleto(String enderecoCompleto) {
@@ -81,7 +124,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getCidade() {
-    return this.cidade;
+    return cidade;
   }
 
   public void setCidade(String cidade) {
@@ -89,7 +132,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getEstado() {
-    return this.estado;
+    return estado;
   }
 
   public void setEstado(String estado) {
@@ -97,7 +140,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getCep() {
-    return this.cep;
+    return cep;
   }
 
   public void setCep(String cep) {
@@ -105,7 +148,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getTelefone() {
-    return this.telefone;
+    return telefone;
   }
 
   public void setTelefone(String telefone) {
@@ -113,7 +156,7 @@ public final class Empresa extends Entidade{
   }
 
   public String getEmail() {
-    return this.email;
+    return email;
   }
 
   public void setEmail(String email) {
@@ -121,40 +164,39 @@ public final class Empresa extends Entidade{
   }
 
   public String getLogoUrl() {
-    return this.logoUrl;
+    return logoUrl;
   }
 
   public void setLogoUrl(String logoUrl) {
     this.logoUrl = logoUrl;
   }
 
-  public Boolean isIsAtivo() {
-    return this.isAtivo;
+  public Boolean getAtivo() {
+    return isAtivo;
   }
 
-  public Boolean getIsAtivo() {
-    return this.isAtivo;
-  }
-
-  public void setIsAtivo(Boolean isAtivo) {
-    this.isAtivo = isAtivo;
+  public void setAtivo(Boolean ativo) {
+    isAtivo = ativo;
   }
 
   @Override
   public String toString() {
-    return "{" +
-      " razaoSocial='" + getRazaoSocial() + "'" +
-      ", nomefantasia='" + getNomefantasia() + "'" +
-      ", cnpj='" + getCnpj() + "'" +
-      ", inscricaoEstadual='" + getInscricaoEstadual() + "'" +
-      ", enderecoCompleto='" + getEnderecoCompleto() + "'" +
-      ", cidade='" + getCidade() + "'" +
-      ", estado='" + getEstado() + "'" +
-      ", cep='" + getCep() + "'" +
-      ", telefone='" + getTelefone() + "'" +
-      ", email='" + getEmail() + "'" +
-      ", logoUrl='" + getLogoUrl() + "'" +
-      ", isAtivo='" + isIsAtivo() + "'" +
-      "}";
+    return "Empresa{" +
+            "razaoSocial='" + razaoSocial + '\'' +
+            ", nomeFantasia='" + nomeFantasia + '\'' +
+            ", cnpj='" + cnpj + '\'' +
+            ", inscricaoEstadual='" + inscricaoEstadual + '\'' +
+            ", enderecoCompleto='" + enderecoCompleto + '\'' +
+            ", cidade='" + cidade + '\'' +
+            ", estado='" + estado + '\'' +
+            ", cep='" + cep + '\'' +
+            ", telefone='" + telefone + '\'' +
+            ", email='" + email + '\'' +
+            ", logoUrl='" + logoUrl + '\'' +
+            ", isAtivo=" + isAtivo +
+            ", updatedAt=" + updatedAt +
+            ", createdAt=" + createdAt +
+            ", id=" + id +
+            '}';
   }
 }
