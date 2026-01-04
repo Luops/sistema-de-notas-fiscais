@@ -6,7 +6,7 @@ import dev.ellyon.sistemanotas.model.enums.Perfil;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "empresa_usuario",
+@Table(name = "tb_empresa_usuario",
         uniqueConstraints = @UniqueConstraint(columnNames = {"id_empresa", "id_usuario"}))
 public class EmpresaUsuario extends Entidade{
   @ManyToOne

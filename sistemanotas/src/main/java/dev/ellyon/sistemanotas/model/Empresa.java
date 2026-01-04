@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 @Entity
-@Table (name = "empresa")
+@Table (name = "tb_empresa")
 public class Empresa extends Entidade{
   @Column(name = "razao_social", nullable = false, length = 255)
   private String razaoSocial;

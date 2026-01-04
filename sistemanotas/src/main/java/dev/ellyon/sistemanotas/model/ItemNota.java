@@ -4,18 +4,17 @@ import dev.ellyon.sistemanotas.model.enums.Unidade;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "item_nota")
+@Table(name = "tb_item_nota")
 public class ItemNota extends Entidade{
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "id_nota", nullable = false)
-    private Nota notaId;
+    @ManyToOne
+    @JoinColumn(name = "id_nota", nullable = false)
+    private Nota nota;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "id_produto", nullable = false)
-    private Produto produtoId;
+    @ManyToOne
+    @JoinColumn(name = "id_produto", nullable = false)
+    private Produto produto;
 
     @Column(name = "codigo_produto", nullable = false, length = 100)
     private String codigoProduto;
@@ -24,7 +23,7 @@ public class ItemNota extends Entidade{
     private String descricaoProduto;
 
     @Column(name = "quantidade", nullable = false)
-    private Integer quantidade;
+    private BigDecimal quantidade;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "unidade", nullable = false, length = 50)
@@ -68,70 +67,72 @@ public class ItemNota extends Entidade{
         super();
     }
 
-    // Construtor com todos os atributos
-    public ItemNota(Long id, Nota notaId, Produto produtoId, String codigoProduto, String descricaoProduto, Integer quantidade,
-                    Unidade unidade, BigDecimal precoUnitario, BigDecimal subTotal, String ncm, String cfop,
-                    BigDecimal aliquotaIcms, BigDecimal valorIcms, BigDecimal aliquotaPis, BigDecimal valorPis,
-                    BigDecimal aliquotaCofins, BigDecimal valorCofins, BigDecimal valorTotalItem, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.notaId = notaId;
-        this.produtoId = produtoId;
-        this.codigoProduto = codigoProduto;
-        this.descricaoProduto = descricaoProduto;
+    // Construtor para criar item a partir de um Produto
+    public ItemNota(Nota nota, Produto produto, BigDecimal quantidade) {
+        this.nota = nota;
+        this.produto = produto;
         this.quantidade = quantidade;
-        this.unidade = unidade;
-        this.precoUnitario = precoUnitario;
-        this.subTotal = subTotal;
-        this.ncm = ncm;
-        this.cfop = cfop;
-        this.aliquotaIcms = aliquotaIcms;
-        this.valorIcms = valorIcms;
-        this.aliquotaPis = aliquotaPis;
-        this.valorPis = valorPis;
-        this.aliquotaCofins = aliquotaCofins;
-        this.valorCofins = valorCofins;
-        this.valorTotalItem = valorTotalItem;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;}
 
-    // Construtor sem id e timestamps
-    public ItemNota(Nota notaId, Produto produtoId, String codigoProduto, String descricaoProduto, Integer quantidade,
-                    Unidade unidade, BigDecimal precoUnitario, BigDecimal subTotal, String ncm, String cfop,
-                    BigDecimal aliquotaIcms, BigDecimal valorIcms, BigDecimal aliquotaPis, BigDecimal valorPis,
-                    BigDecimal aliquotaCofins, BigDecimal valorCofins, BigDecimal valorTotalItem) {
-        this.notaId = notaId;
-        this.produtoId = produtoId;
-        this.codigoProduto = codigoProduto;
-        this.descricaoProduto = descricaoProduto;
-        this.quantidade = quantidade;
-        this.unidade = unidade;
-        this.precoUnitario = precoUnitario;
-        this.subTotal = subTotal;
-        this.ncm = ncm;
-        this.cfop = cfop;
-        this.aliquotaIcms = aliquotaIcms;
-        this.valorIcms = valorIcms;
-        this.aliquotaPis = aliquotaPis;
-        this.valorPis = valorPis;
-        this.aliquotaCofins = aliquotaCofins;
-        this.valorCofins = valorCofins;
-        this.valorTotalItem = valorTotalItem;
+        // ========================================
+        // SNAPSHOT - Copia dados do produto
+        // ========================================
+        this.codigoProduto = produto.getCodigoProduto();
+        this.descricaoProduto = produto.getNome();
+        this.unidade = produto.getUnidade();
+        this.precoUnitario = produto.getPrecoVenda();
+        this.ncm = produto.getNcm();
+        this.cfop = produto.getCfopPadrao();
+
+        // Copia alíquotas padrão
+        this.aliquotaIcms = produto.getAliquotaIcmsPadrao();
+        this.aliquotaPis = produto.getAliquotaPisPadrao();
+        this.aliquotaCofins = produto.getAliquotaCofinsPadrao();
+
+        // Calcula valores
+        calcularValores();
     }
 
-    public Nota getNotaId() {
-        return notaId;
+    // ========================================
+    // MÉTODO DE CÁLCULO
+    // ========================================
+
+    public void calcularValores() {
+        // Subtotal = quantidade × preço
+        this.subTotal = this.quantidade.multiply(this.precoUnitario);
+
+        // ICMS = subtotal × (alíquota / 100)
+        this.valorIcms = this.subTotal.multiply(this.aliquotaIcms)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+
+        // PIS = subtotal × (alíquota / 100)
+        this.valorPis = this.subTotal.multiply(this.aliquotaPis)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+
+        // COFINS = subtotal × (alíquota / 100)
+        this.valorCofins = this.subTotal.multiply(this.aliquotaCofins)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+
+        // Total do item = subtotal + impostos
+        this.valorTotalItem = this.subTotal
+                .add(this.valorIcms)
+                .add(this.valorPis)
+                .add(this.valorCofins);
     }
 
-    public void setNotaId(Nota notaId) {
-        this.notaId = notaId;
+    public Nota getNota() {
+        return nota;
     }
 
-    public Produto getProdutoId() {
-        return produtoId;
+    public void setNota(Nota nota) {
+        this.nota = nota;
     }
 
-    public void setProdutoId(Produto produtoId) {
-        this.produtoId = produtoId;
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public void setProduto(Produto produto) {
+        this.produto = produto;
     }
 
     public String getCodigoProduto() {
@@ -150,12 +151,13 @@ public class ItemNota extends Entidade{
         this.descricaoProduto = descricaoProduto;
     }
 
-    public Integer getQuantidade() {
+    public BigDecimal getQuantidade() {
         return quantidade;
     }
 
-    public void setQuantidade(Integer quantidade) {
+    public void setQuantidade(BigDecimal quantidade) {
         this.quantidade = quantidade;
+        calcularValores();  // Recalcula quando quantidade muda
     }
 
     public Unidade getUnidade() {
@@ -172,14 +174,11 @@ public class ItemNota extends Entidade{
 
     public void setPrecoUnitario(BigDecimal precoUnitario) {
         this.precoUnitario = precoUnitario;
+        calcularValores();  // Recalcula quando preço muda
     }
 
-    public BigDecimal getSubTotal() {
+    public BigDecimal getSubtotal() {
         return subTotal;
-    }
-
-    public void setSubTotal(BigDecimal subTotal) {
-        this.subTotal = subTotal;
     }
 
     public String getNcm() {
@@ -204,14 +203,11 @@ public class ItemNota extends Entidade{
 
     public void setAliquotaIcms(BigDecimal aliquotaIcms) {
         this.aliquotaIcms = aliquotaIcms;
+        calcularValores();  // Recalcula quando alíquota muda
     }
 
     public BigDecimal getValorIcms() {
         return valorIcms;
-    }
-
-    public void setValorIcms(BigDecimal valorIcms) {
-        this.valorIcms = valorIcms;
     }
 
     public BigDecimal getAliquotaPis() {
@@ -220,14 +216,11 @@ public class ItemNota extends Entidade{
 
     public void setAliquotaPis(BigDecimal aliquotaPis) {
         this.aliquotaPis = aliquotaPis;
+        calcularValores();
     }
 
     public BigDecimal getValorPis() {
         return valorPis;
-    }
-
-    public void setValorPis(BigDecimal valorPis) {
-        this.valorPis = valorPis;
     }
 
     public BigDecimal getAliquotaCofins() {
@@ -236,47 +229,27 @@ public class ItemNota extends Entidade{
 
     public void setAliquotaCofins(BigDecimal aliquotaCofins) {
         this.aliquotaCofins = aliquotaCofins;
+        calcularValores();
     }
 
     public BigDecimal getValorCofins() {
         return valorCofins;
     }
 
-    public void setValorCofins(BigDecimal valorCofins) {
-        this.valorCofins = valorCofins;
-    }
-
     public BigDecimal getValorTotalItem() {
         return valorTotalItem;
-    }
-
-    public void setValorTotalItem(BigDecimal valorTotalItem) {
-        this.valorTotalItem = valorTotalItem;
     }
 
     @Override
     public String toString() {
         return "ItemNota{" +
-                "notaId=" + notaId +
-                ", produtoId=" + produtoId +
+                "id=" + id +
                 ", codigoProduto='" + codigoProduto + '\'' +
                 ", descricaoProduto='" + descricaoProduto + '\'' +
                 ", quantidade=" + quantidade +
-                ", unidade=" + unidade +
                 ", precoUnitario=" + precoUnitario +
-                ", subTotal=" + subTotal +
-                ", ncm='" + ncm + '\'' +
-                ", cfop='" + cfop + '\'' +
-                ", aliquotaIcms=" + aliquotaIcms +
-                ", valorIcms=" + valorIcms +
-                ", aliquotaPis=" + aliquotaPis +
-                ", valorPis=" + valorPis +
-                ", aliquotaCofins=" + aliquotaCofins +
-                ", valorCofins=" + valorCofins +
+                ", subtotal=" + subTotal +
                 ", valorTotalItem=" + valorTotalItem +
-                ", updatedAt=" + updatedAt +
-                ", createdAt=" + createdAt +
-                ", id=" + id +
                 '}';
     }
 }

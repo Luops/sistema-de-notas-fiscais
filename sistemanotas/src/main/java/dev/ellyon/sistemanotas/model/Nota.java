@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "nota")
+@Table(name = "tb_nota")
 public class Nota extends Entidade{
     @Column(name = "numero", nullable = false, length = 255)
     private String numero;
@@ -24,12 +24,12 @@ public class Nota extends Entidade{
     @Column(name = "status", nullable = false, length = 50)
     private StatusNota status;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "id_empresa", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_empresa", nullable = false)
     private Empresa empresaId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "id_cliente", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente clienteId;
 
     @Column(name = "data_emissao", nullable = false)
@@ -56,8 +56,8 @@ public class Nota extends Entidade{
     @Column(name = "protocolo_autorizacao", length = 255)
     private String protocoloAutorizacao;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "created_by_user_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "created_by_user_id", nullable = false)
     private Usuario createdBy;
 
     // Construtor padrão
