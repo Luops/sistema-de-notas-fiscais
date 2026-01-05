@@ -13,6 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 public abstract class Entidade implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id", updatable = false, nullable = false, unique = true)
   protected Long id;
 
   @CreationTimestamp

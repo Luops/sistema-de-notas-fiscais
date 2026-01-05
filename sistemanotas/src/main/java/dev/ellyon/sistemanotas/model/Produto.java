@@ -44,11 +44,11 @@ public class Produto extends Entidade{
     @Column(name = "aliquota_cofins_padrao", nullable = false, precision = 5, scale = 2)
     private BigDecimal aliquotaCofinsPadrao;
 
-    @Column(name = "is_ativo", nullable = false)
+    @Column(name = "is_ativo")
     private Boolean isAtivo;
 
     // Construtor padrão
-    protected Produto(){
+    public Produto(){
         super();
     }
 

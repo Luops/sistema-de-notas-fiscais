@@ -25,11 +25,11 @@ public class Nota extends Entidade{
     private StatusNota status;
 
     @ManyToOne
-    @JoinColumn(name = "id_empresa", nullable = false)
+    @JoinColumn(name = "empresa_id", nullable = false)
     private Empresa empresaId;
 
     @ManyToOne
-    @JoinColumn(name = "id_cliente", nullable = false)
+    @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente clienteId;
 
     @Column(name = "data_emissao", nullable = false)

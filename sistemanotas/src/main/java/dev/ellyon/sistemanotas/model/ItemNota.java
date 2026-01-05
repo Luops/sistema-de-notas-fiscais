@@ -13,7 +13,7 @@ public class ItemNota extends Entidade{
     private Nota nota;
 
     @ManyToOne
-    @JoinColumn(name = "id_produto", nullable = false)
+    @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 
     @Column(name = "codigo_produto", nullable = false, length = 100)

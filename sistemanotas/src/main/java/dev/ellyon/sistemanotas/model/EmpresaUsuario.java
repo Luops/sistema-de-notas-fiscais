@@ -7,14 +7,14 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_empresa_usuario",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"id_empresa", "id_usuario"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"empresa_id", "usuario_id"}))
 public class EmpresaUsuario extends Entidade{
   @ManyToOne
-  @JoinColumn(name = "id_empresa", nullable = false)
+  @JoinColumn(name = "empresa_id", nullable = false)
   private Empresa empresa;
 
   @ManyToOne
-  @JoinColumn(name = "id_usuario", nullable = false)
+  @JoinColumn(name = "usuario_id", nullable = false)
   private Usuario usuario;
 
   @Enumerated(EnumType.STRING)
