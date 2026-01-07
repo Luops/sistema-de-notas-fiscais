@@ -1,37 +1,85 @@
 package dev.ellyon.sistemanotas.service.impl;
 
 import dev.ellyon.sistemanotas.dto.produto.ProdutoRequestDTO;
+import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
+import dev.ellyon.sistemanotas.exception.BusinessException;
+import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
+import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Produto;
 import dev.ellyon.sistemanotas.model.TipoProduto;
 import dev.ellyon.sistemanotas.repository.ProdutoRepository;
 import dev.ellyon.sistemanotas.repository.TipoProdutoRepository;
 import dev.ellyon.sistemanotas.service.ProdutoService;
+import dev.ellyon.sistemanotas.service.mapper.ProdutoMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @Transactional
 public class ProdutoServiceImpl implements ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final TipoProdutoRepository tipoProdutoRepository;
+    private final ProdutoMapper produtoMapper;
 
     public ProdutoServiceImpl(
             ProdutoRepository produtoRepository,
-            TipoProdutoRepository tipoProdutoRepository
+            TipoProdutoRepository tipoProdutoRepository,
+            ProdutoMapper produtoMapper
     ) {
         this.produtoRepository = produtoRepository;
         this.tipoProdutoRepository = tipoProdutoRepository;
+        this.produtoMapper = produtoMapper;
     }
 
     @Override
-    public Produto create(ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO create(ProdutoRequestDTO dto) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        /*
+        * VALIDAÇÕES
+        * */
+        // Código obrigatório, único, max 50
+        if (dto.getCodigoProduto() == null || dto.getCodigoProduto().trim().isEmpty()) {
+            errors.put("codigoProduto", "Código do produto é obrigatório");
+        }
         if (produtoRepository.existsByCodigoProduto(dto.getCodigoProduto())) {
-            throw new IllegalArgumentException("Já existe produto com o código informado. Código: " + dto.getCodigoProduto());
+            throw new BusinessException("Já existe produto com o código informado: " + dto.getCodigoProduto());
         }
 
-        TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
-                .orElseThrow(() -> new IllegalArgumentException("Tipo de produto não encontrado. ID: " + dto.getTipoProduto()));
+        // Nome: min 3, max 255
+        if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
+            errors.put("nome", "Nome do produto é obrigatório");
+        } else if (dto.getNome().trim().length() < 3) {
+            errors.put("nome", "Nome do produto deve ter no mínimo 3 caracteres");
+        } else if (dto.getNome().length() > 255) {
+            errors.put("nome", "Nome do produto deve ter no máximo 255 caracteres");
+        }
 
+        // Validação de preço
+        if (dto.getPrecoVenda() == null) {
+            errors.put("precoVenda", "Preço de venda é obrigatório");
+        } else if (dto.getPrecoVenda().compareTo(BigDecimal.ZERO) <= 0) {
+            errors.put("precoVenda", "Preço de venda deve ser maior que zero");
+        }
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Busca o tipo de produto (lança EntityNotFoundException se não existir)
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
+                .orElseThrow(() -> new EntityNotFoundException("TipoProduto", dto.getTipoProduto()));
+
+
+        /*
+        * CRIAÇÃO DO PRODUTO
+        * */
         Produto produto = new Produto();
         produto.setCodigoProduto(dto.getCodigoProduto());
         produto.setNome(dto.getNome());
@@ -44,8 +92,12 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
         produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
         produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
-        produto.setAtivo(dto.getAtivo());
+        produto.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
 
-        return produtoRepository.save(produto);
+        /*
+        * SALVA E RETORNA DTO DE RESPOSTA
+        * */
+        Produto produtoSalvo = produtoRepository.save(produto);
+        return produtoMapper.toResponseDTO(produtoSalvo);
     }
 }

@@ -27,27 +27,34 @@ public abstract class Entidade implements Serializable {
   // Construtor padrão
   public Entidade() {}
 
-  protected Long getId() {
+  // Construtor com todos atributos
+  public Entidade(Long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    this.id = id;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+  }
+
+  public Long getId() {
     return this.id;
   }
 
-  protected void setId(Long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
-  protected LocalDateTime getCreatedAt() {
+  public LocalDateTime getCreatedAt() {
     return this.createdAt;
   }
 
-  protected void setCreatedAt(LocalDateTime createdAt) {
+  public void setCreatedAt(LocalDateTime createdAt) {
     this.createdAt = createdAt;
   }
 
-  protected LocalDateTime getUpdatedAt() {
+  public LocalDateTime getUpdatedAt() {
     return this.updatedAt;
   }
 
-  protected void setUpdatedAt(LocalDateTime updatedAt) {
+  public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
   }
 

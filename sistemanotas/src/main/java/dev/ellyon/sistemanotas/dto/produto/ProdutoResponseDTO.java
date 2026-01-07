@@ -1,58 +1,34 @@
 package dev.ellyon.sistemanotas.dto.produto;
 
-import dev.ellyon.sistemanotas.model.enums.Unidade;
-import jakarta.validation.constraints.*;
+import dev.ellyon.sistemanotas.dto.tipoProduto.TipoProdutoSimpleDTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-public class ProdutoRequestDTO {
-    @NotBlank(message = "Código do produto é obrigatório")
-    @Size(min = 10, max = 10, message = "Código do produto deve ter exatamente 10 caracteres")
-    @Pattern(regexp = "^[A-Z0-9]{10}$", message = "Código do produto deve conter apenas letras maiúsculas e números")
+public class ProdutoResponseDTO {
+    private Long id;
     private String codigoProduto;
-
-    @NotBlank(message = "Nome do produto é obrigatório")
-    @Size(min = 3, max = 255, message = "Nome do produto deve ter entre 3 e 255 caracteres")
     private String nome;
-
-    @NotBlank
-    @Size(min = 10, max = 255, message = "Descrição deve ter entre 10 e 255 caracteres")
     private String descricao;
-
-    @NotNull(message = "Tipo de produto é obrigatório")
-    private Long tipoProduto;
-
-    @NotNull(message = "Unidade é obrigatória")
-    private Unidade unidade;
-
-    @NotNull(message = "Preço de venda é obrigatório")
-    @DecimalMin(value = "0.01", message = "Preço de venda deve ser maior que zero")
+    private TipoProdutoSimpleDTO tipoProduto;
+    private String unidade;
     private BigDecimal precoVenda;
-
-    @Pattern(regexp = "\\d{8}", message = "NCM deve ter exatamente 8 dígitos")
     private String ncm;
-
-    @Pattern(regexp = "\\d{4}", message = "CFOP deve ter exatamente 4 dígitos")
     private String cfopPadrao;
-
-    @NotNull(message = "Alíquota de ICMS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de ICMS deve ser maior que zero")
-    @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de ICMS deve ser menor ou igual a 100")
     private BigDecimal aliquotaIcmsPadrao;
-
-    @NotNull(message = "Alíquota de PIS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de PIS deve ser maior que zero")
-    @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de PIS deve ser menor ou igual a 100")
     private BigDecimal aliquotaPisPadrao;
-
-    @NotNull(message = "Alíquota de COFINS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de COFINS deve ser maior que zero")
-    @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de COFINS deve ser menor ou igual a 100")
     private BigDecimal aliquotaCofinsPadrao;
-
     private Boolean isAtivo;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public ProdutoRequestDTO(String codigoProduto, String nome, String descricao, Long tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Boolean isAtivo) {
+    // Construtor padrao
+    public ProdutoResponseDTO() {
+    }
+
+    // Construtor completo
+    public ProdutoResponseDTO(Long id, String codigoProduto, String nome, String descricao, TipoProdutoSimpleDTO tipoProduto, String unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
         this.codigoProduto = codigoProduto;
         this.nome = nome;
         this.descricao = descricao;
@@ -65,6 +41,16 @@ public class ProdutoRequestDTO {
         this.aliquotaPisPadrao = aliquotaPisPadrao;
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
         this.isAtivo = isAtivo;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getCodigoProduto() {
@@ -91,19 +77,19 @@ public class ProdutoRequestDTO {
         this.descricao = descricao;
     }
 
-    public Long getTipoProduto() {
+    public TipoProdutoSimpleDTO getTipoProduto() {
         return tipoProduto;
     }
 
-    public void setTipoProduto(Long tipoProduto) {
+    public void setTipoProduto(TipoProdutoSimpleDTO tipoProduto) {
         this.tipoProduto = tipoProduto;
     }
 
-    public Unidade getUnidade() {
+    public String getUnidade() {
         return unidade;
     }
 
-    public void setUnidade(Unidade unidade) {
+    public void setUnidade(String unidade) {
         this.unidade = unidade;
     }
 
@@ -161,5 +147,21 @@ public class ProdutoRequestDTO {
 
     public void setAtivo(Boolean ativo) {
         isAtivo = ativo;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
