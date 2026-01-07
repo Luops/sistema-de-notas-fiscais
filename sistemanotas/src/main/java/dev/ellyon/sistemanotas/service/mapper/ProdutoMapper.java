@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.service.mapper;
 
+import dev.ellyon.sistemanotas.dto.produto.ProdutoListResponseDTO;
 import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.dto.tipoProduto.TipoProdutoSimpleDTO;
 import dev.ellyon.sistemanotas.model.Produto;
@@ -29,6 +30,18 @@ public class ProdutoMapper {
                 produto.getAtivo(),
                 produto.getCreatedAt(),
                 produto.getUpdatedAt()
+        );
+    }
+
+    public ProdutoListResponseDTO toListResponseDTO(Produto produto){
+        return new ProdutoListResponseDTO(
+                produto.getId(),
+                produto.getCodigoProduto(),
+                produto.getNome(),
+                produto.getTipoProduto().getNome(),
+                produto.getUnidade().toString(),
+                produto.getPrecoVenda(),
+                produto.getAtivo()
         );
     }
 }

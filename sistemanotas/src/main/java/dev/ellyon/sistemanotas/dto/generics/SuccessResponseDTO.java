@@ -1,4 +1,4 @@
-package dev.ellyon.sistemanotas.dto.error;
+package dev.ellyon.sistemanotas.dto.generics;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -6,25 +6,29 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ErrorResponseDTO {
+public class SuccessResponseDTO {
     private int status;
-    private String error;
     private String message;
-    private String path;
+    private Object data;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime timestamp;
 
-    public ErrorResponseDTO() {
+    public SuccessResponseDTO() {
         this.timestamp = LocalDateTime.now();
     }
 
-    public ErrorResponseDTO(int status, String error, String message, String path) {
+    public SuccessResponseDTO(int status, String message) {
         this();
         this.status = status;
-        this.error = error;
         this.message = message;
-        this.path = path;
+    }
+
+    public SuccessResponseDTO(int status, String message, Object data) {
+        this();
+        this.status = status;
+        this.message = message;
+        this.data = data;
     }
 
     // Getters e Setters
@@ -36,14 +40,6 @@ public class ErrorResponseDTO {
         this.status = status;
     }
 
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-
     public String getMessage() {
         return message;
     }
@@ -52,12 +48,12 @@ public class ErrorResponseDTO {
         this.message = message;
     }
 
-    public String getPath() {
-        return path;
+    public Object getData() {
+        return data;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setData(Object data) {
+        this.data = data;
     }
 
     public LocalDateTime getTimestamp() {

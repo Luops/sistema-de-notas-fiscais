@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.service.impl;
 
+import dev.ellyon.sistemanotas.dto.produto.ProdutoListResponseDTO;
 import dev.ellyon.sistemanotas.dto.produto.ProdutoRequestDTO;
 import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -35,6 +38,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         this.produtoMapper = produtoMapper;
     }
 
+    // Criar um novo produto
     @Override
     public ProdutoResponseDTO create(ProdutoRequestDTO dto) {
         // Validações das exceções
@@ -99,5 +103,120 @@ public class ProdutoServiceImpl implements ProdutoService {
         * */
         Produto produtoSalvo = produtoRepository.save(produto);
         return produtoMapper.toResponseDTO(produtoSalvo);
+    }
+
+    // Deletar um produto
+    @Override
+    public void delete(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        if (produto.getId() == null) {
+            throw new BusinessException("Produto não existe!");
+        }
+
+        produtoRepository.delete(produto);
+    }
+
+    // Atualizar um produto
+    @Override
+    public ProdutoResponseDTO update(Long id, ProdutoRequestDTO dto) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        /*
+         * VALIDAÇÕES
+         * */
+        // Código obrigatório, único, max 50
+        if (dto.getCodigoProduto() == null || dto.getCodigoProduto().trim().isEmpty()) {
+            errors.put("codigoProduto", "Código do produto é obrigatório");
+        }
+
+        // Nome: min 3, max 255
+        if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
+            errors.put("nome", "Nome do produto é obrigatório");
+        } else if (dto.getNome().trim().length() < 3) {
+            errors.put("nome", "Nome do produto deve ter no mínimo 3 caracteres");
+        } else if (dto.getNome().length() > 255) {
+            errors.put("nome", "Nome do produto deve ter no máximo 255 caracteres");
+        }
+
+        // Validação de preço
+        if (dto.getPrecoVenda() == null) {
+            errors.put("precoVenda", "Preço de venda é obrigatório");
+        } else if (dto.getPrecoVenda().compareTo(BigDecimal.ZERO) <= 0) {
+            errors.put("precoVenda", "Preço de venda deve ser maior que zero");
+        }
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Busca o tipo de produto (lança EntityNotFoundException se não existir)
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
+                .orElseThrow(() -> new EntityNotFoundException("TipoProduto", dto.getTipoProduto()));
+
+        /*
+         * ATUALIZAÇÃO DO PRODUTO
+         * */
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+        produto.setCodigoProduto(dto.getCodigoProduto());
+        produto.setNome(dto.getNome());
+        produto.setDescricaoProduto(dto.getDescricao());
+        produto.setTipoProduto(tipoProduto);
+        produto.setUnidade(dto.getUnidade());
+        produto.setPrecoVenda(dto.getPrecoVenda());
+        produto.setNcm(dto.getNcm());
+        produto.setCfopPadrao(dto.getCfopPadrao());
+        produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
+        produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
+        produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
+        produto.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : produto.getAtivo());
+
+        /*
+         * SALVA E RETORNA DTO DE RESPOSTA
+         * */
+        Produto produtoAtualizado = produtoRepository.save(produto);
+        return produtoMapper.toResponseDTO(produtoAtualizado);
+    }
+
+    // Desativar um produto (soft delete)
+    @Override
+    public void softDelete(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        if (produto.getId() == null) {
+            throw new BusinessException("Produto não existe!");
+        }
+
+        produto.setAtivo(false);
+        produtoRepository.save(produto);
+
+    }
+
+    // Ativar um produto
+    @Override
+    public void activate(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        if (produto.getId() == null) {
+            throw new BusinessException("Produto não existe!");
+        }
+
+        produto.setAtivo(true);
+        produtoRepository.save(produto);
+    }
+
+    // Buscar todos os produtos
+    @Override
+    public List<ProdutoListResponseDTO> findAll() {
+        List<Produto> produtos = produtoRepository.findAll();
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 }
