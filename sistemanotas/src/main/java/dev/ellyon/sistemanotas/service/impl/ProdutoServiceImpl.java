@@ -211,10 +211,114 @@ public class ProdutoServiceImpl implements ProdutoService {
         produtoRepository.save(produto);
     }
 
+    // Buscar produto por ID
+    @Override
+    public ProdutoResponseDTO findById(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+        return produtoMapper.toResponseDTO(produto);
+    }
+
     // Buscar todos os produtos
     @Override
     public List<ProdutoListResponseDTO> findAll() {
         List<Produto> produtos = produtoRepository.findAll();
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por tipo de produto ID
+    @Override
+    public List<ProdutoListResponseDTO> findByTipoProdutoId(Long tipoProdutoId) {
+        List<Produto> produtos = produtoRepository.findByTipoProdutoId(tipoProdutoId);
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado para o Tipo Produto ID: " + tipoProdutoId);
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por tipo de produto nome
+    @Override
+    public List<ProdutoListResponseDTO> findByTipoProdutoNome(String tipoProdutoNome) {
+        List<Produto> produtos = produtoRepository.findByTipoProdutoNome(tipoProdutoNome);
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado para o Tipo Produto nome: " + tipoProdutoNome);
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por status (ativo/inativo)
+    @Override
+    public List<ProdutoListResponseDTO> findByIsAtivo(Boolean ativo) {
+        List<Produto> produtos = produtoRepository.findByIsAtivo(ativo);
+        if (produtos.isEmpty()) {
+            String status = ativo ? "ativos" : "inativos";
+            throw new EntityNotFoundException("Nenhum produto " + status + " encontrado.");
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por nome (contendo, case insensitive)
+    @Override
+    public List<ProdutoListResponseDTO> findByNomeContainingIgnoreCase(String nome) {
+        List<Produto> produtos = produtoRepository.findByNomeContainingIgnoreCase(nome);
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado contendo o nome: " + nome);
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por código (contendo, case insensitive)
+    @Override
+    public List<ProdutoListResponseDTO> findByCodigoProdutoContainingIgnoreCase(String codigoProduto) {
+        List<Produto> produtos = produtoRepository.findByCodigoProdutoContainingIgnoreCase(codigoProduto);
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado contendo o código: " + codigoProduto);
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por faixa de preço de venda
+    @Override
+    public List<ProdutoListResponseDTO> findByPrecoVendaBetween(BigDecimal precoMinimo, BigDecimal precoMaximo) {
+        List<Produto> produtos = produtoRepository.findByPrecoVendaBetween(precoMinimo, precoMaximo);
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado na faixa de preço: " + "R$ " + precoMinimo + " ~ " + "R$ " + precoMaximo);
+        }
+        return produtos.stream()
+                .map(produtoMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Buscar produtos por faixa de data de criação
+    @Override
+    public List<ProdutoListResponseDTO> findByCreatedAtBetween(java.time.LocalDateTime dataInicio, java.time.LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+            List<Produto> produtos = produtoRepository.findByCreatedAtBetween(dataInicio, dataFim);
+
+        if (produtos.isEmpty()) {
+            throw new EntityNotFoundException(
+                    String.format("Nenhum produto encontrado entre %s e %s",
+                            dataInicio.toLocalDate(), dataFim.toLocalDate())
+            );
+        }
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
