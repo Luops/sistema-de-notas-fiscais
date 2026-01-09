@@ -1,6 +1,7 @@
 package dev.ellyon.sistemanotas.dto.produto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class ProdutoListResponseDTO {
     private Long id;
@@ -10,13 +11,14 @@ public class ProdutoListResponseDTO {
     private String unidade;
     private BigDecimal precoVenda;
     private Boolean isAtivo;
+    private LocalDateTime createdAt;
 
     // Construtor padrao
     public ProdutoListResponseDTO() {
     }
 
     // Construtor completo
-    public ProdutoListResponseDTO(Long id, String codigoProduto, String nome, String tipoProdutoNome, String unidade, BigDecimal precoVenda, Boolean isAtivo) {
+    public ProdutoListResponseDTO(Long id, String codigoProduto, String nome, String tipoProdutoNome, String unidade, BigDecimal precoVenda, Boolean isAtivo, LocalDateTime createdAt) {
         this.id = id;
         this.codigoProduto = codigoProduto;
         this.nome = nome;
@@ -24,6 +26,7 @@ public class ProdutoListResponseDTO {
         this.unidade = unidade;
         this.precoVenda = precoVenda;
         this.isAtivo = isAtivo;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -80,5 +83,13 @@ public class ProdutoListResponseDTO {
 
     public void setAtivo(Boolean ativo) {
         isAtivo = ativo;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

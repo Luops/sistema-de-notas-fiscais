@@ -6,6 +6,10 @@ import dev.ellyon.sistemanotas.dto.produto.ProdutoRequestDTO;
 import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.service.ProdutoService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -151,6 +155,14 @@ public class ProdutoController {
         LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);   // 23:59:59
 
         List<ProdutoListResponseDTO> produtos = produtoService.findByCreatedAtBetween(dataInicioTime, dataFimTime);
+        return ResponseEntity.ok(produtos);
+    }
+
+    // Rota para listar todos os produtos com paginação
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<ProdutoListResponseDTO>> findAllPaginated(
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<ProdutoListResponseDTO> produtos = produtoService.findAllPaged(pageable);
         return ResponseEntity.ok(produtos);
     }
 }

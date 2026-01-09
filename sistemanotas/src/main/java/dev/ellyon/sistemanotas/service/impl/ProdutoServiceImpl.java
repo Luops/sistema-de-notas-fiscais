@@ -14,6 +14,8 @@ import dev.ellyon.sistemanotas.service.ProdutoService;
 import dev.ellyon.sistemanotas.service.mapper.ProdutoMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -322,5 +324,19 @@ public class ProdutoServiceImpl implements ProdutoService {
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    // Buscar todos os produtos com paginação
+
+    @Override
+    public Page<ProdutoListResponseDTO> findAllPaged(Pageable pageable) {
+        Page<Produto> produtosPage = produtoRepository.findAll(pageable);
+
+        if (produtosPage.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum produto encontrado");
+        }
+
+        // Converte Page<Produto> para Page<ProdutoListResponseDTO>
+        return produtosPage.map(produtoMapper::toListResponseDTO);
     }
 }

@@ -41,7 +41,8 @@ public class ProdutoMapper {
                 produto.getTipoProduto().getNome(),
                 produto.getUnidade().toString(),
                 produto.getPrecoVenda(),
-                produto.getAtivo()
+                produto.getAtivo(),
+                produto.getCreatedAt()
         );
     }
 }

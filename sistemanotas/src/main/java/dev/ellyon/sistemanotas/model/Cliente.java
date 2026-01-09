@@ -34,7 +34,7 @@ public class Cliente extends Entidade{
     private String cidade;
 
     @Column(name = "estado", nullable = false, length = 100)
-    private String estado;
+    private String estadoUF;
 
     @Column(name = "cep", nullable = false, length = 20)
     private String cep;
@@ -46,14 +46,14 @@ public class Cliente extends Entidade{
     private Boolean isAtivo;
 
     // Construtor padrão
-    protected Cliente(){
+    public Cliente(){
         super();
     }
 
     // Construtor com todos atributos
     public Cliente(Long id, String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual,
                    String email, String telefone, String enderecoCompleto, String cidade,
-                   String estado, String cep, String bairro, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   String estadoUF, String cep, String bairro, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
@@ -63,7 +63,7 @@ public class Cliente extends Entidade{
         this.telefone = telefone;
         this.enderecoCompleto = enderecoCompleto;
         this.cidade = cidade;
-        this.estado = estado;
+        this.estadoUF = estadoUF;
         this.cep = cep;
         this.bairro = bairro;
         this.isAtivo = isAtivo;
@@ -74,7 +74,7 @@ public class Cliente extends Entidade{
     // Construtor sem id e timestamps
     public Cliente(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual,
                    String email, String telefone, String enderecoCompleto, String cidade,
-                   String estado, String cep, String bairro, Boolean isAtivo) {
+                   String estadoUF, String cep, String bairro, Boolean isAtivo) {
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
         this.cpfCnpj = cpfCnpj;
@@ -83,7 +83,7 @@ public class Cliente extends Entidade{
         this.telefone = telefone;
         this.enderecoCompleto = enderecoCompleto;
         this.cidade = cidade;
-        this.estado = estado;
+        this.estadoUF = estadoUF;
         this.cep = cep;
         this.bairro = bairro;
         this.isAtivo = isAtivo;
@@ -153,12 +153,12 @@ public class Cliente extends Entidade{
         this.cidade = cidade;
     }
 
-    public String getEstado() {
-        return estado;
+    public String getEstadoUF() {
+        return estadoUF;
     }
 
-    public void setEstado(String estado) {
-        this.estado = estado;
+    public void setEstadoUF(String estadoUF) {
+        this.estadoUF = estadoUF;
     }
 
     public String getCep() {
@@ -196,7 +196,7 @@ public class Cliente extends Entidade{
                 ", telefone='" + telefone + '\'' +
                 ", enderecoCompleto='" + enderecoCompleto + '\'' +
                 ", cidade='" + cidade + '\'' +
-                ", estado='" + estado + '\'' +
+                ", estado='" + estadoUF + '\'' +
                 ", cep='" + cep + '\'' +
                 ", bairro='" + bairro + '\'' +
                 ", isAtivo=" + isAtivo +
