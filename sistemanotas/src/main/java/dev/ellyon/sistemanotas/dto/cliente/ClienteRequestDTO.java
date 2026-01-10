@@ -32,7 +32,7 @@ public class ClienteRequestDTO {
     private String enderecoCompleto;
 
     @NotBlank(message = "Cidade é obrigatória.")
-    @Size(min = 5, max = 255, message = "Cidade deve ter no mínimo 5 e no máximo 255 caracteres.")
+    @Size(min = 3, max = 255, message = "Cidade deve ter no mínimo 3 e no máximo 255 caracteres.")
     private String cidade;
 
     @NotBlank(message = "Estado (UF) é obrigatório.")

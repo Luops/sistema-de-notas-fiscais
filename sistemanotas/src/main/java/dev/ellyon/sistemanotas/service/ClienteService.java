@@ -7,4 +7,5 @@ public interface ClienteService {
     // "Contratos" - O que esse serviço deve oferecer
     // Create - Update - Delete - Soft Delete - Activate
     ClienteResponseDTO create(ClienteRequestDTO dto); // Criar um novo cliente
+    void delete(Long id); // Deletar um produto por ID
 }
