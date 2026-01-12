@@ -327,7 +327,6 @@ public class ProdutoServiceImpl implements ProdutoService {
     }
 
     // Buscar todos os produtos com paginação
-
     @Override
     public Page<ProdutoListResponseDTO> findAllPaged(Pageable pageable) {
         Page<Produto> produtosPage = produtoRepository.findAll(pageable);

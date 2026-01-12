@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.service.mapper;
 
+import dev.ellyon.sistemanotas.dto.cliente.ClienteListResponseDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteResponseDTO;
 import dev.ellyon.sistemanotas.model.Cliente;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,19 @@ public class ClienteMapper {
                 cliente.getAtivo(),
                 cliente.getCreatedAt(),
                 cliente.getUpdatedAt()
+        );
+    }
+
+    public ClienteListResponseDTO toListResponseDTO(Cliente cliente){
+        return new ClienteListResponseDTO(
+                cliente.getId(),
+                cliente.getNome(),
+                cliente.getTipoPessoa().toString(),
+                cliente.getCpfCnpj(),
+                cliente.getCidade(),
+                cliente.getTelefone(),
+                cliente.getEstadoUF(),
+                cliente.getAtivo()
         );
     }
 }
