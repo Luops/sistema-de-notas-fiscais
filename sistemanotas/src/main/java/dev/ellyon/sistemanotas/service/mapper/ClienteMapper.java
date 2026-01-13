@@ -33,8 +33,8 @@ public class ClienteMapper {
                 cliente.getNome(),
                 cliente.getTipoPessoa().toString(),
                 cliente.getCpfCnpj(),
-                cliente.getCidade(),
                 cliente.getTelefone(),
+                cliente.getCidade(),
                 cliente.getEstadoUF(),
                 cliente.getAtivo()
         );

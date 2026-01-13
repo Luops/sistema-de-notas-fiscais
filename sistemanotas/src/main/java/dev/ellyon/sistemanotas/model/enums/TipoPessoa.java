@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum TipoPessoa {
   FISICA("FISICA", "Pessoa Física"),
   JURIDICA("JURIDICA", "Pessoa Jurídica"),
-  CONSUMIDOR_FINAL("CONSUMIDOR_FINAL", "Consumidor Final"); // ✅ Adicione esta opção
+  CONSUMIDOR_FINAL("CONSUMIDOR FINAL", "Consumidor Final"),
+  CONSUMIDDOR_NAO_IDENTIFICADO("CONSUMIDDOR NAO IDENTIFICADO", "Consumidor Não Identificado");
 
   private final String codigo;
   private final String descricao;

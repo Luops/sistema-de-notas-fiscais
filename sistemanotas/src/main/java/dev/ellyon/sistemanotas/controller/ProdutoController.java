@@ -146,7 +146,6 @@ public class ProdutoController {
     public ResponseEntity<List<ProdutoListResponseDTO>> findByCreatedAtBetween(
             @RequestParam(name = "dataInicio")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-
             @RequestParam(name = "dataFim")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
 

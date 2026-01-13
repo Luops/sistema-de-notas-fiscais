@@ -4,6 +4,7 @@ import dev.ellyon.sistemanotas.dto.cliente.ClienteListResponseDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteRequestDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteResponseDTO;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
+import dev.ellyon.sistemanotas.dto.produto.ProdutoListResponseDTO;
 import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.service.ClienteService;
 import jakarta.validation.Valid;
@@ -11,10 +12,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -112,6 +116,70 @@ public class ClienteController {
     @GetMapping("/findByTipoPessoa/{tipoPessoa}")
     public ResponseEntity<List<ClienteListResponseDTO>> findByTipoPessoa(@PathVariable String tipoPessoa) {
         List<ClienteListResponseDTO> clientes = clienteService.findByTipoPessoa(tipoPessoa);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por email (contendo, case insensitive)
+    @GetMapping("/findByEmail/{email}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByEmailContainingIgnoreCase(@PathVariable String email) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByEmailContainingIgnoreCase(email);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por telefone (contendo, case insensitive)
+    @GetMapping("/findByTelefone/{telefone}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByTelefoneContainingIgnoreCase(@PathVariable String telefone) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByTelefoneContainingIgnoreCase(telefone);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por cidade (contendo, case insensitive)
+    @GetMapping("/findByCidade/{cidade}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByCidadeContainingIgnoreCase(@PathVariable String cidade) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByCidadeContainingIgnoreCase(cidade);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por estado
+    @GetMapping("/findByEstadoUF/{estadoUF}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByEstadoUF(@PathVariable String estadoUF) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByEstadoUF(estadoUF);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Buscar clientes por CEP
+    @GetMapping("/findByCEP/{cep}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByCep(@PathVariable String cep) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByCep(cep);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por status (Ativo/Inativo)
+    @GetMapping("/findByIsAtivo/{ativo}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByIsAtivo(@PathVariable Boolean ativo) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByIsAtivo(ativo);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes pela data de criação
+    @GetMapping("/findByCreatedAtBetween")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByCreatedAtBetween(
+            @RequestParam(name = "dataInicio")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(name = "dataFim")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        // Converte LocalDate para LocalDateTime (início do dia e fim do dia)
+        LocalDateTime dataInicioTime = dataInicio.atStartOfDay(); // 00:00:00
+        LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);   // 23:59:59
+
+        List<ClienteListResponseDTO> clientes = clienteService.findByCreatedAtBetween(dataInicioTime, dataFimTime);
+        return ResponseEntity.ok(clientes);
+    }
+
+    // Rota para buscar clientes por nome (contendo, case insensitive)
+    @GetMapping("/findByNome/{nome}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByNomeContainingIgnoreCase(@PathVariable String nome) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByNomeContainingIgnoreCase(nome);
         return ResponseEntity.ok(clientes);
     }
 }

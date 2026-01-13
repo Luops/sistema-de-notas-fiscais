@@ -373,6 +373,7 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteMapper.toResponseDTO(cliente.get(0));
     }
 
+    // Buscar cliente pelo cpf/cnpj
     @Override
     public List<ClienteListResponseDTO> findByTipoPessoa(String tipoPessoaStr) {
         // Converter a string para o enum TipoPessoa
@@ -380,7 +381,7 @@ public class ClienteServiceImpl implements ClienteService {
         try {
             tipoPessoa = TipoPessoa.fromCodigo(tipoPessoaStr);
         } catch (IllegalArgumentException e) {
-            throw new BusinessException("Tipo de pessoa inválido: " + tipoPessoaStr + ". Valores aceitos: FISICA, JURIDICA, CONSUMIDOR_FINAL");
+            throw new BusinessException("Tipo de pessoa inválido: " + tipoPessoaStr + ". Valores aceitos: FISICA, JURIDICA, CONSUMIDOR FINAL, CONSUMIDOR NAO IDENTIFICADO.");
         }
 
 
@@ -393,43 +394,83 @@ public class ClienteServiceImpl implements ClienteService {
         return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por email (contendo, case insensitive)
     @Override
     public List<ClienteListResponseDTO> findByEmailContainingIgnoreCase(String email) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByEmailContainingIgnoreCase(email);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado com email contendo: " + email);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por telefone (contendo, case insensitive)
     @Override
     public List<ClienteListResponseDTO> findByTelefoneContainingIgnoreCase(String telefone) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByTelefoneContainingIgnoreCase(telefone);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado com telefone contendo: " + telefone);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por cidade (contendo, case insensitive)
     @Override
     public List<ClienteListResponseDTO> findByCidadeContainingIgnoreCase(String cidade) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByCidadeContainingIgnoreCase(cidade);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado na cidade: " + cidade);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por estado
     @Override
     public List<ClienteListResponseDTO> findByEstadoUF(String estadoUF) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByEstadoUF(estadoUF);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado no estado: " + estadoUF);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por CEP
     @Override
-    public List<ClienteListResponseDTO> findByCEP(String cep) {
-        return List.of();
+    public List<ClienteListResponseDTO> findByCep(String cep) {
+        List<Cliente> clientes = clienteRepository.findByCep(cep);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado no CEP: " + cep);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por status (Ativo/Inativo)
     @Override
     public List<ClienteListResponseDTO> findByIsAtivo(Boolean ativo) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByIsAtivo(ativo);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado com status: " + (ativo ? "Ativo" : "Inativo"));
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por nome (contendo, case insensitive)
     @Override
     public List<ClienteListResponseDTO> findByNomeContainingIgnoreCase(String nome) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByNomeContainingIgnoreCase(nome);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado com nome contendo: " + nome);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar clientes por faixa de data de criação
     @Override
     public List<ClienteListResponseDTO> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
-        return List.of();
+        List<Cliente> clientes = clienteRepository.findByCreatedAtBetween(dataInicio, dataFim);
+        if (clientes.isEmpty()){
+            throw new EntityNotFoundException("Nenhum cliente encontrado entre as datas: " + dataInicio + " e " + dataFim);
+        }
+        return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
 }
