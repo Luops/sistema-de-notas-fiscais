@@ -44,7 +44,7 @@ public class ClienteController {
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Cliente deletado com sucesso",
-                null // ou produtoDeletado
+                null
         );
 
         return ResponseEntity.ok(response);

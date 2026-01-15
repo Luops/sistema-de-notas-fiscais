@@ -45,7 +45,9 @@ public class EmpresaRequestDTO {
 
     private String logoUrl;
 
-    public EmpresaRequestDTO(String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estadoUF, String cep, String telefone, String email, String logoUrl) {
+    private Boolean isAtivo;
+
+    public EmpresaRequestDTO(String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estadoUF, String cep, String telefone, String email, String logoUrl, Boolean isAtivo) {
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
         this.cnpj = cnpj;
@@ -57,6 +59,7 @@ public class EmpresaRequestDTO {
         this.telefone = telefone;
         this.email = email;
         this.logoUrl = logoUrl;
+        this.isAtivo = isAtivo;
     }
 
     public String getRazaoSocial() {
@@ -145,5 +148,13 @@ public class EmpresaRequestDTO {
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public Boolean getAtivo() {
+        return isAtivo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        isAtivo = ativo;
     }
 }

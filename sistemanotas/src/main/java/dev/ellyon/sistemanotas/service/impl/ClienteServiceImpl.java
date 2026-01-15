@@ -7,6 +7,7 @@ import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Cliente;
+import dev.ellyon.sistemanotas.model.Empresa;
 import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
 import dev.ellyon.sistemanotas.repository.ClienteRepository;
 import dev.ellyon.sistemanotas.service.ClienteService;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -181,6 +183,10 @@ public class ClienteServiceImpl implements ClienteService {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        // Verifica se a cliente existe
+        Cliente clienteExistente = clienteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente", id));
+
         /*
          * NORMALIZAÇÃO DE DADOS (REMOVER FORMATAÇÃO)
          * */
@@ -213,22 +219,39 @@ public class ClienteServiceImpl implements ClienteService {
         // Validação de CPF/CNPJ
         if (cpfCnpjLimpo.isEmpty()) {
             errors.put("cpfCnpj", "O CPF/CNPJ do cliente é obrigatório");
-        } else {
-            // Valida tamanho: CPF = 11 dígitos, CNPJ = 14 dígitos
-            if (cpfCnpjLimpo.length() < 11 && cpfCnpjLimpo.length() > 14) {
+        } else if (cpfCnpjLimpo.length() < 11 && cpfCnpjLimpo.length() > 14) {
                 errors.put("cpfCnpj", "CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos");
-            } else if (clienteRepository.existsByCpfCnpj(cpfCnpjLimpo)) {
-                errors.put("cpfCnpj", "O CPF/CNPJ já está cadastrado");
+        }   else {
+            // Busca cliente com esse CPF/CNPJ
+            Optional<Cliente> clienteComMesmoCnpj = clienteRepository.findByCpfCnpj(cpfCnpjLimpo);
+
+            // Se encontrou um cliente com esse CPF/CNPJ
+            if (clienteComMesmoCnpj.isPresent()) {
+                // Verifica se NÃO é a mesmo cliente sendo editada
+                if (!clienteComMesmoCnpj.get().getId().equals(id)) {
+                    errors.put("cpfCnpj", "CPF/CNPJ já cadastrado no sistema");
+                }
             }
         }
 
         // Validação de Email
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
-            errors.put("email", "O email do cliente é obrigatório");
+            errors.put("email", "Email é obrigatório");
         } else if (!dto.getEmail().contains("@")) {
-            errors.put("email", "O email do cliente é inválido");
-        } else if (clienteRepository.existsByEmail(dto.getEmail().toLowerCase().trim())) {
-            errors.put("email", "Já existe um cliente com este email");
+            errors.put("email", "Email inválido");
+        } else {
+            String emailNormalizado = dto.getEmail().toLowerCase().trim();
+
+            // Busca cliente com esse email
+            Optional<Cliente> clienteComMesmoEmail = clienteRepository.findByEmailContainingIgnoreCase(emailNormalizado);
+
+            // Se encontrou um cliente com esse email
+            if (clienteComMesmoEmail.isPresent()) {
+                // Verifica se NÃO é o mesmo cliente sendo editado
+                if (!clienteComMesmoEmail.get().getId().equals(id)) {
+                    errors.put("email", "Email já cadastrado no sistema");
+                }
+            }
         }
 
         // Validação de Telefone
@@ -284,24 +307,25 @@ public class ClienteServiceImpl implements ClienteService {
         /*
          * ATUALIZACAO DO CLIENTE
          * */
-        Cliente cliente = clienteRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Cliente", id));
-        cliente.setNome(dto.getNome());
-        cliente.setTipoPessoa(dto.getTipoPessoa() != null ? dto.getTipoPessoa() : TipoPessoa.CONSUMIDOR_NAO_IDENTIFICADO);
-        cliente.setCpfCnpj(cpfCnpjLimpo);
-        cliente.setInscricaoEstadual(dto.getInscricaoEstadual());
-        cliente.setEmail(emailNormalizado);
-        cliente.setTelefone(telefoneLimpo);
-        cliente.setEnderecoCompleto(dto.getEnderecoCompleto());
-        cliente.setCidade(dto.getCidade());
-        cliente.setEstadoUF(estadoUFNormalizado);
-        cliente.setCep(cepLimpo);
-        cliente.setBairro(dto.getBairro());
-        cliente.setAtivo(true);
+        clienteExistente.setNome(dto.getNome().toLowerCase().trim());
+        clienteExistente.setTipoPessoa(dto.getTipoPessoa() != null ? dto.getTipoPessoa() : TipoPessoa.CONSUMIDOR_NAO_IDENTIFICADO);
+        clienteExistente.setCpfCnpj(cpfCnpjLimpo);
+        clienteExistente.setInscricaoEstadual(dto.getInscricaoEstadual().trim());
+        clienteExistente.setEmail(emailNormalizado);
+        clienteExistente.setTelefone(telefoneLimpo);
+        clienteExistente.setEnderecoCompleto(dto.getEnderecoCompleto().toLowerCase().trim());
+        clienteExistente.setCidade(dto.getCidade().toLowerCase().trim());
+        clienteExistente.setEstadoUF(estadoUFNormalizado);
+        clienteExistente.setCep(cepLimpo);
+        clienteExistente.setBairro(dto.getBairro().toLowerCase().trim());
+        if (dto.getAtivo() != null) {
+            clienteExistente.setAtivo(dto.getAtivo());
+        }
 
         /*
          * SALVA E RETORNA DTO DE RESPOSTA
          * */
-        Cliente clienteAtualizado = clienteRepository.save(cliente);
+        Cliente clienteAtualizado = clienteRepository.save(clienteExistente);
         return clienteMapper.toResponseDTO(clienteAtualizado);
     }
 
@@ -364,12 +388,12 @@ public class ClienteServiceImpl implements ClienteService {
     // Buscar cliente por CPF/CNPJ
     @Override
     public ClienteResponseDTO findByCpfCnpj(String cpfCnpj) {
-        List<Cliente> cliente = clienteRepository.findByCpfCnpj(cpfCnpj);
+        Optional<Cliente> cliente = clienteRepository.findByCpfCnpj(cpfCnpj);
         if (cliente.isEmpty()) {
             throw new EntityNotFoundException("Cliente com CPF/CNPJ " + cpfCnpj + " não encontrado.");
         }
 
-        return clienteMapper.toResponseDTO(cliente.get(0));
+        return clienteMapper.toResponseDTO(cliente.get());
     }
 
     // Buscar cliente pelo cpf/cnpj
@@ -396,7 +420,7 @@ public class ClienteServiceImpl implements ClienteService {
     // Buscar clientes por email (contendo, case insensitive)
     @Override
     public List<ClienteListResponseDTO> findByEmailContainingIgnoreCase(String email) {
-        List<Cliente> clientes = clienteRepository.findByEmailContainingIgnoreCase(email);
+        Optional<Cliente> clientes = clienteRepository.findByEmailContainingIgnoreCase(email);
         if (clientes.isEmpty()){
             throw new EntityNotFoundException("Nenhum cliente encontrado com email contendo: " + email);
         }

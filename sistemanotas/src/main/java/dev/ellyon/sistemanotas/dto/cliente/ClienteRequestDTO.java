@@ -47,7 +47,9 @@ public class ClienteRequestDTO {
     @Size(min = 3, max = 255, message = "Bairro deve ter no mínimo 3 e no máximo 255 caracteres.")
     private String bairro;
 
-    public ClienteRequestDTO(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String cidade, String estadoUF, String cep, String bairro) {
+    private Boolean isAtivo;
+
+    public ClienteRequestDTO(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo) {
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
         this.cpfCnpj = cpfCnpj;
@@ -59,6 +61,7 @@ public class ClienteRequestDTO {
         this.estadoUF = estadoUF;
         this.cep = cep;
         this.bairro = bairro;
+        this.isAtivo = isAtivo;
     }
 
     public String getNome() {
@@ -147,5 +150,13 @@ public class ClienteRequestDTO {
 
     public void setBairro(String bairro) {
         this.bairro = bairro;
+    }
+
+    public Boolean getAtivo() {
+        return isAtivo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        isAtivo = ativo;
     }
 }
