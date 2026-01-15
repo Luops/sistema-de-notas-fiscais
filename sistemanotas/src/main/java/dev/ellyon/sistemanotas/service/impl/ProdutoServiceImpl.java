@@ -46,15 +46,17 @@ public class ProdutoServiceImpl implements ProdutoService {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        String codigoProdutoUpperCase = dto.getCodigoProduto().toUpperCase();
+
         /*
         * VALIDAÇÕES
         * */
         // Código obrigatório, único, max 50
-        if (dto.getCodigoProduto() == null || dto.getCodigoProduto().trim().isEmpty()) {
+        if (codigoProdutoUpperCase == null || codigoProdutoUpperCase.trim().isEmpty()) {
             errors.put("codigoProduto", "Código do produto é obrigatório");
         }
-        if (produtoRepository.existsByCodigoProduto(dto.getCodigoProduto())) {
-            throw new BusinessException("Já existe produto com o código informado: " + dto.getCodigoProduto());
+        if (produtoRepository.existsByCodigoProduto(codigoProdutoUpperCase)) {
+            throw new BusinessException("Já existe produto com o código informado: " + codigoProdutoUpperCase);
         }
 
         // Nome: min 3, max 255
@@ -87,7 +89,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         * CRIAÇÃO DO PRODUTO
         * */
         Produto produto = new Produto();
-        produto.setCodigoProduto(dto.getCodigoProduto());
+        produto.setCodigoProduto(codigoProdutoUpperCase);
         produto.setNome(dto.getNome());
         produto.setDescricaoProduto(dto.getDescricao());
         produto.setTipoProduto(tipoProduto);
@@ -98,7 +100,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
         produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
         produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
-        produto.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
+        produto.setAtivo(true);
 
         /*
         * SALVA E RETORNA DTO DE RESPOSTA
@@ -126,11 +128,13 @@ public class ProdutoServiceImpl implements ProdutoService {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        String codigoProdutoUpperCase = dto.getCodigoProduto().toUpperCase();
+
         /*
          * VALIDAÇÕES
          * */
         // Código obrigatório, único, max 50
-        if (dto.getCodigoProduto() == null || dto.getCodigoProduto().trim().isEmpty()) {
+        if (codigoProdutoUpperCase == null || codigoProdutoUpperCase.trim().isEmpty()) {
             errors.put("codigoProduto", "Código do produto é obrigatório");
         }
 
@@ -164,7 +168,7 @@ public class ProdutoServiceImpl implements ProdutoService {
          * */
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
-        produto.setCodigoProduto(dto.getCodigoProduto());
+        produto.setCodigoProduto(codigoProdutoUpperCase);
         produto.setNome(dto.getNome());
         produto.setDescricaoProduto(dto.getDescricao());
         produto.setTipoProduto(tipoProduto);
@@ -175,7 +179,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
         produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
         produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
-        produto.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : produto.getAtivo());
+        produto.setAtivo(true);
 
         /*
          * SALVA E RETORNA DTO DE RESPOSTA

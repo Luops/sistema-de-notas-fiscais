@@ -26,7 +26,7 @@ public class Empresa extends Entidade{
   private String cidade;
 
   @Column(name = "estado", nullable = false, length = 100)
-  private String estado;
+  private String estadoUF;
 
   @Column(name = "cep", nullable = false, length = 20)
   private String cep;
@@ -44,12 +44,12 @@ public class Empresa extends Entidade{
   private Boolean isAtivo;
 
   // Construtor padrão
-  protected Empresa(){
+  public Empresa(){
     super();
   }
 
   // Construtor com todos os atributos
-  public Empresa(Long id, String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estado, String cep, String telefone, String email, String logoUrl, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+  public Empresa(Long id, String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estadoUF, String cep, String telefone, String email, String logoUrl, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
     this.id = id;
     this.razaoSocial = razaoSocial;
     this.nomeFantasia = nomeFantasia;
@@ -57,7 +57,7 @@ public class Empresa extends Entidade{
     this.inscricaoEstadual = inscricaoEstadual;
     this.enderecoCompleto = enderecoCompleto;
     this.cidade = cidade;
-    this.estado = estado;
+    this.estadoUF = estadoUF;
     this.cep = cep;
     this.telefone = telefone;
     this.email = email;
@@ -68,14 +68,14 @@ public class Empresa extends Entidade{
   }
 
   // Constructor sem Id e timestamps
-  public Empresa(String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estado, String cep, String telefone, String email, String logoUrl, Boolean isAtivo) {
+  public Empresa(String razaoSocial, String nomeFantasia, String cnpj, String inscricaoEstadual, String enderecoCompleto, String cidade, String estadoUF, String cep, String telefone, String email, String logoUrl, Boolean isAtivo) {
     this.razaoSocial = razaoSocial;
     this.nomeFantasia = nomeFantasia;
     this.cnpj = cnpj;
     this.inscricaoEstadual = inscricaoEstadual;
     this.enderecoCompleto = enderecoCompleto;
     this.cidade = cidade;
-    this.estado = estado;
+    this.estadoUF = estadoUF;
     this.cep = cep;
     this.telefone = telefone;
     this.email = email;
@@ -131,12 +131,12 @@ public class Empresa extends Entidade{
     this.cidade = cidade;
   }
 
-  public String getEstado() {
-    return estado;
+  public String getEstadoUF() {
+    return estadoUF;
   }
 
-  public void setEstado(String estado) {
-    this.estado = estado;
+  public void setEstadoUF(String estadoUF) {
+    this.estadoUF = estadoUF;
   }
 
   public String getCep() {
@@ -188,7 +188,7 @@ public class Empresa extends Entidade{
             ", inscricaoEstadual='" + inscricaoEstadual + '\'' +
             ", enderecoCompleto='" + enderecoCompleto + '\'' +
             ", cidade='" + cidade + '\'' +
-            ", estado='" + estado + '\'' +
+            ", estado='" + estadoUF + '\'' +
             ", cep='" + cep + '\'' +
             ", telefone='" + telefone + '\'' +
             ", email='" + email + '\'' +

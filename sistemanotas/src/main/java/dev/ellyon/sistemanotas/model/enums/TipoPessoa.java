@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TipoPessoa {
-  FISICA("FISICA", "Pessoa Física"),
-  JURIDICA("JURIDICA", "Pessoa Jurídica"),
-  CONSUMIDOR_FINAL("CONSUMIDOR FINAL", "Consumidor Final"),
-  CONSUMIDDOR_NAO_IDENTIFICADO("CONSUMIDDOR NAO IDENTIFICADO", "Consumidor Não Identificado");
+  FISICA("F", "Pessoa Física"),
+  JURIDICA("J", "Pessoa Jurídica"),
+  CONSUMIDOR_FINAL("CF", "Consumidor Final"),
+  CONSUMIDOR_NAO_IDENTIFICADO("CNI", "Consumidor Não Identificado");
 
   private final String codigo;
   private final String descricao;
@@ -28,7 +28,7 @@ public enum TipoPessoa {
 
   @JsonCreator
   public static TipoPessoa fromCodigo(String codigo) {
-    // ✅ Retorna CONSUMIDOR_FINAL se o campo vier vazio ou null
+    // Retorna CONSUMIDOR_FINAL se o campo vier vazio ou null
     if (codigo == null || codigo.trim().isEmpty()) {
       return CONSUMIDOR_FINAL;
     }
@@ -40,12 +40,12 @@ public enum TipoPessoa {
     }
 
     throw new IllegalArgumentException(
-            "Tipo de pessoa inválido: " + codigo + ". Valores aceitos: F (Física), J (Jurídica), C (Consumidor Final)"
+            "Tipo de pessoa inválido: " + codigo + ". Valores aceitos: F (Física), J (Jurídica), CF (Consumidor Final), CNI (Consumidor Não Identificado)"
     );
   }
 
   @Override
   public String toString() {
-    return codigo;
+    return descricao; // Retorna: FISICA, JURIDICA, CONSUMIDOR_FINAL, CONSUMIDOR_NAO_IDENTIFICADO
   }
 }

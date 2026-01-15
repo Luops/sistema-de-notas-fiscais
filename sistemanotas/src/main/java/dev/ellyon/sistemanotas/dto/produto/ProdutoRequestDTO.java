@@ -7,8 +7,7 @@ import java.math.BigDecimal;
 
 public class ProdutoRequestDTO {
     @NotBlank(message = "Código do produto é obrigatório")
-    @Size(min = 10, max = 10, message = "Código do produto deve ter exatamente 10 caracteres")
-    @Pattern(regexp = "^[A-Z0-9]{10}$", message = "Código do produto deve conter apenas letras maiúsculas e números")
+    @Size(min = 10, max = 18, message = "Código do produto deve ter entre 10 e 18 caracteres")
     private String codigoProduto;
 
     @NotBlank(message = "Nome do produto é obrigatório")
@@ -50,9 +49,7 @@ public class ProdutoRequestDTO {
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de COFINS deve ser menor ou igual a 100")
     private BigDecimal aliquotaCofinsPadrao;
 
-    private Boolean isAtivo;
-
-    public ProdutoRequestDTO(String codigoProduto, String nome, String descricao, Long tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Boolean isAtivo) {
+    public ProdutoRequestDTO(String codigoProduto, String nome, String descricao, Long tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao) {
         this.codigoProduto = codigoProduto;
         this.nome = nome;
         this.descricao = descricao;
@@ -64,7 +61,6 @@ public class ProdutoRequestDTO {
         this.aliquotaIcmsPadrao = aliquotaIcmsPadrao;
         this.aliquotaPisPadrao = aliquotaPisPadrao;
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
-        this.isAtivo = isAtivo;
     }
 
     public String getCodigoProduto() {
@@ -155,11 +151,4 @@ public class ProdutoRequestDTO {
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
     }
 
-    public Boolean getAtivo() {
-        return isAtivo;
-    }
-
-    public void setAtivo(Boolean ativo) {
-        isAtivo = ativo;
-    }
 }

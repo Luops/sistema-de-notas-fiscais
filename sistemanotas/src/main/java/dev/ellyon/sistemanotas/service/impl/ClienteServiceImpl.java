@@ -7,7 +7,6 @@ import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Cliente;
-import dev.ellyon.sistemanotas.model.Produto;
 import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
 import dev.ellyon.sistemanotas.repository.ClienteRepository;
 import dev.ellyon.sistemanotas.service.ClienteService;
@@ -155,7 +154,7 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setEstadoUF(estadoUFNormalizado);
         cliente.setCep(cepLimpo);
         cliente.setBairro(dto.getBairro());
-        cliente.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true); // Novo cliente sempre ativo
+        cliente.setAtivo(true); // Novo cliente sempre ativo
 
         /*
          * SALVA E RETORNA DTO DE RESPOSTA
@@ -283,11 +282,11 @@ public class ClienteServiceImpl implements ClienteService {
 
 
         /*
-         * CRIAÇÃO DO CLIENTE
+         * ATUALIZACAO DO CLIENTE
          * */
         Cliente cliente = clienteRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Cliente", id));
         cliente.setNome(dto.getNome());
-        cliente.setTipoPessoa(dto.getTipoPessoa() != null ? dto.getTipoPessoa() : TipoPessoa.CONSUMIDOR_FINAL);
+        cliente.setTipoPessoa(dto.getTipoPessoa() != null ? dto.getTipoPessoa() : TipoPessoa.CONSUMIDOR_NAO_IDENTIFICADO);
         cliente.setCpfCnpj(cpfCnpjLimpo);
         cliente.setInscricaoEstadual(dto.getInscricaoEstadual());
         cliente.setEmail(emailNormalizado);
@@ -297,7 +296,7 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setEstadoUF(estadoUFNormalizado);
         cliente.setCep(cepLimpo);
         cliente.setBairro(dto.getBairro());
-        cliente.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true); // Novo cliente sempre ativo
+        cliente.setAtivo(true);
 
         /*
          * SALVA E RETORNA DTO DE RESPOSTA
