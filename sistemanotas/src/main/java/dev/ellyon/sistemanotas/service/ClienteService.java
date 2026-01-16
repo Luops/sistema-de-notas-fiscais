@@ -3,9 +3,6 @@ package dev.ellyon.sistemanotas.service;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteListResponseDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteRequestDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteResponseDTO;
-import dev.ellyon.sistemanotas.dto.produto.ProdutoListResponseDTO;
-import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
-import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

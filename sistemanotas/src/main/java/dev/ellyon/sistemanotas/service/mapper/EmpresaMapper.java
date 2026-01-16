@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.service.mapper;
 
+import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.model.Empresa;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,19 @@ public class EmpresaMapper {
                 empresa.getAtivo(),
                 empresa.getCreatedAt(),
                 empresa.getUpdatedAt()
+        );
+    }
+
+    public EmpresaListResponseDTO toListResponseDTO(Empresa empresa){
+        return new EmpresaListResponseDTO(
+                empresa.getId(),
+                empresa.getRazaoSocial(),
+                empresa.getNomeFantasia(),
+                empresa.getCnpj(),
+                empresa.getCidade(),
+                empresa.getEstadoUF(),
+                empresa.getTelefone(),
+                empresa.getAtivo()
         );
     }
 }

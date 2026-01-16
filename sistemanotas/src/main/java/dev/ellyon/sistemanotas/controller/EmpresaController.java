@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.controller;
 
+import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaRequestDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
@@ -8,6 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/empresa")
@@ -68,5 +71,18 @@ public class EmpresaController {
                 null
         );
         return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar uma empresa por ID
+    @GetMapping("/findById/{id}")
+    public EmpresaResponseDTO findById(@PathVariable Long id) {
+        return empresaService.findById(id);
+    }
+
+    // Rota para buscar todas as empresas
+    @GetMapping("/findAll")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findAll() {
+        List<EmpresaListResponseDTO> empresas = empresaService.findAll();
+        return ResponseEntity.ok(empresas);
     }
 }

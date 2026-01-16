@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.service.impl;
 
+import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaRequestDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
@@ -11,11 +12,16 @@ import dev.ellyon.sistemanotas.repository.EmpresaRepository;
 import dev.ellyon.sistemanotas.service.EmpresaService;
 import dev.ellyon.sistemanotas.service.mapper.EmpresaMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -240,5 +246,74 @@ public class EmpresaServiceImpl implements EmpresaService {
 
         empresa.setAtivo(true);
         empresaRepository.save(empresa);
+    }
+
+    // Buscar empresa por ID
+    @Override
+    public EmpresaResponseDTO findById(Long id) {
+        Empresa empresa = empresaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Empresa", id));
+        return empresaMapper.toResponseDTO(empresa);
+    }
+
+    // Buscar todas as empresas
+    @Override
+    public List<EmpresaListResponseDTO> findAll() {
+        List<Empresa> empresas = empresaRepository.findAll();
+        return empresas.stream().map(empresaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable) {
+        return null;
+    }
+
+    @Override
+    public EmpresaResponseDTO findByCnpj(String cnpj) {
+        return null;
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByRazaoSocialContaining(String razaoSocial) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByNomeFantasiaContaining(String nomeFantasia) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByEmail(String email) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByTelefone(String telefone) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByCidade(String cidade) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByEstadoUF(String estadoUF) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByCep(String cep) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByAtivo(Boolean ativo) {
+        return List.of();
+    }
+
+    @Override
+    public List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim) {
+        return List.of();
     }
 }
