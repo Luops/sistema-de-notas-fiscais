@@ -14,4 +14,5 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
 
     Optional<Empresa> findByCnpj(String cnpj);  // ✅ Retorna Optional
     Optional<Empresa> findByEmail(String email); // ✅ Retorna Optional
+    List<Empresa> findByRazaoSocialContainingIgnoreCase(String razaoSocial); // Retorna lista de empresas com razão social contendo o termo
 }

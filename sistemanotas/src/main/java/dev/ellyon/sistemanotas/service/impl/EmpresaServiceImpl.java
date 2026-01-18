@@ -6,7 +6,6 @@ import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
-import dev.ellyon.sistemanotas.model.Cliente;
 import dev.ellyon.sistemanotas.model.Empresa;
 import dev.ellyon.sistemanotas.repository.EmpresaRepository;
 import dev.ellyon.sistemanotas.service.EmpresaService;
@@ -259,22 +258,48 @@ public class EmpresaServiceImpl implements EmpresaService {
     @Override
     public List<EmpresaListResponseDTO> findAll() {
         List<Empresa> empresas = empresaRepository.findAll();
+        if(empresas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma empresa encontrada.");
+        }
         return empresas.stream().map(empresaMapper::toListResponseDTO).collect(Collectors.toList());
     }
 
+    // Buscar todas as empresas com paginação
     @Override
     public Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable) {
-        return null;
+        Page<Empresa> empresasPage = empresaRepository.findAll(pageable);
+        if (empresasPage.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada.");
+        }
+        // Mapeia cada Empresa para EmpresaListResponseDTO
+        return empresasPage.map(empresaMapper::toListResponseDTO);
     }
 
+    // Buscar empresa por CNPJ
     @Override
     public EmpresaResponseDTO findByCnpj(String cnpj) {
-        return null;
+        Empresa empresa = empresaRepository.findByCnpj(cnpj)
+                .orElseThrow(() -> new EntityNotFoundException("Empresa com CNPJ " + cnpj + " não encontrada."));
+        return empresaMapper.toResponseDTO(empresa);
     }
 
+    // Buscar empresas por razão social contendo um termo
     @Override
-    public List<EmpresaListResponseDTO> findByRazaoSocialContaining(String razaoSocial) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial) {
+        // Valida se o termo de busca não é vazio
+        if (razaoSocial == null || razaoSocial.trim().isEmpty()) {
+            throw new BusinessException("O termo de busca para razão social não pode ser vazio.");
+        }
+
+        String razaoSocialTrimmed = razaoSocial.trim();
+        List<Empresa> empresas = empresaRepository.findByRazaoSocialContainingIgnoreCase(razaoSocialTrimmed);
+
+        if(empresas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com a razão social contendo: " + razaoSocialTrimmed);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override

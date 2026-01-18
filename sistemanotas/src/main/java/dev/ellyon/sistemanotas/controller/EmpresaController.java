@@ -6,6 +6,11 @@ import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
 import dev.ellyon.sistemanotas.service.EmpresaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -83,6 +88,29 @@ public class EmpresaController {
     @GetMapping("/findAll")
     public ResponseEntity<List<EmpresaListResponseDTO>> findAll() {
         List<EmpresaListResponseDTO> empresas = empresaService.findAll();
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas com paginação
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<EmpresaListResponseDTO>> findAllPaged(
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<EmpresaListResponseDTO> empresasPage = empresaService.findAllPaged(pageable);
+        return ResponseEntity.ok(empresasPage);
+    }
+
+    // Rota para buscar empresa por CNPJ
+    @GetMapping("/findByCnpj/{cnpj}")
+    public EmpresaResponseDTO findByCnpj(@PathVariable String cnpj) {
+        return empresaService.findByCnpj(cnpj);
+    }
+
+    // Rota para buscar empresas por razão social contendo um termo
+    @GetMapping("/findByRazaoSocial")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByRazaoSocialContainingIgnoreCase(
+            @RequestParam(name = "razaoSocial")
+            @NotBlank(message = "Razão Social não pode ser vazia") String razaoSocial){
+        List<EmpresaListResponseDTO> empresas = empresaService.findByRazaoSocialContainingIgnoreCase(razaoSocial);
         return ResponseEntity.ok(empresas);
     }
 }

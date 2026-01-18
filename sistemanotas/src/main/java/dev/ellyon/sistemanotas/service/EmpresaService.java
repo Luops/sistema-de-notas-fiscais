@@ -23,7 +23,7 @@ public interface EmpresaService {
     List<EmpresaListResponseDTO> findAll(); // Buscar todas as empresas
     Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable); // Buscar todas as empresas com paginação
     EmpresaResponseDTO findByCnpj(String cnpj); // Buscar empresa por CNPJ
-    List<EmpresaListResponseDTO> findByRazaoSocialContaining(String razaoSocial); // Buscar empresas por razão social contendo um termo
+    List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial); // Buscar empresas por razão social contendo um termo
     List<EmpresaListResponseDTO> findByNomeFantasiaContaining(String nomeFantasia); // Buscar empresas pelo nome fantasia contendo um termo
     List<EmpresaListResponseDTO> findByEmail(String email); // Buscar empresas por email
     List<EmpresaListResponseDTO> findByTelefone(String telefone) ; // Buscar empresas por telefone

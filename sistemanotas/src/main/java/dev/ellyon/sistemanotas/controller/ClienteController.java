@@ -4,8 +4,6 @@ import dev.ellyon.sistemanotas.dto.cliente.ClienteListResponseDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteRequestDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteResponseDTO;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
-import dev.ellyon.sistemanotas.dto.produto.ProdutoListResponseDTO;
-import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.service.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;

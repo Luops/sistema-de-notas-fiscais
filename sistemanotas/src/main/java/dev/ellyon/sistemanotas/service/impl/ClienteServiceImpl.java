@@ -7,7 +7,6 @@ import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Cliente;
-import dev.ellyon.sistemanotas.model.Empresa;
 import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
 import dev.ellyon.sistemanotas.repository.ClienteRepository;
 import dev.ellyon.sistemanotas.service.ClienteService;
@@ -396,7 +395,7 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteMapper.toResponseDTO(cliente.get());
     }
 
-    // Buscar cliente pelo cpf/cnpj
+    // Buscar cliente pelo tipo de pessoa
     @Override
     public List<ClienteListResponseDTO> findByTipoPessoa(String tipoPessoaStr) {
         // Converter a string para o enum TipoPessoa
