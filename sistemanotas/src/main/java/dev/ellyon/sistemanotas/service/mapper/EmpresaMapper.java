@@ -3,6 +3,7 @@ package dev.ellyon.sistemanotas.service.mapper;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
 import dev.ellyon.sistemanotas.model.Empresa;
+import dev.ellyon.sistemanotas.utils.FormatUtils;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,13 +13,13 @@ public class EmpresaMapper {
                 empresa.getId(),
                 empresa.getRazaoSocial(),
                 empresa.getNomeFantasia(),
-                empresa.getCnpj(),
+                FormatUtils.formatCpfCnpj(empresa.getCnpj()),
                 empresa.getInscricaoEstadual(),
                 empresa.getEnderecoCompleto(),
                 empresa.getCidade(),
                 empresa.getEstadoUF(),
-                empresa.getCep(),
-                empresa.getTelefone(),
+                FormatUtils.formatCep(empresa.getCep()),
+                FormatUtils.formatTelefone(empresa.getTelefone()),
                 empresa.getEmail(),
                 empresa.getLogoUrl(),
                 empresa.getAtivo(),
@@ -32,10 +33,11 @@ public class EmpresaMapper {
                 empresa.getId(),
                 empresa.getRazaoSocial(),
                 empresa.getNomeFantasia(),
-                empresa.getCnpj(),
+                FormatUtils.formatCpfCnpj(empresa.getCnpj()),
                 empresa.getCidade(),
                 empresa.getEstadoUF(),
-                empresa.getTelefone(),
+                FormatUtils.formatTelefone(empresa.getTelefone()),
+                empresa.getEmail(),
                 empresa.getAtivo()
         );
     }

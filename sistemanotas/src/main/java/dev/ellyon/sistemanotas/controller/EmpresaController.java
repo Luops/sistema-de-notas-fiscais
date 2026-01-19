@@ -11,10 +11,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -111,6 +115,79 @@ public class EmpresaController {
             @RequestParam(name = "razaoSocial")
             @NotBlank(message = "Razão Social não pode ser vazia") String razaoSocial){
         List<EmpresaListResponseDTO> empresas = empresaService.findByRazaoSocialContainingIgnoreCase(razaoSocial);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas pelo nome fantasia contendo um termo
+    @GetMapping("/findByNomeFantasia")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByNomeFantasiaContainingIgnoreCase(
+            @RequestParam(name = "nomeFantasia")
+            @NotBlank(message = "Nome Fantasia não pode ser vazio") String nomeFantasia) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByNomeFantasiaContainingIgnoreCase(nomeFantasia);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por email
+    @GetMapping("/findByEmail/{email}")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByEmailContainingIgnoreCase(
+            @PathVariable String email) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByEmailContainingIgnoreCase(email);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por telefone
+    @GetMapping("/findByTelefone/{telefone}")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByTelefoneContaining(
+            @PathVariable String telefone) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByTelefoneContaining(telefone);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por cidade
+    @GetMapping("/findByCidade")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByCidadeIgnoreCase(
+            @RequestParam(name = "cidade")
+            @NotBlank(message = "Cidade não pode ser vazia") String cidade) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByCidadeIgnoreCase(cidade);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por estado (UF)
+    @GetMapping("/findByEstadoUF/{estadoUF}")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByEstadoUFIgnoreCase(
+            @PathVariable String estadoUF) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByEstadoUFIgnoreCase(estadoUF);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por CEP
+    @GetMapping("/findByCep/{cep}")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByCep(
+            @PathVariable String cep) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByCep(cep);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas por status de ativo/inativo
+    @GetMapping("/findByAtivoInativo/{ativo}")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByEmpresaAtivoInativo(
+            @PathVariable Boolean ativo) {
+        List<EmpresaListResponseDTO> empresas = empresaService.findByIsAtivo(ativo);
+        return ResponseEntity.ok(empresas);
+    }
+
+    // Rota para buscar empresas criadas entre duas datas
+    @GetMapping("/findByCreatedAtBetween")
+    public ResponseEntity<List<EmpresaListResponseDTO>> findByCreatedAtBetween(
+            @RequestParam(name = "dataInicio")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(name = "dataFim")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim)  {
+        // Converter LocalDate para LocalDateTime no início do dia e fim do dia
+        LocalDateTime inicioDateTime = dataInicio.atStartOfDay(); // 00:00:00
+        LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59); // 23:59:59
+
+        List<EmpresaListResponseDTO> empresas = empresaService.findByCreatedAtBetween(inicioDateTime, fimDateTime);
         return ResponseEntity.ok(empresas);
     }
 }

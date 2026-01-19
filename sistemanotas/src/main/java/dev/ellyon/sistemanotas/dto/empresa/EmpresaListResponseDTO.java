@@ -8,6 +8,7 @@ public class EmpresaListResponseDTO {
     private String cidade;
     private String estadoUF;
     private String telefone;
+    private String email;
     private Boolean isAtivo;
 
     // Construtor padrao
@@ -15,7 +16,7 @@ public class EmpresaListResponseDTO {
     }
 
     // Construtor completo
-    public EmpresaListResponseDTO(Long id, String razaoSocial, String nomeFantasia, String cnpj, String cidade, String estadoUF, String telefone, Boolean isAtivo) {
+    public EmpresaListResponseDTO(Long id, String razaoSocial, String nomeFantasia, String cnpj, String cidade, String estadoUF, String telefone, String email, Boolean isAtivo) {
         this.id = id;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
@@ -23,6 +24,7 @@ public class EmpresaListResponseDTO {
         this.cidade = cidade;
         this.estadoUF = estadoUF;
         this.telefone = telefone;
+        this.email = email;
         this.isAtivo = isAtivo;
     }
 
@@ -80,6 +82,14 @@ public class EmpresaListResponseDTO {
 
     public void setTelefone(String telefone) {
         this.telefone = telefone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Boolean getAtivo() {

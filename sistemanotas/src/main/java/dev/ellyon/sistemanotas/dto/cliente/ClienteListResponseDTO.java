@@ -8,6 +8,7 @@ public class ClienteListResponseDTO {
     private String telefone;
     private String cidade;
     private String estadoUF;
+    private String email;
     private Boolean isAtivo;
 
     // Construtor padrao
@@ -15,7 +16,7 @@ public class ClienteListResponseDTO {
     }
 
     // Construtor completo
-    public ClienteListResponseDTO(Long id, String nome, String tipoPessoa, String cpfCnpj, String telefone, String cidade, String estadoUF, Boolean isAtivo) {
+    public ClienteListResponseDTO(Long id, String nome, String tipoPessoa, String cpfCnpj, String telefone, String cidade, String estadoUF, String email, Boolean isAtivo) {
         this.id = id;
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
@@ -23,6 +24,7 @@ public class ClienteListResponseDTO {
         this.telefone = telefone;
         this.cidade = cidade;
         this.estadoUF = estadoUF;
+        this.email = email;
         this.isAtivo = isAtivo;
     }
 
@@ -80,6 +82,14 @@ public class ClienteListResponseDTO {
 
     public void setEstadoUF(String estadoUF) {
         this.estadoUF = estadoUF;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Boolean getAtivo() {

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -302,43 +303,119 @@ public class EmpresaServiceImpl implements EmpresaService {
                 .collect(Collectors.toList());
     }
 
+    // Buscar empresas pelo nome fantasia contendo um termo
     @Override
-    public List<EmpresaListResponseDTO> findByNomeFantasiaContaining(String nomeFantasia) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByNomeFantasiaContainingIgnoreCase(String nomeFantasia) {
+        List<Empresa> empresas = empresaRepository.findByNomeFantasiaContainingIgnoreCase(nomeFantasia);
+        if (empresas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o nome fantasia contendo: " + nomeFantasia);
+        }
+
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por email
     @Override
-    public List<EmpresaListResponseDTO> findByEmail(String email) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByEmailContainingIgnoreCase(String email) {
+        List<Empresa> empresas = empresaRepository.findByEmailContainingIgnoreCase(email);
+        if (empresas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o email contendo: " + email);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por telefone
     @Override
-    public List<EmpresaListResponseDTO> findByTelefone(String telefone) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByTelefoneContaining(String telefone) {
+        List<Empresa> empresas = empresaRepository.findByTelefoneContaining(telefone);
+        if (empresas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o telefone contendo: " + telefone);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por cidade
     @Override
-    public List<EmpresaListResponseDTO> findByCidade(String cidade) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByCidadeIgnoreCase(String cidade) {
+        List<Empresa> empresas = empresaRepository.findByCidadeIgnoreCase(cidade);
+        if (empresas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada na cidade: " + cidade);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por estado (UF)
     @Override
-    public List<EmpresaListResponseDTO> findByEstadoUF(String estadoUF) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByEstadoUFIgnoreCase(String estadoUF) {
+        List<Empresa> empresas = empresaRepository.findByEstadoUFIgnoreCase(estadoUF);
+        if (empresas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada no estado (UF): " + estadoUF);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por CEP
     @Override
     public List<EmpresaListResponseDTO> findByCep(String cep) {
-        return List.of();
+        List<Empresa> empresas = empresaRepository.findByCep(cep);
+        if (empresas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o CEP: " + cep);
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas por status de ativo/inativo
     @Override
-    public List<EmpresaListResponseDTO> findByAtivo(Boolean ativo) {
-        return List.of();
+    public List<EmpresaListResponseDTO> findByIsAtivo(Boolean ativo) {
+        List<Empresa> empresas = empresaRepository.findByIsAtivo(ativo);
+        if (empresas.isEmpty()) {
+            String status = ativo ? "ativas" : "inativas";
+            throw new EntityNotFoundException("Nenhuma empresa " + status + " encontrada.");
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 
+    // Buscar empresas criadas entre duas datas
     @Override
     public List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim) {
-        return List.of();
+        if (inicio == null || fim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (inicio.isAfter(fim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
+        List<Empresa> empresas = empresaRepository.findByCreatedAtBetween(inicio, fim);
+
+        // Formatação das datas para exibição na mensagem de erro
+        if (empresas.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = inicio.format(formatter);
+            String dataFimFormatada = fim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma empresa encontrada entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
+        }
+        return empresas.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
     }
 }

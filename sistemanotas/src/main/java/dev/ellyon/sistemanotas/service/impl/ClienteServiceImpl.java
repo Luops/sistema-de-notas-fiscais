@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -468,10 +469,10 @@ public class ClienteServiceImpl implements ClienteService {
 
     // Buscar clientes por status (Ativo/Inativo)
     @Override
-    public List<ClienteListResponseDTO> findByIsAtivo(Boolean ativo) {
-        List<Cliente> clientes = clienteRepository.findByIsAtivo(ativo);
+    public List<ClienteListResponseDTO> findByIsAtivo(Boolean isAtivo) {
+        List<Cliente> clientes = clienteRepository.findByIsAtivo(isAtivo);
         if (clientes.isEmpty()){
-            throw new EntityNotFoundException("Nenhum cliente encontrado com status: " + (ativo ? "Ativo" : "Inativo"));
+            throw new EntityNotFoundException("Nenhum cliente encontrado com status: " + (isAtivo ? "Ativo" : "Inativo"));
         }
         return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }
@@ -489,9 +490,27 @@ public class ClienteServiceImpl implements ClienteService {
     // Buscar clientes por faixa de data de criação
     @Override
     public List<ClienteListResponseDTO> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
         List<Cliente> clientes = clienteRepository.findByCreatedAtBetween(dataInicio, dataFim);
-        if (clientes.isEmpty()){
-            throw new EntityNotFoundException("Nenhum cliente encontrado entre as datas: " + dataInicio + " e " + dataFim);
+
+        // Formatação das datas para exibição na mensagem de erro
+        if (clientes.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = dataInicio.format(formatter);
+            String dataFimFormatada = dataFim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhum cliente encontrado entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
         }
         return clientes.stream().map(clienteMapper::toListResponseDTO).collect(Collectors.toList());
     }

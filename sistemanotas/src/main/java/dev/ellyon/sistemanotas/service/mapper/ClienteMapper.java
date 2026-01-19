@@ -3,6 +3,7 @@ package dev.ellyon.sistemanotas.service.mapper;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteListResponseDTO;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteResponseDTO;
 import dev.ellyon.sistemanotas.model.Cliente;
+import dev.ellyon.sistemanotas.utils.FormatUtils;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,14 +13,14 @@ public class ClienteMapper {
                 cliente.getId(),
                 cliente.getNome(),
                 cliente.getTipoPessoa().toString(),
-                cliente.getCpfCnpj(),
+                FormatUtils.formatCpfCnpj(cliente.getCpfCnpj()),
                 cliente.getInscricaoEstadual(),
                 cliente.getEmail(),
-                cliente.getTelefone(),
+                FormatUtils.formatTelefone(cliente.getTelefone()),
                 cliente.getEnderecoCompleto(),
                 cliente.getCidade(),
                 cliente.getEstadoUF(),
-                cliente.getCep(),
+                FormatUtils.formatCep(cliente.getCep()),
                 cliente.getBairro(),
                 cliente.getAtivo(),
                 cliente.getCreatedAt(),
@@ -32,10 +33,11 @@ public class ClienteMapper {
                 cliente.getId(),
                 cliente.getNome(),
                 cliente.getTipoPessoa().toString(),
-                cliente.getCpfCnpj(),
-                cliente.getTelefone(),
+                FormatUtils.formatCpfCnpj(cliente.getCpfCnpj()),
+                FormatUtils.formatTelefone(cliente.getTelefone()),
                 cliente.getCidade(),
                 cliente.getEstadoUF(),
+                cliente.getEmail(),
                 cliente.getAtivo()
         );
     }

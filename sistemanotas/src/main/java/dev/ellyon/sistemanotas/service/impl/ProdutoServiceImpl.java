@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -317,12 +318,19 @@ public class ProdutoServiceImpl implements ProdutoService {
         if (dataInicio.isAfter(dataFim)) {
             throw new BusinessException("Data de início não pode ser posterior à data de fim");
         }
-            List<Produto> produtos = produtoRepository.findByCreatedAtBetween(dataInicio, dataFim);
 
+        List<Produto> produtos = produtoRepository.findByCreatedAtBetween(dataInicio, dataFim);
+
+        // Formatação das datas para exibição na mensagem de erro
         if (produtos.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = dataInicio.format(formatter);
+            String dataFimFormatada = dataFim.format(formatter);
+
             throw new EntityNotFoundException(
                     String.format("Nenhum produto encontrado entre %s e %s",
-                            dataInicio.toLocalDate(), dataFim.toLocalDate())
+                            dataInicioFormatada, dataFimFormatada)
             );
         }
         return produtos.stream()

@@ -153,9 +153,9 @@ public class ClienteController {
     }
 
     // Rota para buscar clientes por status (Ativo/Inativo)
-    @GetMapping("/findByIsAtivo/{ativo}")
-    public ResponseEntity<List<ClienteListResponseDTO>> findByIsAtivo(@PathVariable Boolean ativo) {
-        List<ClienteListResponseDTO> clientes = clienteService.findByIsAtivo(ativo);
+    @GetMapping("/findByAtivoInativo/{isAtivo}")
+    public ResponseEntity<List<ClienteListResponseDTO>> findByAtivoInativo(@PathVariable Boolean isAtivo) {
+        List<ClienteListResponseDTO> clientes = clienteService.findByIsAtivo(isAtivo);
         return ResponseEntity.ok(clientes);
     }
 

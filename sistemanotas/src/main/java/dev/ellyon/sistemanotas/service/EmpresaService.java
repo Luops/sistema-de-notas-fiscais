@@ -24,12 +24,12 @@ public interface EmpresaService {
     Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable); // Buscar todas as empresas com paginação
     EmpresaResponseDTO findByCnpj(String cnpj); // Buscar empresa por CNPJ
     List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial); // Buscar empresas por razão social contendo um termo
-    List<EmpresaListResponseDTO> findByNomeFantasiaContaining(String nomeFantasia); // Buscar empresas pelo nome fantasia contendo um termo
-    List<EmpresaListResponseDTO> findByEmail(String email); // Buscar empresas por email
-    List<EmpresaListResponseDTO> findByTelefone(String telefone) ; // Buscar empresas por telefone
-    List<EmpresaListResponseDTO> findByCidade(String cidade); // Buscar empresas por cidade
-    List<EmpresaListResponseDTO> findByEstadoUF(String estadoUF); // Buscar empresas por estado (UF)
+    List<EmpresaListResponseDTO> findByNomeFantasiaContainingIgnoreCase(String nomeFantasia); // Buscar empresas pelo nome fantasia contendo um termo
+    List<EmpresaListResponseDTO> findByEmailContainingIgnoreCase(String email); // Buscar empresas por email
+    List<EmpresaListResponseDTO> findByTelefoneContaining(String telefone) ; // Buscar empresas por telefone
+    List<EmpresaListResponseDTO> findByCidadeIgnoreCase(String cidade); // Buscar empresas por cidade
+    List<EmpresaListResponseDTO> findByEstadoUFIgnoreCase(String estadoUF); // Buscar empresas por estado (UF)
     List<EmpresaListResponseDTO> findByCep(String cep); // Buscar empresas por CEP
-    List<EmpresaListResponseDTO> findByAtivo(Boolean ativo) ; // Buscar empresas por status de ativo/inativo
+    List<EmpresaListResponseDTO> findByIsAtivo(Boolean ativo) ; // Buscar empresas por status de ativo/inativo
     List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim); // Buscar empresas criadas entre duas datas
 }

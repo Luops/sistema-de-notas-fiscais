@@ -30,7 +30,7 @@ public interface ClienteService {
     List<ClienteListResponseDTO> findByCidadeContainingIgnoreCase(String cidade); // Buscar clientes por cidade (contendo, case insensitive)
     List<ClienteListResponseDTO> findByEstadoUF(String estadoUF); // Buscar clientes por estado
     List<ClienteListResponseDTO> findByCep(String cep); // Buscar clientes por CEP
-    List<ClienteListResponseDTO> findByIsAtivo(Boolean ativo); // Buscar clientes por status (Ativo/Inativo)
+    List<ClienteListResponseDTO> findByIsAtivo(Boolean isAtivo); // Buscar clientes por status (Ativo/Inativo)
     List<ClienteListResponseDTO> findByNomeContainingIgnoreCase(String nome); // Buscar clientes por nome (contendo, case insensitive)
     List<ClienteListResponseDTO> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar clientes por faixa de data de criação
 
