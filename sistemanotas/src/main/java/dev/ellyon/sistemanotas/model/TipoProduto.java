@@ -16,7 +16,7 @@ public class TipoProduto extends Entidade{
     private Boolean isAtivo;
 
     // Construtor padrão
-    protected TipoProduto(){
+    public TipoProduto(){
         super();
     }
 

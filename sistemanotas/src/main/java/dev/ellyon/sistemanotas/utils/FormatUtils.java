@@ -65,4 +65,25 @@ public class FormatUtils {
 
         return telefone;
     }
+
+    /* ================= CAPITALIZE NOME ================= */
+
+    public static String capitalizeNome(String nome){
+        if (nome == null || nome.trim().isEmpty()) {
+            return nome;
+        }
+
+        String[] palavras = nome.trim().toLowerCase().split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+
+        for (String palavra : palavras) {
+            if (palavra.length() > 0) {
+                resultado.append(Character.toUpperCase(palavra.charAt(0)))
+                        .append(palavra.substring(1))
+                        .append(" ");
+            }
+        }
+
+        return resultado.toString().trim();
+    }
 }
