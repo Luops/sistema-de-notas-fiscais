@@ -21,4 +21,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findByCodigoProdutoContainingIgnoreCase(String codigoProduto); // Buscar produtos por código (contendo, case insensitive)
     List<Produto> findByPrecoVendaBetween(BigDecimal precoMinimo, BigDecimal precoMaximo); // Buscar produtos por faixa de preço de venda
     List<Produto> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar produtos por faixa de data de criação
+
+    long countByTipoProdutoId(Long tipoProdutoId); // Contar produtos por tipo (Id)
 }

@@ -7,6 +7,7 @@ import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.TipoProduto;
+import dev.ellyon.sistemanotas.repository.ProdutoRepository;
 import dev.ellyon.sistemanotas.repository.TipoProdutoRepository;
 import dev.ellyon.sistemanotas.service.TipoProdutoService;
 import dev.ellyon.sistemanotas.service.mapper.TipoProdutoMapper;
@@ -15,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +26,11 @@ import java.util.Optional;
 @Transactional
 public class TipoProdutoImpl implements TipoProdutoService {
     private final TipoProdutoRepository tipoProdutoRepository;
+    private final ProdutoRepository produtoRepository;
     private final TipoProdutoMapper tipoProdutoMapper;
-    public TipoProdutoImpl(TipoProdutoRepository tipoProdutoRepository, TipoProdutoMapper tipoProdutoMapper) {
+    public TipoProdutoImpl(TipoProdutoRepository tipoProdutoRepository, ProdutoRepository produtoRepository, TipoProdutoMapper tipoProdutoMapper) {
         this.tipoProdutoRepository = tipoProdutoRepository;
+        this.produtoRepository = produtoRepository;
         this.tipoProdutoMapper = tipoProdutoMapper;
     }
 
@@ -75,11 +79,17 @@ public class TipoProdutoImpl implements TipoProdutoService {
     public void delete(Long id) {
         TipoProduto tipoProduto = tipoProdutoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tipo de produto não encontrado com o ID", id));
-        if (tipoProduto.getId() == null) {
-            throw new BusinessException("Tipo de produto não existe!");
+
+        // Verifica se existe produtos associados a esse tipo de produto
+        long quantidadeProdutosAssociados = produtoRepository.countByTipoProdutoId(id);
+        if (quantidadeProdutosAssociados > 0) {
+            throw new BusinessException(
+                    String.format("Não é possível excluir este tipo de produto. Existem %d produto(s) cadastrado(s) com este tipo. Desative-o ao invés de excluir.",
+                            quantidadeProdutosAssociados)
+            );
         }
 
-        tipoProdutoRepository.deleteById(id);
+        tipoProdutoRepository.delete(tipoProduto);
 
     }
 
@@ -136,38 +146,92 @@ public class TipoProdutoImpl implements TipoProdutoService {
         return tipoProdutoMapper.toResponseDTO(updatedTipoProduto);
     }
 
+    // Desativar um tipo de produto
     @Override
     public void softDelete(Long id) {
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de produto não encontrado com o ID", id));
+        if (tipoProduto.getId() == null) {
+            throw new BusinessException("Tipo de produto não existe.");
+        }
 
+        tipoProduto.setAtivo(false);
+        tipoProdutoRepository.save(tipoProduto);
     }
 
+    // Ativar um tipo de produto
     @Override
     public void activate(Long id) {
-
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de produto não encontrado com o ID", id));
+        if (tipoProduto.getId() == null) {
+            throw new BusinessException("Tipo de produto não existe.");
+        }
+        tipoProduto.setAtivo(true);
+        tipoProdutoRepository.save(tipoProduto);
     }
 
+    // Buscar um tipo de produto por ID
     @Override
     public TipoProdutoResponseDTO findById(Long id) {
-        return null;
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de produto não encontrado com o ID", id));
+        return tipoProdutoMapper.toResponseDTO(tipoProduto);
     }
 
+    // Buscar todos os tipos de produtos
     @Override
     public List<TipoProdutoResponseDTO> findAll() {
-        return List.of();
+        List<TipoProduto> tipoProdutos = tipoProdutoRepository.findAll();
+        if(tipoProdutos.isEmpty()){
+            throw new EntityNotFoundException("Nenhum tipo de produto encontrado.");
+        }
+        return tipoProdutos.stream().map(tipoProdutoMapper::toResponseDTO).toList();
     }
 
+    // Buscar tipos de produtos por status (ativo/inativo)
     @Override
     public List<TipoProdutoResponseDTO> findByAtivoInativo(Boolean ativo) {
-        return List.of();
+        List<TipoProduto> tipoProdutos = tipoProdutoRepository.findByIsAtivo(ativo);
+        if(tipoProdutos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum tipo de produto encontrado com o status informado.");
+        }
+        return tipoProdutos.stream().map(tipoProdutoMapper::toResponseDTO).toList();
     }
 
+    // Buscar tipos de produtos por nome (contendo, case insensitive)
     @Override
-    public TipoProdutoResponseDTO findByNomeContainingIgnoreCase(String nome) {
-        return null;
+    public List<TipoProdutoResponseDTO> findByNomeContainingIgnoreCase(String nome) {
+        List<TipoProduto> tipoProdutos = tipoProdutoRepository.findByNomeContainingIgnoreCase(nome);
+        if(tipoProdutos.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum tipo de produto encontrado com o nome informado.");
+        }
+        return tipoProdutos.stream().map(tipoProdutoMapper::toResponseDTO).toList();
     }
 
+    // Buscar tipos de produtos criados entre duas datas
     @Override
     public List<TipoProdutoResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim) {
-        return List.of();
+        if (inicio == null || fim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (inicio.isAfter(fim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
+        List<TipoProduto> tipoProdutos = tipoProdutoRepository.findByCreatedAtBetween(inicio, fim);
+        if(tipoProdutos.isEmpty()) {
+            // Formata a data para o padrao brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = inicio.format(formatter);
+            String dataFimFormatada = fim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma tipo de produto encontrado entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
+        }
+        return tipoProdutos.stream().map(tipoProdutoMapper::toResponseDTO).toList();
     }
 }

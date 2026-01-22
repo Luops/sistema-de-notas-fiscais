@@ -13,6 +13,7 @@ public interface TipoProdutoRepository extends JpaRepository<TipoProduto, Long> 
 
     List<TipoProduto> findByIsAtivo(Boolean ativo);
     Optional<TipoProduto> findByNome(String nome);
-    Optional<TipoProduto> findByNomeContainingIgnoreCase(String nome);
+    List<TipoProduto> findByNomeContainingIgnoreCase(String nome);
     List<TipoProduto> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim);
+
 }
