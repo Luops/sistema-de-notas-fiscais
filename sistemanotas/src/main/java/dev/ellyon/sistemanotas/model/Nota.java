@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_nota")
@@ -26,17 +28,21 @@ public class Nota extends Entidade{
 
     @ManyToOne
     @JoinColumn(name = "empresa_id", nullable = false)
-    private Empresa empresaId;
+    private Empresa empresa;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente clienteId;
+    private Cliente cliente;
 
-    @Column(name = "data_emissao", nullable = false)
+    @Column(name = "data_emissao")
     private LocalDateTime dataEmissao;
 
     @Column(name = "data_cancelamento")
     private LocalDateTime dataCancelamento;
+
+    // Relacionamento com ItemNota
+    @OneToMany(mappedBy = "nota", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemNota> itens = new ArrayList<>();
 
     @Column(name = "valor_produtos", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorProdutos;
@@ -61,12 +67,12 @@ public class Nota extends Entidade{
     private Usuario createdBy;
 
     // Construtor padrão
-    protected Nota() {
+    public Nota() {
         super();
     }
 
     // Construtor com todos os atributos
-    public Nota(Long id, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresaId, Cliente clienteId,
+    public Nota(Long id, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
                 LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
                 BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
                 String protocoloAutorizacao, Usuario createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -75,8 +81,8 @@ public class Nota extends Entidade{
         this.serie = serie;
         this.tipo = tipo;
         this.status = status;
-        this.empresaId = empresaId;
-        this.clienteId = clienteId;
+        this.empresa = empresa;
+        this.cliente = cliente;
         this.dataEmissao = dataEmissao;
         this.dataCancelamento = dataCancelamento;
         this.valorProdutos = valorProdutos;
@@ -91,7 +97,7 @@ public class Nota extends Entidade{
     }
 
     // Construtor sem id e timestamps
-    public Nota(String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresaId, Cliente clienteId,
+    public Nota(String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
                 LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
                 BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
                 String protocoloAutorizacao, Usuario createdBy) {
@@ -99,8 +105,8 @@ public class Nota extends Entidade{
         this.serie = serie;
         this.tipo = tipo;
         this.status = status;
-        this.empresaId = empresaId;
-        this.clienteId = clienteId;
+        this.empresa = empresa;
+        this.cliente = cliente;
         this.dataEmissao = dataEmissao;
         this.dataCancelamento = dataCancelamento;
         this.valorProdutos = valorProdutos;
@@ -144,20 +150,20 @@ public class Nota extends Entidade{
         this.status = status;
     }
 
-    public Empresa getEmpresaId() {
-        return empresaId;
+    public Empresa getEmpresa() {
+        return empresa;
     }
 
-    public void setEmpresaId(Empresa empresaId) {
-        this.empresaId = empresaId;
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 
-    public Cliente getClienteId() {
-        return clienteId;
+    public Cliente getCliente() {
+        return cliente;
     }
 
-    public void setClienteId(Cliente clienteId) {
-        this.clienteId = clienteId;
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
     public LocalDateTime getDataEmissao() {
@@ -232,6 +238,22 @@ public class Nota extends Entidade{
         this.createdBy = createdBy;
     }
 
+    public List<ItemNota> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemNota> itens) {
+        this.itens = itens;
+    }
+
+    public Usuario getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Usuario createdBy) {
+        this.createdBy = createdBy;
+    }
+
     @Override
     public String toString() {
         return "Nota{" +
@@ -239,8 +261,8 @@ public class Nota extends Entidade{
                 ", serie='" + serie + '\'' +
                 ", tipo=" + tipo +
                 ", status=" + status +
-                ", empresaId=" + empresaId +
-                ", clienteId=" + clienteId +
+                ", empresa=" + empresa +
+                ", cliente=" + cliente +
                 ", dataEmissao=" + dataEmissao +
                 ", dataCancelamento=" + dataCancelamento +
                 ", valorProdutos=" + valorProdutos +

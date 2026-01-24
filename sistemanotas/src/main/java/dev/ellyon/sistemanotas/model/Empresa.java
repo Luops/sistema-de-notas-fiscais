@@ -179,6 +179,7 @@ public class Empresa extends Entidade{
     isAtivo = ativo;
   }
 
+
   @Override
   public String toString() {
     return "Empresa{" +
