@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 // Repositório JPA para a entidade. Fazer operações de CRUD no banco de dados.
@@ -23,4 +24,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar produtos por faixa de data de criação
 
     long countByTipoProdutoId(Long tipoProdutoId); // Contar produtos por tipo (Id)
+
+    Optional<Produto> findByIdAndIsAtivo(Long id, Boolean isAtivo); // Buscar produto por Id e status (Ativo/Inativo)
 }

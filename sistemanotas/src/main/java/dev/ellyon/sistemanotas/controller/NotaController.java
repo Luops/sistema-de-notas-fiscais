@@ -1,6 +1,7 @@
 package dev.ellyon.sistemanotas.controller;
 
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
+import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import dev.ellyon.sistemanotas.service.NotaService;
@@ -33,6 +34,21 @@ public class NotaController {
                 notaResponseDTO
         );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // Rota para adicionar item a nota
+    @PostMapping("/{notaId}/add-item")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> addItem(
+            @PathVariable Long notaId,
+            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO) {
+        NotaResponseDTO notaResponseDTO = notaService.addItem(notaId, itemNotaRequestDTO);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Item adicionado com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

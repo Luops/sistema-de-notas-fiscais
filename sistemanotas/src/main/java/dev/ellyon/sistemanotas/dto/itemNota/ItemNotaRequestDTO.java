@@ -9,15 +9,15 @@ public class ItemNotaRequestDTO {
     @NotNull(message = "ID do produto é obrigatório")
     private Long produtoId;
 
-    @NotBlank(message = "Quantidade é obrigatória")
-    private Integer quantidade;
+    @NotNull(message = "Quantidade é obrigatória")
+    private BigDecimal quantidade;
 
     private BigDecimal precoUnitario;
     private BigDecimal aliquotaIcms;
     private BigDecimal aliquotaPis;
     private BigDecimal aliquotaCofins;
 
-    public ItemNotaRequestDTO(Long produtoId, Integer quantidade, BigDecimal precoUnitario, BigDecimal aliquotaIcms, BigDecimal aliquotaPis, BigDecimal aliquotaCofins) {
+    public ItemNotaRequestDTO(Long produtoId, BigDecimal quantidade, BigDecimal precoUnitario, BigDecimal aliquotaIcms, BigDecimal aliquotaPis, BigDecimal aliquotaCofins) {
         this.produtoId = produtoId;
         this.quantidade = quantidade;
         this.precoUnitario = precoUnitario;
@@ -34,11 +34,11 @@ public class ItemNotaRequestDTO {
         this.produtoId = produtoId;
     }
 
-    public Integer getQuantidade() {
+    public BigDecimal getQuantidade() {
         return quantidade;
     }
 
-    public void setQuantidade(Integer quantidade) {
+    public void setQuantidade(BigDecimal quantidade) {
         this.quantidade = quantidade;
     }
 

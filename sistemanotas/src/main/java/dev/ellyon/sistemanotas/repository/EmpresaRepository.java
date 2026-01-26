@@ -26,4 +26,6 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
     List<Empresa> findByCep(String cep); // Retorna lista de empresas com o CEP
     List<Empresa> findByIsAtivo(Boolean ativo); // Retorna lista de empresas por status de ativo/inativo
     List<Empresa> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim); // Retorna lista de empresas criadas entre duas datas
+
+    Optional<Empresa> findByIdAndIsAtivo(Long id, Boolean isAtivo); // Retorna empresa por ID e status de ativo/inativo
 }

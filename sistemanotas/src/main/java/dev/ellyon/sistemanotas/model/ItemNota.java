@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Table(name = "tb_item_nota")
 public class ItemNota extends Entidade{
     @ManyToOne
-    @JoinColumn(name = "id_nota", nullable = false)
+    @JoinColumn(name = "nota_id", nullable = false)
     private Nota nota;
 
     @ManyToOne

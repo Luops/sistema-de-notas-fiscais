@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.dto.nota;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteSimpleResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaSimpleResponseDTO;
 import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaResponseDTO;
@@ -24,7 +25,11 @@ public class NotaResponseDTO {
     private BigDecimal valorTotal;
     private String observacoes;
     private UsuarioSimpleResponseDTO createdBy;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
 
     // construtor padrao
