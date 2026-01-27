@@ -24,4 +24,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     List<Cliente> findByIsAtivo(Boolean isAtivo); // Buscar cliente pelo
     List<Cliente> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar clientes por faixa de data de criação
     List<Cliente> findByNomeContainingIgnoreCase(String nome); // Buscar clientes por nome (contendo, case insensitive)
+
+    Optional<Cliente> findByIdAndIsAtivo(Long id, Boolean isAtivo); // Buscar cliente por Id e status (Ativo/Inativo)
 }

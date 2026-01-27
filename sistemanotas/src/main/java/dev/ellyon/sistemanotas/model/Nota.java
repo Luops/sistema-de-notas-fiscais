@@ -31,7 +31,7 @@ public class Nota extends Entidade{
     private Empresa empresa;
 
     @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
     @Column(name = "data_emissao")

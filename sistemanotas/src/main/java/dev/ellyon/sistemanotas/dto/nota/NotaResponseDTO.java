@@ -17,7 +17,9 @@ public class NotaResponseDTO {
     private String status;
     private EmpresaSimpleResponseDTO empresa;
     private ClienteSimpleResponseDTO cliente;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dataEmissao;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dataCancelamento;
     private ItemNotaResponseDTO[] itens;
     private BigDecimal valorProdutos;
@@ -25,10 +27,8 @@ public class NotaResponseDTO {
     private BigDecimal valorTotal;
     private String observacoes;
     private UsuarioSimpleResponseDTO createdBy;
-
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
-
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
 

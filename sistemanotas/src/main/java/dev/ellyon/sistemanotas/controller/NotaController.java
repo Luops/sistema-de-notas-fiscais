@@ -51,4 +51,63 @@ public class NotaController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // Rota para atualizar item da nota
+    @PutMapping("/{notaId}/update-item/{itemId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> updateItem(
+            @PathVariable Long notaId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO) {
+        NotaResponseDTO notaResponseDTO = notaService.updateItem(notaId, itemId, itemNotaRequestDTO);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Item atualizado com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para remover item da nota
+    @DeleteMapping("/{notaId}/remove-item/{itemId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> removeItem(
+            @PathVariable Long notaId,
+            @PathVariable Long itemId) {
+        NotaResponseDTO notaResponseDTO = notaService.removeItem(notaId, itemId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Item removido com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para emitir nota
+    @PostMapping("/{notaId}/emitir")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> emitirNota(@PathVariable Long notaId) {
+        NotaResponseDTO notaResponseDTO = notaService.emitirNota(notaId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Nota emitida com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para atualizar dados da nota
+    @PutMapping("/update/{notaId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> updateNota(
+            @PathVariable Long notaId,
+            @RequestBody @Valid NotaRequestDTO dto) {
+        NotaResponseDTO notaResponseDTO = notaService.updateNota(notaId, dto);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Nota atualizada com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

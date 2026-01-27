@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -203,4 +204,269 @@ public class NotaServiceImpl implements NotaService {
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
     }
+
+    // atualizar item da nota
+    @Override
+    public NotaResponseDTO updateItem(Long notaId, Long itemId, ItemNotaRequestDTO itemNotaRequestDTO) {
+        Map<String, String> errors = new HashMap<>();
+
+        // 1. Verificar se a nota existe e está em rascunho
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        if (nota.getStatus() != StatusNota.RASCUNHO) {
+            errors.put("nota", "Só é possível atualizar itens em notas com status RASCUNHO");
+        }
+
+        // 2. Verificar se o item existe na nota
+        ItemNota itemNota = nota.getItens().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("ItemNota", itemId));
+
+        // ========================================
+        // GUARDAR VALORES ANTIGOS ANTES DE ALTERAR
+        // ========================================
+        BigDecimal subTotalAntigo = itemNota.getSubtotal();
+        BigDecimal valorImpostosAntigo = itemNota.getValorIcms()
+                .add(itemNota.getValorPis())
+                .add(itemNota.getValorCofins());
+
+        // 3. Validar quantidade
+        if (itemNotaRequestDTO.getQuantidade() == null || itemNotaRequestDTO.getQuantidade().compareTo(BigDecimal.ZERO) <= 0) {
+            errors.put("quantidade", "Quantidade deve ser maior que zero");
+        }
+
+        // 4. Validar preço unitário
+        BigDecimal precoParaValidar = itemNotaRequestDTO.getPrecoUnitario();
+        if (precoParaValidar == null) {
+            // Se não informado, usa o preço do produto
+            precoParaValidar = itemNota.getProduto().getPrecoVenda();
+            if (precoParaValidar == null) {
+                errors.put("precoUnitario", "Preço unitário não informado e produto não possui preço de venda cadastrado");
+            }
+        }
+        if (precoParaValidar != null && precoParaValidar.compareTo(BigDecimal.ZERO) <= 0) {
+            errors.put("precoUnitario", "Preço unitário deve ser maior que zero");
+        }
+
+        // 5. Valida as alíquotas (se informadas)
+        if (itemNotaRequestDTO.getAliquotaIcms() != null && itemNotaRequestDTO.getAliquotaIcms().compareTo(BigDecimal.ZERO) < 0) {
+            errors.put("aliquotaIcms", "Alíquota ICMS não pode ser negativa");
+        }
+        if (itemNotaRequestDTO.getAliquotaPis() != null && itemNotaRequestDTO.getAliquotaPis().compareTo(BigDecimal.ZERO) < 0) {
+            errors.put("aliquotaPis", "Alíquota PIS não pode ser negativa");
+        }
+        if (itemNotaRequestDTO.getAliquotaCofins() != null && itemNotaRequestDTO.getAliquotaCofins().compareTo(BigDecimal.ZERO) < 0) {
+            errors.put("aliquotaCofins", "Alíquota COFINS não pode ser negativa");
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // 6. Atualizar campos do item
+        itemNota.setQuantidade(itemNotaRequestDTO.getQuantidade());
+
+        if (itemNotaRequestDTO.getPrecoUnitario() != null) {
+            itemNota.setPrecoUnitario(itemNotaRequestDTO.getPrecoUnitario());
+        } else {
+            // Usa o preço do produto se não foi informado
+            itemNota.setPrecoUnitario(itemNota.getProduto().getPrecoVenda());
+        }
+
+        if (itemNotaRequestDTO.getAliquotaIcms() != null) {
+            itemNota.setAliquotaIcms(itemNotaRequestDTO.getAliquotaIcms());
+        }
+        if (itemNotaRequestDTO.getAliquotaPis() != null) {
+            itemNota.setAliquotaPis(itemNotaRequestDTO.getAliquotaPis());
+        }
+        if (itemNotaRequestDTO.getAliquotaCofins() != null) {
+            itemNota.setAliquotaCofins(itemNotaRequestDTO.getAliquotaCofins());
+        }
+
+        // 7. Recalcular totais da nota
+        // Subtrai valores antigos
+        nota.setValorProdutos(nota.getValorProdutos().subtract(subTotalAntigo));
+        nota.setValorImpostosTotal(nota.getValorImpostosTotal().subtract(valorImpostosAntigo));
+
+        // Adiciona valores novos
+        BigDecimal subTotalNovo = itemNota.getSubtotal();
+        BigDecimal valorImpostosNovo = itemNota.getValorIcms()
+                .add(itemNota.getValorPis())
+                .add(itemNota.getValorCofins());
+
+        nota.setValorProdutos(nota.getValorProdutos().add(subTotalNovo));
+        nota.setValorImpostosTotal(nota.getValorImpostosTotal().add(valorImpostosNovo));
+        nota.setValorTotal(nota.getValorProdutos().add(nota.getValorImpostosTotal()));
+
+        // 8. Salvar e retornar
+        Nota notaAtualizada = notaRepository.save(nota);
+        return notaMapper.toResponseDTO(notaAtualizada);
+    }
+
+    // remover item da nota
+    @Override
+    public NotaResponseDTO removeItem(Long notaId, Long itemId) {
+        Map<String, String> errors = new HashMap<>();
+
+        // 1. Verificar se a nota existe e está em rascunho
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        if (nota.getStatus() != StatusNota.RASCUNHO) {
+            errors.put("nota", "Só é possível remover itens em notas com status RASCUNHO");
+        }
+
+        // 2. Verificar se o item existe na nota
+        ItemNota itemNota = nota.getItens().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("ItemNota", itemId));
+
+        // 3. Remover item da nota
+        nota.getItens().remove(itemNota);
+
+        // 4. Recalcular totais da nota
+        nota.setValorProdutos(nota.getValorProdutos().subtract(itemNota.getSubtotal()));
+        BigDecimal valorImpostosItem = itemNota.getValorIcms()
+                .add(itemNota.getValorPis())
+                .add(itemNota.getValorCofins());
+        nota.setValorImpostosTotal(nota.getValorImpostosTotal().subtract(valorImpostosItem));
+        nota.setValorTotal(nota.getValorProdutos().add(nota.getValorImpostosTotal()));
+
+        // 5. Salvar e retornar
+        Nota notaAtualizada = notaRepository.save(nota);
+        return notaMapper.toResponseDTO(notaAtualizada);
+
+    }
+
+    // emitir nota
+    @Override
+    public NotaResponseDTO emitirNota(Long notaId) {
+        Map<String, String> errors = new HashMap<>();
+        // 1. Verificar se a nota existe e está em rascunho
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        if (nota.getStatus() != StatusNota.RASCUNHO) {
+            errors.put("nota", "Só é possível emitir notas com status RASCUNHO");
+        }
+
+        // 2. Verificar se a nota possui pelo menos um item
+        if (nota.getItens().isEmpty()) {
+            errors.put("itens", "Não é possível emitir nota sem itens");
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // 3. Atualizar status e data de emissão
+        nota.setStatus(StatusNota.EMITIDA);
+        LocalDateTime now = LocalDateTime.now();
+        nota.setDataEmissao(now);
+
+        // 4. Salvar e retornar
+        Nota notaAtualizada = notaRepository.save(nota);
+        return notaMapper.toResponseDTO(notaAtualizada);
+
+    }
+
+    // atualizar dados da nota
+    @Override
+    public NotaResponseDTO updateNota(Long notaId, NotaRequestDTO dto) {
+        Map<String, String> errors = new HashMap<>();
+
+        // 1. Verificar se a nota existe e está em rascunho
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        if (nota.getStatus() != StatusNota.RASCUNHO) {
+            errors.put("nota", "Só é possível atualizar notas com status RASCUNHO");
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // 2. Atualizar campos permitidos
+        // Validar observações
+        if (dto.getObservacoes() != null && dto.getObservacoes().length() > 500) {
+            errors.put("observacoes", "Observações devem ter no máximo 500 caracteres");
+        }
+
+        // Atualizar empresa (se informado)
+        Empresa novaEmpresa = null;
+        if (dto.getEmpresaId() != null) {
+            novaEmpresa = empresaRepository.findByIdAndIsAtivo(dto.getEmpresaId(), true)
+                    .orElseGet(() -> {
+                        errors.put("empresaId", "Empresa não encontrada ou inativa");
+                        return null;
+                    });
+        }
+
+        // Validar usuário (se informado)
+        Usuario novoUsuario = null;
+        if (dto.getUsuarioId() != null) {
+            novoUsuario = usuarioRepository.findByIdAndIsAtivo(dto.getUsuarioId(), true)
+                    .orElseGet(() -> {
+                        errors.put("usuarioId", "Usuário não encontrado ou inativo");
+                        return null;
+                    });
+        }
+
+        // Validar cliente (se informado)
+        Cliente novoCliente = null;
+        if (dto.getClienteId() != null) {
+            novoCliente = clienteRepository.findByIdAndIsAtivo(dto.getClienteId(), true)
+                    .orElseGet(() -> {
+                        errors.put("clienteId", "Cliente não encontrado ou inativo");
+                        return null;
+                    });
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // 3. Atualizar campos
+        nota.setObservacoes(dto.getObservacoes());
+
+        // Atualizar empresa (se informada e diferente da atual)
+        if (dto.getEmpresaId() != null) {
+            if (nota.getEmpresa() == null || !dto.getEmpresaId().equals(nota.getEmpresa().getId())) {
+                nota.setEmpresa(novaEmpresa);
+            }
+        }
+
+        // Atualizar usuário (se informado e diferente do atual)
+        if (dto.getUsuarioId() != null) {
+            if (nota.getCreatedBy() == null || !dto.getUsuarioId().equals(nota.getCreatedBy().getId())) {
+                nota.setCreatedBy(novoUsuario);
+            }
+        }
+
+        // Atualizar cliente (permite null para remover)
+        if (dto.getClienteId() != null) {
+            // Se informado, atualiza apenas se for diferente
+            if (nota.getCliente() == null || !dto.getClienteId().equals(nota.getCliente().getId())) {
+                nota.setCliente(novoCliente);
+            }
+        } else {
+            // Se não informado (null), remove o cliente da nota
+            nota.setCliente(null);
+        }
+
+        // Retirar data de cancelamento e emissao se houver
+        nota.setDataCancelamento(null);
+        nota.setDataEmissao(null);
+
+        // 4. Salvar e retornar
+        Nota notaAtualizada = notaRepository.save(nota);
+        return notaMapper.toResponseDTO(notaAtualizada);
+
+    }
+
+
 }
