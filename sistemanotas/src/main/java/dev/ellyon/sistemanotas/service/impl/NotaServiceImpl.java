@@ -1,6 +1,7 @@
 package dev.ellyon.sistemanotas.service.impl;
 
 import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaRequestDTO;
+import dev.ellyon.sistemanotas.dto.nota.NotaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
@@ -13,12 +14,16 @@ import dev.ellyon.sistemanotas.repository.*;
 import dev.ellyon.sistemanotas.service.NotaService;
 import dev.ellyon.sistemanotas.service.mapper.NotaMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -468,5 +473,79 @@ public class NotaServiceImpl implements NotaService {
 
     }
 
+    // cancelar nota
+    @Override
+    public void cancelarNota(Long notaId) {
+        Map<String, String> errors = new HashMap<>();
 
+        // 1. Verificar se a nota existe e está emitida
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        if (nota.getStatus() == StatusNota.CANCELADA) {
+            errors.put("nota", "Só é possível cancelar notas com status EMITIDA ou RASCUNHO");
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // 2. Atualizar status e data de cancelamento
+        nota.setStatus(StatusNota.CANCELADA);
+        LocalDateTime now = LocalDateTime.now();
+        nota.setDataCancelamento(now);
+
+        // 3. Salvar
+        notaRepository.save(nota);
+
+
+    }
+
+    // buscar nota por ID
+    @Override
+    public NotaResponseDTO findById(Long notaId) {
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+        return notaMapper.toResponseDTO(nota);
+    }
+
+    // buscar todas as notas
+    @Override
+    public List<NotaListResponseDTO> findAll() {
+        List<Nota> notas = notaRepository.findAll();
+
+
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar todas as notas com paginação
+    @Override
+    public Page<NotaListResponseDTO> findAllPaged(Pageable pageable) {
+        Page<Nota> notasPage = notaRepository.findAll(pageable);
+        if (notasPage.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma nota encontrada.");
+        }
+
+        return notasPage.map(notaMapper::toListResponseDTO);
+    }
+
+    // buscar nota por número e empresa
+    @Override
+    public NotaResponseDTO findByNumeroAndEmpresaId(Long empresaId, String numero) {
+        // Validações
+        if (numero == null || numero.isBlank()) {
+            throw new IllegalArgumentException("Número da nota é obrigatório");
+        }
+        if (empresaId == null) {
+            throw new IllegalArgumentException("ID da empresa é obrigatório");
+        }
+
+        Nota nota = notaRepository.findByNumeroAndEmpresaId(numero, empresaId);
+        if (nota == null) {
+            throw new EntityNotFoundException(
+                    "Nota com número " + numero + " não encontrada para a empresa " + empresaId
+            );
+        }
+        return notaMapper.toResponseDTO(nota);
+    }
 }

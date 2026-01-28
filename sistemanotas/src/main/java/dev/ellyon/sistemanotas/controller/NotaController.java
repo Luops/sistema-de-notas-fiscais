@@ -2,10 +2,15 @@ package dev.ellyon.sistemanotas.controller;
 
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
 import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaRequestDTO;
+import dev.ellyon.sistemanotas.dto.nota.NotaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import dev.ellyon.sistemanotas.service.NotaService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -110,4 +115,65 @@ public class NotaController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // Rota para cancelar nota
+    @PutMapping("/cancel/{notaId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> cancelarNota(@PathVariable Long notaId) {
+        notaService.cancelarNota(notaId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Nota cancelada com sucesso",
+                null
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar nota por ID
+    @GetMapping("/findById/{notaId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long notaId) {
+        NotaResponseDTO notaResponseDTO = notaService.findById(notaId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Nota encontrada com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar todas as notas
+    @GetMapping("/findAll")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> findAll() {
+        List<NotaListResponseDTO> notas = notaService.findAll();
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar todas as notas com paginação
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<NotaListResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Page<NotaListResponseDTO> notas = notaService.findAllPaged(pageable);
+        return ResponseEntity.ok(notas);
+    }
+
+    // Rota para buscar nota por número e empresa
+    @GetMapping
+    public ResponseEntity<SuccessResponseDTO> findByNumeroAndEmpresaId(
+            @RequestParam(required = true) Long empresaId,
+            @RequestParam(required = true) String numero) {
+        NotaResponseDTO notaResponseDTO = notaService.findByNumeroAndEmpresaId(empresaId, numero);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Nota encontrada com sucesso",
+                notaResponseDTO
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

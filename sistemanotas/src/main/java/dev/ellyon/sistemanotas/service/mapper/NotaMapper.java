@@ -3,6 +3,7 @@ package dev.ellyon.sistemanotas.service.mapper;
 import dev.ellyon.sistemanotas.dto.cliente.ClienteSimpleResponseDTO;
 import dev.ellyon.sistemanotas.dto.empresa.EmpresaSimpleResponseDTO;
 import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaResponseDTO;
+import dev.ellyon.sistemanotas.dto.nota.NotaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import dev.ellyon.sistemanotas.dto.usuario.UsuarioSimpleResponseDTO;
 import dev.ellyon.sistemanotas.model.Cliente;
@@ -73,6 +74,21 @@ public class NotaMapper {
                 createdByDTO,
                 nota.getCreatedAt(),
                 nota.getUpdatedAt()
+        );
+    }
+
+    public NotaListResponseDTO toListResponseDTO(Nota nota) {
+        if (nota == null) {
+            return null;
+        }
+        return new NotaListResponseDTO(
+                nota.getId(),
+                nota.getNumero(),
+                nota.getTipo().toString(),
+                nota.getStatus().toString(),
+                nota.getCliente().getNome().trim(),
+                nota.getCliente().getTipoPessoa().toString(),
+                nota.getDataEmissao()
         );
     }
 }

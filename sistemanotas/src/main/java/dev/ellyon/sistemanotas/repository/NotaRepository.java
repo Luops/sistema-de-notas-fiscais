@@ -15,4 +15,5 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
         WHERE n.empresa.id = :empresaId
     """)
     Integer findUltimoNumeroPorEmpresa(@Param("empresaId") Long empresaId);
+    Nota findByNumeroAndEmpresaId(@Param("numero") String numero, @Param("empresaId") Long empresaId);
 }
