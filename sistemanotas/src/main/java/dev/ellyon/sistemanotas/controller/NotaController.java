@@ -176,4 +176,126 @@ public class NotaController {
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    // Rota para buscar notas por tipo
+    @GetMapping("/tipo/{tipo}")
+    public ResponseEntity<SuccessResponseDTO> findByTipo(@PathVariable String tipo) {
+        List<NotaListResponseDTO> notas = notaService.findByTipo(tipo);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar notas por status
+    @GetMapping("/status/{status}")
+    public ResponseEntity<SuccessResponseDTO> findByStatus(@PathVariable String status) {
+        List<NotaListResponseDTO> notas = notaService.findByStatus(status);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar notas por empresa
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<SuccessResponseDTO> findByEmpresaId(@PathVariable Long empresaId) {
+        List<NotaListResponseDTO> notas = notaService.findByEmpresaId(empresaId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar notas por cliente
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<SuccessResponseDTO> findByClienteId(@PathVariable Long clienteId) {
+        List<NotaListResponseDTO> notas = notaService.findByClienteId(clienteId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar notas por usuário que criou
+    @GetMapping("/created-by/{userId}")
+    public ResponseEntity<SuccessResponseDTO> findByCreatedByUserId(@PathVariable Long userId) {
+        List<NotaListResponseDTO> notas = notaService.findByCreatedByUserId(userId);
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // Rota para buscar notas por intervalo de datas de emissão
+    @GetMapping("/data-emissao")
+    public ResponseEntity<SuccessResponseDTO> findByDataEmissaoBetween(
+            @RequestParam(value = "dataInicio", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+
+            @RequestParam(value = "dataFim", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) {
+        // Validar se ambos foram enviados
+        if (dataInicio == null || dataFim == null) {
+            throw new IllegalArgumentException(
+                    "Os parâmetros 'dataInicio' e 'dataFim' são obrigatórios. " +
+                            "Formato: YYYY-MM-DD. Exemplo: ?dataInicio=2026-01-01&dataFim=2026-01-31"
+            );
+        }
+
+        // Converte LocalDate para LocalDateTime
+        LocalDateTime dataInicioTime = dataInicio.atStartOfDay();
+        LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);
+
+        List<NotaListResponseDTO> notas = notaService.findByDataEmissaoBetween(dataInicioTime, dataFimTime);
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar notas por intervalo de datas de emissão
+    @GetMapping("/data-cancelamento")
+    public ResponseEntity<SuccessResponseDTO> findByDataCancelamentoBetween(
+            @RequestParam(value = "dataInicio", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+
+            @RequestParam(value = "dataFim", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) {
+        // Validar se ambos foram enviados
+        if (dataInicio == null || dataFim == null) {
+            throw new IllegalArgumentException(
+                    "Os parâmetros 'dataInicio' e 'dataFim' são obrigatórios. " +
+                            "Formato: YYYY-MM-DD. Exemplo: ?dataInicio=2026-01-01&dataFim=2026-01-31"
+            );
+        }
+
+        // Converte LocalDate para LocalDateTime
+        LocalDateTime dataInicioTime = dataInicio.atStartOfDay();
+        LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);
+
+        List<NotaListResponseDTO> notas = notaService.findByDataCancelamentoBetween(dataInicioTime, dataFimTime);
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
 }

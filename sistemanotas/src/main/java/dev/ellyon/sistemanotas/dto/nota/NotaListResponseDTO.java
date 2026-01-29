@@ -2,6 +2,7 @@ package dev.ellyon.sistemanotas.dto.nota;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class NotaListResponseDTO {
@@ -11,8 +12,11 @@ public class NotaListResponseDTO {
     private String status;
     private String clienteNome;
     private String tipoCliente;
+    private BigDecimal valorTotal;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dataEmissao;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime dataCancelamento;
 
     // Construtor padrão
     public NotaListResponseDTO() {
@@ -20,16 +24,16 @@ public class NotaListResponseDTO {
     }
 
     // Construtor completo
-
-
-    public NotaListResponseDTO(Long id, String numero, String tipo, String status, String clienteNome, String tipoCliente, LocalDateTime dataEmissao) {
+    public NotaListResponseDTO(Long id, String numero, String tipo, String status, String clienteNome, String tipoCliente, BigDecimal valorTotal, LocalDateTime dataEmissao, LocalDateTime dataCancelamento) {
         this.id = id;
         this.numero = numero;
         this.tipo = tipo;
         this.status = status;
         this.clienteNome = clienteNome;
         this.tipoCliente = tipoCliente;
+        this.valorTotal = valorTotal;
         this.dataEmissao = dataEmissao;
+        this.dataCancelamento = dataCancelamento;
     }
 
     public Long getId() {
@@ -64,14 +68,6 @@ public class NotaListResponseDTO {
         this.status = status;
     }
 
-    public String getTipoCliente() {
-        return tipoCliente;
-    }
-
-    public void setTipoCliente(String tipoCliente) {
-        this.tipoCliente = tipoCliente;
-    }
-
     public String getClienteNome() {
         return clienteNome;
     }
@@ -80,11 +76,35 @@ public class NotaListResponseDTO {
         this.clienteNome = clienteNome;
     }
 
+    public String getTipoCliente() {
+        return tipoCliente;
+    }
+
+    public void setTipoCliente(String tipoCliente) {
+        this.tipoCliente = tipoCliente;
+    }
+
+    public BigDecimal getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
+    }
+
     public LocalDateTime getDataEmissao() {
         return dataEmissao;
     }
 
     public void setDataEmissao(LocalDateTime dataEmissao) {
         this.dataEmissao = dataEmissao;
+    }
+
+    public LocalDateTime getDataCancelamento() {
+        return dataCancelamento;
+    }
+
+    public void setDataCancelamento(LocalDateTime dataCancelamento) {
+        this.dataCancelamento = dataCancelamento;
     }
 }

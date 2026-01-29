@@ -24,6 +24,7 @@ public class NotaResponseDTO {
     private ItemNotaResponseDTO[] itens;
     private BigDecimal valorProdutos;
     private BigDecimal valorImpostosTotal;
+    private BigDecimal frete;
     private BigDecimal valorTotal;
     private String observacoes;
     private UsuarioSimpleResponseDTO createdBy;
@@ -38,7 +39,7 @@ public class NotaResponseDTO {
     }
 
     // construtor completo
-    public NotaResponseDTO(Long id, String numero, String serie, String tipo, String status, EmpresaSimpleResponseDTO empresa, ClienteSimpleResponseDTO cliente, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, ItemNotaResponseDTO[] itens, BigDecimal valorProdutos, BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, UsuarioSimpleResponseDTO createdBy,  LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public NotaResponseDTO(Long id, String numero, String serie, String tipo, String status, EmpresaSimpleResponseDTO empresa, ClienteSimpleResponseDTO cliente, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, ItemNotaResponseDTO[] itens, BigDecimal valorProdutos, BigDecimal valorImpostosTotal, BigDecimal frete, BigDecimal valorTotal, String observacoes, UsuarioSimpleResponseDTO createdBy,  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.numero = numero;
         this.serie = serie;
@@ -51,6 +52,7 @@ public class NotaResponseDTO {
         this.itens = itens;
         this.valorProdutos = valorProdutos;
         this.valorImpostosTotal = valorImpostosTotal;
+        this.frete = frete;
         this.valorTotal = valorTotal;
         this.observacoes = observacoes;
         this.createdBy = createdBy;
@@ -152,6 +154,14 @@ public class NotaResponseDTO {
 
     public void setValorImpostosTotal(BigDecimal valorImpostosTotal) {
         this.valorImpostosTotal = valorImpostosTotal;
+    }
+
+    public BigDecimal getFrete() {
+        return frete;
+    }
+
+    public void setFrete(BigDecimal frete) {
+        this.frete = frete;
     }
 
     public BigDecimal getValorTotal() {

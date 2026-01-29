@@ -69,6 +69,7 @@ public class NotaMapper {
                 itensDTO,
                 nota.getValorProdutos(),
                 nota.getValorImpostosTotal(),
+                nota.getFrete(),
                 nota.getValorTotal(),
                 nota.getObservacoes(),
                 createdByDTO,
@@ -88,7 +89,9 @@ public class NotaMapper {
                 nota.getStatus().toString(),
                 nota.getCliente().getNome().trim(),
                 nota.getCliente().getTipoPessoa().toString(),
-                nota.getDataEmissao()
+                nota.getValorTotal(),
+                nota.getDataEmissao(),
+                nota.getDataCancelamento()
         );
     }
 }

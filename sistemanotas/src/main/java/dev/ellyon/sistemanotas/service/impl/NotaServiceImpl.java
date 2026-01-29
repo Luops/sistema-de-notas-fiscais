@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -463,6 +464,19 @@ public class NotaServiceImpl implements NotaService {
             nota.setCliente(null);
         }
 
+        // Atualizar frete (se informado)
+        BigDecimal freteAtual = nota.getFrete() != null ? nota.getFrete() : BigDecimal.ZERO;
+        BigDecimal novoFrete = dto.getFrete() != null ? dto.getFrete() : BigDecimal.ZERO;
+
+        // Atualizar frete
+        nota.setFrete(novoFrete);
+
+        // Recalcular valor total: valorProdutos + valorImpostos + frete
+        BigDecimal valorProdutos = nota.getValorProdutos() != null ? nota.getValorProdutos() : BigDecimal.ZERO;
+        BigDecimal valorImpostos = nota.getValorImpostosTotal() != null ? nota.getValorImpostosTotal() : BigDecimal.ZERO;
+
+        nota.setValorTotal(valorProdutos.add(valorImpostos).add(novoFrete));
+
         // Retirar data de cancelamento e emissao se houver
         nota.setDataCancelamento(null);
         nota.setDataEmissao(null);
@@ -547,5 +561,140 @@ public class NotaServiceImpl implements NotaService {
             );
         }
         return notaMapper.toResponseDTO(nota);
+    }
+
+    // buscar notas por tipo
+    @Override
+    public List<NotaListResponseDTO> findByTipo(String tipo) {
+        // Validar tipo
+        TipoNota tipoNota;
+        try {
+            tipoNota = TipoNota.valueOf(tipo.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Tipo de nota inválido. Valores permitidos: ENTRADA, SAIDA, NFE, NFCE, NFSE");
+        }
+        List<Nota> notas = notaRepository.findAll().stream()
+                .filter(nota -> nota.getTipo() == tipoNota)
+                .collect(Collectors.toList());
+        if (notas.isEmpty()){
+            throw new EntityNotFoundException("Nenhuma nota encontrada para o tipo: " + tipo);
+        }
+
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar notas por status
+    @Override
+    public List<NotaListResponseDTO> findByStatus(String status) {
+        // Validar status
+        StatusNota statusNota;
+        try {
+            statusNota = StatusNota.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Status de nota inválido. Valores permitidos: RASCUNHO, EMITIDA, CANCELADA");
+        }
+        List<Nota> notas = notaRepository.findAll().stream()
+                .filter(nota -> nota.getStatus() == statusNota)
+                .collect(Collectors.toList());
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma nota encontrada para o status: " + status);
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar notas por empresa
+    @Override
+    public List<NotaListResponseDTO> findByEmpresaId(Long empresaId) {
+        List<Nota> notas = notaRepository.findAll().stream()
+                .filter(nota -> nota.getEmpresa().getId().equals(empresaId))
+                .collect(Collectors.toList());
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma nota encontrada para a empresa ID: " + empresaId);
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar notas por cliente
+    @Override
+    public List<NotaListResponseDTO> findByClienteId(Long clienteId) {
+        List<Nota> notas = notaRepository.findAll().stream()
+                .filter(nota -> nota.getCliente() != null && nota.getCliente().getId().equals(clienteId))
+                .collect(Collectors.toList());
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma nota encontrada para o cliente ID: " + clienteId);
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar notas por usuário que criou
+    @Override
+    public List<NotaListResponseDTO> findByCreatedByUserId(Long userId) {
+        List<Nota> notas = notaRepository.findAll().stream()
+                .filter(nota -> nota.getCreatedBy() != null && nota.getCreatedBy().getId().equals(userId))
+                .collect(Collectors.toList());
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma nota encontrada para o usuário ID: " + userId);
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
+
+    // buscar notas por intervalo de datas de emissão
+    @Override
+    public List<NotaListResponseDTO> findByDataEmissaoBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
+        List<Nota> notas = notaRepository.findByDataEmissaoBetweenOrderByDataEmissaoDesc(dataInicio, dataFim);
+
+        // Formatação das datas para exibição na mensagem de erro
+        if (notas.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = dataInicio.format(formatter);
+            String dataFimFormatada = dataFim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma nota encontrada entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
+        }
+
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+
+    }
+
+    // buscar notas por intervalo de datas de cancelamento
+    @Override
+    public List<NotaListResponseDTO> findByDataCancelamentoBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
+        List<Nota> notas = notaRepository.findByDataCancelamentoBetweenOrderByDataCancelamentoDesc(dataInicio, dataFim);
+
+        // Formatação das datas para exibição na mensagem de erro
+        if (notas.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = dataInicio.format(formatter);
+            String dataFimFormatada = dataFim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma nota encontrada entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
+        }
+
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+
     }
 }

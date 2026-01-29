@@ -3,6 +3,8 @@ package dev.ellyon.sistemanotas.dto.nota;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 public class NotaRequestDTO {
     @NotNull(message = "ID da empresa é obrigatório")
     private Long empresaId;
@@ -12,13 +14,16 @@ public class NotaRequestDTO {
     @NotNull(message = "ID do usuario é obrigatório")
     private Long usuarioId;
 
+    private BigDecimal frete;
+
     @Size(max = 500, message = "Observações devem ter no máximo 500 caracteres")
     private String observacoes;
 
-    public NotaRequestDTO(Long empresaId, Long clienteId, Long usuarioId, String observacoes) {
+    public NotaRequestDTO(Long empresaId, Long clienteId, Long usuarioId, BigDecimal frete, String observacoes) {
         this.empresaId = empresaId;
         this.clienteId = clienteId;
         this.usuarioId = usuarioId;
+        this.frete = frete;
         this.observacoes = observacoes;
     }
 
@@ -44,6 +49,14 @@ public class NotaRequestDTO {
 
     public void setUsuarioId(Long usuarioId) {
         this.usuarioId = usuarioId;
+    }
+
+    public BigDecimal getFrete() {
+        return frete;
+    }
+
+    public void setFrete(BigDecimal frete) {
+        this.frete = frete;
     }
 
     public String getObservacoes() {

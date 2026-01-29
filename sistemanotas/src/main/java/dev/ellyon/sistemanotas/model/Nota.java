@@ -66,6 +66,9 @@ public class Nota extends Entidade{
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private Usuario createdBy;
 
+    @Column(name = "frete", precision = 15, scale = 2)
+    private BigDecimal frete;
+
     // Construtor padrão
     public Nota() {
         super();
@@ -75,7 +78,7 @@ public class Nota extends Entidade{
     public Nota(Long id, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
                 LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
                 BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
-                String protocoloAutorizacao, Usuario createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                String protocoloAutorizacao, Usuario createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, BigDecimal frete) {
         this.id = id;
         this.numero = numero;
         this.serie = serie;
@@ -94,13 +97,14 @@ public class Nota extends Entidade{
         this.createdBy = createdBy;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.frete = frete;
     }
 
     // Construtor sem id e timestamps
     public Nota(String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
                 LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
                 BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
-                String protocoloAutorizacao, Usuario createdBy) {
+                String protocoloAutorizacao, Usuario createdBy, BigDecimal frete) {
         this.numero = numero;
         this.serie = serie;
         this.tipo = tipo;
@@ -116,6 +120,7 @@ public class Nota extends Entidade{
         this.chaveAcesso = chaveAcesso;
         this.protocoloAutorizacao = protocoloAutorizacao;
         this.createdBy = createdBy;
+        this.frete = frete;
     }
 
     public String getNumero() {
@@ -252,6 +257,14 @@ public class Nota extends Entidade{
 
     public void setCreatedBy(Usuario createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public BigDecimal getFrete() {
+        return frete;
+    }
+
+    public void setFrete(BigDecimal frete) {
+        this.frete = frete;
     }
 
     @Override

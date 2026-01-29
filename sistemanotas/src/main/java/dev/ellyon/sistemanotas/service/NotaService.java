@@ -7,6 +7,7 @@ import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NotaService {
@@ -25,4 +26,11 @@ public interface NotaService {
     List<NotaListResponseDTO> findAll(); // Buscar todas as notas
     Page<NotaListResponseDTO> findAllPaged(Pageable pageable); // Buscar todas as notas com paginação
     NotaResponseDTO findByNumeroAndEmpresaId(Long empresaId, String numero); // Buscar nota por número e empresa
+    List<NotaListResponseDTO> findByTipo(String tipo); // Buscar notas por tipo
+    List<NotaListResponseDTO> findByStatus(String status); // Buscar notas por status
+    List<NotaListResponseDTO> findByEmpresaId(Long empresaId); // Buscar notas por empresa
+    List<NotaListResponseDTO> findByClienteId(Long clienteId); // Buscar notas por cliente
+    List<NotaListResponseDTO> findByCreatedByUserId(Long userId); // Buscar notas por usuário que criou
+    List<NotaListResponseDTO> findByDataEmissaoBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar notas por intervalo de datas de emissão
+    List<NotaListResponseDTO> findByDataCancelamentoBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar notas por intervalo de datas de cancelamento
 }
