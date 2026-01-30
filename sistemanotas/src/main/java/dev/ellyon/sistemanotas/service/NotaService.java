@@ -7,6 +7,7 @@ import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,4 +34,6 @@ public interface NotaService {
     List<NotaListResponseDTO> findByCreatedByUserId(Long userId); // Buscar notas por usuário que criou
     List<NotaListResponseDTO> findByDataEmissaoBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar notas por intervalo de datas de emissão
     List<NotaListResponseDTO> findByDataCancelamentoBetween(LocalDateTime dataInicio, LocalDateTime dataFim); // Buscar notas por intervalo de datas de cancelamento
+    List<NotaListResponseDTO> findByValorTotalBetween(BigDecimal valorMinimo, BigDecimal valorMaximo); // Buscar notas por intervalo de valor total
+    List<NotaListResponseDTO> findByValorImpostosTotalBetween(BigDecimal valorMinimo, BigDecimal valorMaximo); // Buscar notas por intervalo de valor total de impostos
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,5 +29,15 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
     List<Nota> findByDataCancelamentoBetweenOrderByDataCancelamentoDesc(
             LocalDateTime dataInicio,
             LocalDateTime dataFim
+    );
+
+    List<Nota> findByValorTotalBetweenOrderByValorTotalDesc(
+            BigDecimal valorMinimo,
+            BigDecimal valorMaximo
+    );
+
+    List<Nota> findByValorImpostosTotalBetweenOrderByValorImpostosTotalDesc(
+            BigDecimal valorMinimo,
+            BigDecimal valorMaximo
     );
 }

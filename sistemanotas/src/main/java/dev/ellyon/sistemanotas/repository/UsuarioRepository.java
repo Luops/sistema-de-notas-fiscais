@@ -11,4 +11,6 @@ import java.util.Optional;
 // Repositório JPA para a entidade. Fazer operações de CRUD no banco de dados.
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByIdAndIsAtivo(Long id, Boolean isAtivo);
+
+    Optional<Usuario> findByEmail(String email);
 }

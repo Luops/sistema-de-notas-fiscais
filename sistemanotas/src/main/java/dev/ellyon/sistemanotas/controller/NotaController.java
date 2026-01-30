@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -290,6 +291,44 @@ public class NotaController {
         LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);
 
         List<NotaListResponseDTO> notas = notaService.findByDataCancelamentoBetween(dataInicioTime, dataFimTime);
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar notas por intervalo de valor total
+    @GetMapping("/valor-total")
+    public ResponseEntity<SuccessResponseDTO> findByValorTotalBetween(
+            @RequestParam(value = "valorMinimo", required = true) String valorMinimo,
+            @RequestParam(value = "valorMaximo", required = true) String valorMaximo
+    ) {
+        List<NotaListResponseDTO> notas = notaService.findByValorTotalBetween(
+                new BigDecimal(valorMinimo),
+                new BigDecimal(valorMaximo)
+        );
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar notas por intervalo de valor total de impostos
+    @GetMapping("/valor-impostos-total")
+    public ResponseEntity<SuccessResponseDTO> findByValorImpostosTotalBetween(
+            @RequestParam(value = "valorMinimo", required = true) String valorMinimo,
+            @RequestParam(value = "valorMaximo", required = true) String valorMaximo
+    ) {
+        List<NotaListResponseDTO> notas = notaService.findByValorImpostosTotalBetween(
+                new BigDecimal(valorMinimo),
+                new BigDecimal(valorMaximo)
+        );
 
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),

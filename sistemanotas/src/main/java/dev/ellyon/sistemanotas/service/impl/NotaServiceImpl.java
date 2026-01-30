@@ -697,4 +697,45 @@ public class NotaServiceImpl implements NotaService {
         return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
 
     }
+
+    // buscar notas por intervalo de valor total
+    @Override
+    public List<NotaListResponseDTO> findByValorTotalBetween(BigDecimal valorMinimo, BigDecimal valorMaximo) {
+        if (valorMinimo == null || valorMaximo == null) {
+            throw new BusinessException("Valor mínimo e valor máximo são obrigatórios");
+        }
+        if (valorMaximo .compareTo(valorMinimo) < 0) {
+            throw new BusinessException("Valor máximo não pode ser menor que o valor mínimo");
+        }
+
+        List<Nota> notas = notaRepository.findByValorTotalBetweenOrderByValorTotalDesc(valorMinimo, valorMaximo);
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma nota encontrada entre os valores R$ %.2f e R$ %.2f",
+                            valorMinimo, valorMaximo)
+            );
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+
+    }
+
+    // buscar notas por intervalo de valor total de impostos
+    @Override
+    public List<NotaListResponseDTO> findByValorImpostosTotalBetween(BigDecimal valorMinimo, BigDecimal valorMaximo) {
+        if (valorMinimo == null || valorMaximo == null) {
+            throw new BusinessException("Valor mínimo e valor máximo são obrigatórios");
+        }
+        if (valorMaximo.compareTo(valorMinimo) < 0) {
+            throw new BusinessException("Valor máximo não pode ser menor que o valor mínimo");
+        }
+
+        List<Nota> notas = notaRepository.findByValorImpostosTotalBetweenOrderByValorImpostosTotalDesc(valorMinimo, valorMaximo);
+        if (notas.isEmpty()) {
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma nota encontrada entre os valores R$ %.2f e R$ %.2f",
+                            valorMinimo, valorMaximo)
+            );
+        }
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+    }
 }

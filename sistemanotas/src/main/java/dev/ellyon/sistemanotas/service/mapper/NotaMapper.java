@@ -6,9 +6,6 @@ import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import dev.ellyon.sistemanotas.dto.usuario.UsuarioSimpleResponseDTO;
-import dev.ellyon.sistemanotas.model.Cliente;
-import dev.ellyon.sistemanotas.model.Empresa;
-import dev.ellyon.sistemanotas.model.ItemNota;
 import dev.ellyon.sistemanotas.model.Nota;
 import org.springframework.stereotype.Component;
 

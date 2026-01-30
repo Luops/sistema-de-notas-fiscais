@@ -22,7 +22,7 @@ public class Usuario extends Entidade {
   private Boolean isAtivo;
 
   // Construtor padrao
-  protected Usuario() {
+  public Usuario() {
     super();
   }
 
