@@ -407,7 +407,6 @@ public class ClienteServiceImpl implements ClienteService {
             throw new BusinessException("Tipo de pessoa inválido: " + tipoPessoaStr + ". Valores aceitos: FISICA, JURIDICA, CONSUMIDOR FINAL, CONSUMIDOR NAO IDENTIFICADO.");
         }
 
-
         List<Cliente> clientes = clienteRepository.findByTipoPessoa(tipoPessoa);
 
         if (clientes.isEmpty()){

@@ -40,4 +40,6 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
             BigDecimal valorMinimo,
             BigDecimal valorMaximo
     );
+
+    long countByCreatedById(Long usuarioId);
 }
