@@ -232,47 +232,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return List.of(usuarioMapper.toResponseDTO(usuario));
     }
 
-    // Obter usuários por empresa
-    @Override
-    public List<EmpresaUsuarioResponseDTO> findByEmpresaId(Long empresaId) {
-        // Verificar se empresa existe
-        Empresa empresa = empresaRepository.findByIdAndIsAtivo(empresaId, true)
-                .orElseThrow(() -> new EntityNotFoundException("Empresa", empresaId));
-
-        // Buscar associações
-        List<EmpresaUsuario> empresaUsuarios = empresaUsuarioRepository.findByEmpresaId(empresaId);
-
-        if (empresaUsuarios.isEmpty()) {
-            throw new EntityNotFoundException("Nenhum usuário encontrado para a empresa com ID: " + empresaId);
-        }
-
-        // Mapear para DTO incluindo o perfil
-        return empresaUsuarios.stream().map(empresaUsuarioMapper::toResponseDTO).collect(Collectors.toList());
-
-    }
-
-    // Obter usuários por perfil
-    @Override
-    public List<EmpresaUsuarioResponseDTO> findByPerfil(String perfilStr) {
-        // Converter a string do perfil para o enum Perfil
-        Perfil perfil;
-        try {
-            perfil = Perfil.fromCodigo(perfilStr);
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException("Perfil inválido: " + perfilStr + ". Valores permitidos: ADMIN, VENDEDOR, VISUALIZADOR");
-        }
-
-        List<EmpresaUsuario> usuarios = empresaUsuarioRepository.findByPerfil(perfil);
-
-        if (usuarios.isEmpty()){
-            throw new EntityNotFoundException("Nenhum usuário encontrado com o perfil: " + perfilStr);
-        }
-
-        return usuarios.stream()
-                .map(empresaUsuarioMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
     // Obter usuários por nome
     @Override
     public List<UsuarioResponseDTO> findByNome(String nome) {
@@ -296,4 +255,5 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .map(usuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
 }

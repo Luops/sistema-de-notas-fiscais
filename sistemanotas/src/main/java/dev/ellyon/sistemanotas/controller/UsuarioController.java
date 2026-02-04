@@ -142,31 +142,6 @@ public class UsuarioController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Rota para obter usuários por empresa
-    @GetMapping("/findByEmpresaId/{empresaId}")
-    public ResponseEntity<SuccessResponseDTO> findByEmpresaId(@PathVariable Long empresaId) {
-        List<EmpresaUsuarioResponseDTO> usuarios = usuarioService.findByEmpresaId(empresaId);
-        SuccessResponseDTO response = new SuccessResponseDTO(
-                HttpStatus.OK.value(),
-                "Usuários encontrados com sucesso",
-                usuarios
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
-
-    }
-
-    // Rota para obter usuários por perfil
-    @GetMapping("/findByPerfil/{perfil}")
-    public ResponseEntity<SuccessResponseDTO> findByPerfil(@PathVariable String perfil) {
-        List<EmpresaUsuarioResponseDTO> usuarios = usuarioService.findByPerfil(perfil);
-        SuccessResponseDTO response = new SuccessResponseDTO(
-                HttpStatus.OK.value(),
-                "Usuários encontrados com sucesso",
-                usuarios
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
     // Rota para obter usuários por nome
     @GetMapping("/findByNome/{nome}")
     public ResponseEntity<SuccessResponseDTO> findByNome(@PathVariable String nome) {

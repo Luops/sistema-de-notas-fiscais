@@ -1,13 +1,17 @@
 package dev.ellyon.sistemanotas.dto.empresaUsuario;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class EmpresaUsuarioResponseDTO {
     private Long id;
     private String nome;
     private String email;
+    private String nomeEmpresa;
     private Boolean isAtivo;
     private String perfil;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
     // Construtor padrão
@@ -15,11 +19,11 @@ public class EmpresaUsuarioResponseDTO {
     }
 
     // Construtor completo
-    public EmpresaUsuarioResponseDTO(Long id, String nome, String email, Boolean isAtivo,
-                                     String perfil, LocalDateTime createdAt) {
+    public EmpresaUsuarioResponseDTO(Long id, String nome, String email, String nomeEmpresa, Boolean isAtivo, String perfil, LocalDateTime createdAt) {
         this.id = id;
         this.nome = nome;
         this.email = email;
+        this.nomeEmpresa = nomeEmpresa;
         this.isAtivo = isAtivo;
         this.perfil = perfil;
         this.createdAt = createdAt;
@@ -48,6 +52,14 @@ public class EmpresaUsuarioResponseDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getNomeEmpresa() {
+        return nomeEmpresa;
+    }
+
+    public void setNomeEmpresa(String nomeEmpresa) {
+        this.nomeEmpresa = nomeEmpresa;
     }
 
     public Boolean getIsAtivo() {

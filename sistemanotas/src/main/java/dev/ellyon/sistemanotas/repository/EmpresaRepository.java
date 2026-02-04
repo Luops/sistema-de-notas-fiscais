@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
     boolean existsByCnpj(String cnpj);
     boolean existsByEmail(String email);
+    boolean existsById(Long id); // Verificar se um usuário existe por ID
 
     Optional<Empresa> findByCnpj(String cnpj);  // ✅ Retorna Optional
     Optional<Empresa> findByEmail(String email); // ✅ Retorna Optional

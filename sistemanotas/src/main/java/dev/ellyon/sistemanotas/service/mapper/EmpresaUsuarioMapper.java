@@ -13,6 +13,7 @@ public class EmpresaUsuarioMapper {
                 empresaUsuario.getUsuario().getId(),
                 empresaUsuario.getUsuario().getNome(),
                 empresaUsuario.getUsuario().getEmail(),
+                empresaUsuario.getEmpresa().getNomeFantasia(),
                 empresaUsuario.getUsuario().getIsAtivo(),
                 empresaUsuario.getPerfil().name(),
                 empresaUsuario.getUsuario().getCreatedAt()
@@ -20,13 +21,14 @@ public class EmpresaUsuarioMapper {
     }
 
     // Método com parâmetros individuais (se precisar)
-    public EmpresaUsuarioResponseDTO toResponseDTO(Long id, String nome, String email,
+    public EmpresaUsuarioResponseDTO toResponseDTO(Long id, String nome, String email, String nomeEmpresa,
                                                    Boolean isAtivo, String perfil,
                                                    LocalDateTime createdAt) {
         return new EmpresaUsuarioResponseDTO(
                 id,
                 nome,
                 email,
+                nomeEmpresa,
                 isAtivo,
                 perfil,
                 createdAt

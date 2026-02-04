@@ -21,8 +21,7 @@ public interface UsuarioService {
     UsuarioResponseDTO findById(Long id); // Obter um usuário por ID
     List<UsuarioResponseDTO> findAll(); // Obter todos os usuários
     List<UsuarioResponseDTO> findByEmail(String email); // Obter usuários por email
-    List<EmpresaUsuarioResponseDTO> findByEmpresaId(Long empresaId); // Obter usuários por empresa
-    List<EmpresaUsuarioResponseDTO> findByPerfil(String perfil); // Obter usuários por perfil
     List<UsuarioResponseDTO> findByNome(String nome); // Obter usuários por nome
     List<UsuarioResponseDTO> findByAtivo(boolean ativo); // Obter usuários por status de ativo
+
 }

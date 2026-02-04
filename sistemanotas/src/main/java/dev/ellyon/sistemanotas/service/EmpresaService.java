@@ -32,4 +32,6 @@ public interface EmpresaService {
     List<EmpresaListResponseDTO> findByCep(String cep); // Buscar empresas por CEP
     List<EmpresaListResponseDTO> findByIsAtivo(Boolean ativo) ; // Buscar empresas por status de ativo/inativo
     List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim); // Buscar empresas criadas entre duas datas
+
+
 }

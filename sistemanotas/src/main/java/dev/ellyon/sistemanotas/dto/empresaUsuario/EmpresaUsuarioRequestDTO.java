@@ -11,9 +11,9 @@ public class EmpresaUsuarioRequestDTO {
     private Long usuarioId;
 
     @NotNull(message = "O perfil do usuário não pode ser nulo")
-    private Perfil perfil;
+    private String perfil;
 
-    public EmpresaUsuarioRequestDTO(Long empresaId, Long usuarioId, Perfil perfil) {
+    public EmpresaUsuarioRequestDTO(Long empresaId, Long usuarioId, String perfil) {
         this.empresaId = empresaId;
         this.usuarioId = usuarioId;
         this.perfil = perfil;
@@ -35,11 +35,11 @@ public class EmpresaUsuarioRequestDTO {
         this.usuarioId = usuarioId;
     }
 
-    public Perfil getPerfil() {
+    public String getPerfil() {
         return perfil;
     }
 
-    public void setPerfil(Perfil perfil) {
+    public void setPerfil(String perfil) {
         this.perfil = perfil;
     }
 }
