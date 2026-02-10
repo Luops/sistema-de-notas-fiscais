@@ -46,6 +46,8 @@ public class ClienteController {
         );
 
         return ResponseEntity.ok(response);
+        
+
     }
 
     // Rota para atualizar um cliente
@@ -66,6 +68,8 @@ public class ClienteController {
         );
 
         return ResponseEntity.ok(response);
+
+         
     }
 
     // Rota para ativar um cliente

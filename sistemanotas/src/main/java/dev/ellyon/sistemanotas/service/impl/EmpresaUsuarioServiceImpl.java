@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -201,7 +202,7 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
     // Obter empresas por usuario
     @Override
     public List<EmpresaUsuarioResponseDTO> findByUsuarioId(Long usuarioId) {
-        // Verificar se empresa existe
+        // Verificar se usuario existe
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario", usuarioId));
 
@@ -215,5 +216,27 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
         // Mapear para DTO incluindo o perfil
         return empresaUsuarios.stream().map(empresaUsuarioMapper::toResponseDTO).collect(Collectors.toList());
 
+    }
+
+    // Buscar vinculo especifico e uma empresa e usuario
+    @Override
+    public EmpresaUsuarioResponseDTO findByEmpresaIdUsuarioId(Long empresaId, Long usuarioId) {
+        // Verificar se empresa existe
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new EntityNotFoundException("Empresa", empresaId));
+
+        // Verificar se usuario existe
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario", usuarioId));
+
+        // Buscar associações
+        EmpresaUsuario empresaUsuario = empresaUsuarioRepository
+                .findByUsuarioIdAndEmpresaId(usuarioId, empresaId) // ✅ Ordem correta
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("Nenhum vínculo encontrado entre o usuário '%s' e a empresa '%s'",
+                                usuario.getNome(), empresa.getNomeFantasia())
+                ));
+
+        return empresaUsuarioMapper.toResponseDTO(empresaUsuario);
     }
 }

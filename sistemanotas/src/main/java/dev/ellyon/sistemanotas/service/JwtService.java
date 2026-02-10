@@ -11,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -25,16 +26,16 @@ public class JwtService {
     /**
      * Gera um token JWT para o usuário
      */
-    public String gerarToken(Long usuarioId, String email, String nome) {
+    public String gerarToken(Long usuarioId, String email, String nome, List<String> perfis) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("usuarioId", usuarioId);
-        claims.put("email", email);
         claims.put("nome", nome);
+        claims.put("perfis", perfis); // ✅ Adicionar perfis
 
         return Jwts.builder()
                 .claims(claims)
                 .subject(email)
-                .issuedAt(new Date())
+                .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
@@ -93,5 +94,13 @@ public class JwtService {
     private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /**
+     * Extrai perfis do token
+     */
+    public List<String> extrairPerfis(String token) {
+        Claims claims = extrairClaims(token);
+        return claims.get("perfis", List.class);
     }
 }

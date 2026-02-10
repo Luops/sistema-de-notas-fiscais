@@ -62,6 +62,16 @@ public class Nota extends Entidade{
     @Column(name = "protocolo_autorizacao", length = 255)
     private String protocoloAutorizacao;
 
+    @Column(name = "protocolo_cancelamento", length = 15)
+    private String protocoloCancelamento;
+
+    @Column(name = "justificativa_cancelamento", length = 255)
+    private String justificativaCancelamento;
+
+    @Lob
+    @Column(name = "xml_nfe", columnDefinition = "TEXT")
+    private String xmlNfe;
+
     @ManyToOne
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private Usuario createdBy;
@@ -75,11 +85,8 @@ public class Nota extends Entidade{
     }
 
     // Construtor com todos os atributos
-    public Nota(Long id, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
-                LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
-                BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
-                String protocoloAutorizacao, Usuario createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, BigDecimal frete) {
-        this.id = id;
+    public Nota(Long id, LocalDateTime createdAt, LocalDateTime updatedAt, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, List<ItemNota> itens, BigDecimal valorProdutos, BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso, String protocoloAutorizacao, String protocoloCancelamento, String justificativaCancelamento, String xmlNfe, Usuario createdBy, BigDecimal frete) {
+        super(id, createdAt, updatedAt);
         this.numero = numero;
         this.serie = serie;
         this.tipo = tipo;
@@ -88,23 +95,22 @@ public class Nota extends Entidade{
         this.cliente = cliente;
         this.dataEmissao = dataEmissao;
         this.dataCancelamento = dataCancelamento;
+        this.itens = itens;
         this.valorProdutos = valorProdutos;
         this.valorImpostosTotal = valorImpostosTotal;
         this.valorTotal = valorTotal;
         this.observacoes = observacoes;
         this.chaveAcesso = chaveAcesso;
         this.protocoloAutorizacao = protocoloAutorizacao;
+        this.protocoloCancelamento = protocoloCancelamento;
+        this.justificativaCancelamento = justificativaCancelamento;
+        this.xmlNfe = xmlNfe;
         this.createdBy = createdBy;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.frete = frete;
     }
 
     // Construtor sem id e timestamps
-    public Nota(String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente,
-                LocalDateTime dataEmissao, LocalDateTime dataCancelamento, BigDecimal valorProdutos,
-                BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso,
-                String protocoloAutorizacao, Usuario createdBy, BigDecimal frete) {
+    public Nota(String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, List<ItemNota> itens, BigDecimal valorProdutos, BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso, String protocoloAutorizacao, String protocoloCancelamento, String justificativaCancelamento, String xmlNfe, Usuario createdBy, BigDecimal frete) {
         this.numero = numero;
         this.serie = serie;
         this.tipo = tipo;
@@ -113,12 +119,16 @@ public class Nota extends Entidade{
         this.cliente = cliente;
         this.dataEmissao = dataEmissao;
         this.dataCancelamento = dataCancelamento;
+        this.itens = itens;
         this.valorProdutos = valorProdutos;
         this.valorImpostosTotal = valorImpostosTotal;
         this.valorTotal = valorTotal;
         this.observacoes = observacoes;
         this.chaveAcesso = chaveAcesso;
         this.protocoloAutorizacao = protocoloAutorizacao;
+        this.protocoloCancelamento = protocoloCancelamento;
+        this.justificativaCancelamento = justificativaCancelamento;
+        this.xmlNfe = xmlNfe;
         this.createdBy = createdBy;
         this.frete = frete;
     }
@@ -187,6 +197,14 @@ public class Nota extends Entidade{
         this.dataCancelamento = dataCancelamento;
     }
 
+    public List<ItemNota> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemNota> itens) {
+        this.itens = itens;
+    }
+
     public BigDecimal getValorProdutos() {
         return valorProdutos;
     }
@@ -235,20 +253,28 @@ public class Nota extends Entidade{
         this.protocoloAutorizacao = protocoloAutorizacao;
     }
 
-    public Usuario getCreatedByUserId() {
-        return createdBy;
+    public String getProtocoloCancelamento() {
+        return protocoloCancelamento;
     }
 
-    public void setCreatedByUserId(Usuario createdBy) {
-        this.createdBy = createdBy;
+    public void setProtocoloCancelamento(String protocoloCancelamento) {
+        this.protocoloCancelamento = protocoloCancelamento;
     }
 
-    public List<ItemNota> getItens() {
-        return itens;
+    public String getJustificativaCancelamento() {
+        return justificativaCancelamento;
     }
 
-    public void setItens(List<ItemNota> itens) {
-        this.itens = itens;
+    public void setJustificativaCancelamento(String justificativaCancelamento) {
+        this.justificativaCancelamento = justificativaCancelamento;
+    }
+
+    public String getXmlNfe() {
+        return xmlNfe;
+    }
+
+    public void setXmlNfe(String xmlNfe) {
+        this.xmlNfe = xmlNfe;
     }
 
     public Usuario getCreatedBy() {
@@ -278,16 +304,18 @@ public class Nota extends Entidade{
                 ", cliente=" + cliente +
                 ", dataEmissao=" + dataEmissao +
                 ", dataCancelamento=" + dataCancelamento +
+                ", itens=" + itens +
                 ", valorProdutos=" + valorProdutos +
                 ", valorImpostosTotal=" + valorImpostosTotal +
                 ", valorTotal=" + valorTotal +
                 ", observacoes='" + observacoes + '\'' +
                 ", chaveAcesso='" + chaveAcesso + '\'' +
                 ", protocoloAutorizacao='" + protocoloAutorizacao + '\'' +
+                ", protocoloCancelamento='" + protocoloCancelamento + '\'' +
+                ", justificativaCancelamento='" + justificativaCancelamento + '\'' +
+                ", xmlNfe='" + xmlNfe + '\'' +
                 ", createdBy=" + createdBy +
-                ", id=" + id +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
+                ", frete=" + frete +
                 '}';
     }
 }

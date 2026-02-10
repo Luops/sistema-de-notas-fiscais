@@ -353,8 +353,15 @@ public class NotaServiceImpl implements NotaService {
         // 1. Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
-        if (nota.getStatus() != StatusNota.RASCUNHO) {
-            errors.put("nota", "Só é possível emitir notas com status RASCUNHO");
+
+        // Validar se já foi emitida
+        if (nota.getStatus() == StatusNota.EMITIDA) {
+            throw new BusinessException("Nota já foi emitida. Use o endpoint de NF-e para consultar.");
+        }
+
+        // Validar se está cancelada
+        if (nota.getStatus() == StatusNota.CANCELADA) {
+            throw new BusinessException("Não é possível emitir nota cancelada");
         }
 
         // 2. Verificar se a nota possui pelo menos um item

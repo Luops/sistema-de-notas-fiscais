@@ -16,5 +16,30 @@ spring:
     locations: classpath:db/migration
 
 jwt:
-    secret: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-    expiration: 86400000
+  secret: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
+  expiration: 86400000
+
+nfe:
+  # Ambiente: 1=Produção, 2=Homologação
+  ambiente: 2
+  mock-sefaz: true
+
+  # Certificado Digital
+  certificado:
+    tipo: A1  # A1 ou A3
+    caminho: classpath:certificados/certificado-homologacao.pfx
+    senha: 123456
+
+  # Dados do Emitente
+  emitente:
+    uf: RS
+    codigo-municipio: 4305108  # Cachoeirinha/RS
+
+  # URLs SEFAZ (Homologação RS)
+  sefaz:
+    url-autorizacao: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeAutorizacao/NFeAutorizacao4.asmx
+    url-retorno-autorizacao: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeRetAutorizacao/NFeRetAutorizacao4.asmx
+    url-consulta-protocolo: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeConsultaProtocolo/NfeConsultaProtocolo4.asmx
+    url-status-servico: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx
+    url-inutilizacao: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeInutilizacao/NfeInutilizacao4.asmx
+    url-cancelamento: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeCancelamento/NfeCancelamento4.asmx

@@ -35,17 +35,17 @@ public class ProdutoRequestDTO {
     private String cfopPadrao;
 
     @NotNull(message = "Alíquota de ICMS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de ICMS deve ser maior que zero")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de ICMS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de ICMS deve ser menor ou igual a 100")
     private BigDecimal aliquotaIcmsPadrao;
 
     @NotNull(message = "Alíquota de PIS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de PIS deve ser maior que zero")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de PIS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de PIS deve ser menor ou igual a 100")
     private BigDecimal aliquotaPisPadrao;
 
     @NotNull(message = "Alíquota de COFINS é obrigatória")
-    @DecimalMin(value = "0.1", inclusive = true, message = "Alíquota de COFINS deve ser maior que zero")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de COFINS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de COFINS deve ser menor ou igual a 100")
     private BigDecimal aliquotaCofinsPadrao;
 

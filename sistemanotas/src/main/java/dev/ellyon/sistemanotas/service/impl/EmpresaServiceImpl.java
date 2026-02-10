@@ -7,7 +7,12 @@ import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Empresa;
+import dev.ellyon.sistemanotas.model.EmpresaUsuario;
+import dev.ellyon.sistemanotas.model.Nota;
 import dev.ellyon.sistemanotas.repository.EmpresaRepository;
+import dev.ellyon.sistemanotas.repository.EmpresaUsuarioRepository;
+import dev.ellyon.sistemanotas.repository.NotaRepository;
+import dev.ellyon.sistemanotas.repository.UsuarioRepository;
 import dev.ellyon.sistemanotas.service.EmpresaService;
 import dev.ellyon.sistemanotas.service.mapper.EmpresaMapper;
 import jakarta.transaction.Transactional;
@@ -27,9 +32,15 @@ import java.util.stream.Collectors;
 @Transactional
 public class EmpresaServiceImpl implements EmpresaService {
     private final EmpresaRepository empresaRepository;
+    private final EmpresaUsuarioRepository empresaUsuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final NotaRepository notaRepository;
     private final EmpresaMapper empresaMapper;
-    public EmpresaServiceImpl(EmpresaRepository empresaRepository, EmpresaMapper empresaMapper) {
+    public EmpresaServiceImpl(EmpresaRepository empresaRepository, EmpresaUsuarioRepository empresaUsuarioRepository, UsuarioRepository usuarioRepository, NotaRepository notaRepository, EmpresaMapper empresaMapper) {
         this.empresaRepository = empresaRepository;
+        this.empresaUsuarioRepository = empresaUsuarioRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.notaRepository = notaRepository;
         this.empresaMapper = empresaMapper;
     }
 
@@ -108,14 +119,34 @@ public class EmpresaServiceImpl implements EmpresaService {
     // Deletar uma empresa
     @Override
     public void delete(Long id) {
+        // Declaracao dos errors
+        Map<String, String> errors = new HashMap<>();
+
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa com ID " + id + " não encontrada."));
+
 
         if (empresa.getId() == null) {
             throw new BusinessException("Empresa não existe!");
         }
 
-        empresaRepository.deleteById(id);
+        // Verificar se há usuário vinculados a empresa
+        List<EmpresaUsuario> empresaUsuario = empresaUsuarioRepository.findByEmpresaId(id);
+        if (!empresaUsuario.isEmpty()){
+            errors.put("empresaUsuario", "Há vinculos dessa empresa com usuários. É recomendável somente desativar a empresa!");
+        }
+
+        // Verificar se há notas vinculaas a empresa
+        List<Nota> notas = notaRepository.findByEmpresaId(id);
+        if(!notas.isEmpty()){
+            errors.put("notas", "Há vinculos dessa empresa com alguma nota. É recomendável somente desativar a empresa!");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Não é possível deletar a empresa", errors);
+        }
+
+        empresaRepository.delete(empresa);
     }
 
     // Atualizar uma empresa

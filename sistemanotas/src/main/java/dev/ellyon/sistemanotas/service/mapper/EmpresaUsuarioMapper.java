@@ -5,6 +5,7 @@ import dev.ellyon.sistemanotas.model.EmpresaUsuario;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Component
 public class EmpresaUsuarioMapper {
@@ -19,7 +20,6 @@ public class EmpresaUsuarioMapper {
                 empresaUsuario.getUsuario().getCreatedAt()
         );
     }
-
     // Método com parâmetros individuais (se precisar)
     public EmpresaUsuarioResponseDTO toResponseDTO(Long id, String nome, String email, String nomeEmpresa,
                                                    Boolean isAtivo, String perfil,

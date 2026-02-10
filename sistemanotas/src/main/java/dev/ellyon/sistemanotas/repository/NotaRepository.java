@@ -42,4 +42,6 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
     );
 
     long countByCreatedById(Long usuarioId);
+
+    List<Nota> findByEmpresaId(Long empresaId);
 }

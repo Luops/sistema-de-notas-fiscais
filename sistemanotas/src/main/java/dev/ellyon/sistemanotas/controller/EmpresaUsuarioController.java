@@ -91,4 +91,21 @@ public class EmpresaUsuarioController {
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
+
+    // Rota para obter o vinculo entre empresa e usuario especifico
+    @GetMapping("/vinculo")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<SuccessResponseDTO> findByUsuarioIdAndEmpresaId(@Valid
+            @RequestParam  Long empresaId,
+            @RequestParam  Long usuarioId) {
+
+        EmpresaUsuarioResponseDTO responseDTO = empresaUsuarioService.findByEmpresaIdUsuarioId(empresaId,usuarioId);
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Encontrado com sucesso vínculo entre Empresa e Usuário!",
+                responseDTO
+        );
+        return ResponseEntity.ok(response);
+    }
 }

@@ -19,6 +19,7 @@ import dev.ellyon.sistemanotas.service.UsuarioService;
 import dev.ellyon.sistemanotas.service.mapper.EmpresaUsuarioMapper;
 import dev.ellyon.sistemanotas.service.mapper.UsuarioMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -254,6 +255,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarios.stream()
                 .map(usuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    public boolean isOwnProfile(Long userId) {
+        // Obter email do usuário autenticado do SecurityContext
+        String emailAutenticado = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Obter usuário que quer editar
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new ValidationException("Usuário não encontrado com ID: " + userId, null));
+
+        // Comparar emails
+        return usuario.getEmail().equals(emailAutenticado);
     }
 
 }

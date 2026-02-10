@@ -24,4 +24,5 @@ public interface UsuarioService {
     List<UsuarioResponseDTO> findByNome(String nome); // Obter usuários por nome
     List<UsuarioResponseDTO> findByAtivo(boolean ativo); // Obter usuários por status de ativo
 
+    boolean isOwnProfile(Long userId); // Verificar se é seu próprio perfil
 }

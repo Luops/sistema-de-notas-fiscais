@@ -36,51 +36,58 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDTO autenticar(LoginRequestDTO dto) {
-
-        // ========================================
-        // 1. BUSCAR USUÁRIO POR EMAIL
-        // ========================================
+        // Buscar usuário
         Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BusinessException("Email ou senha inválidos"));
 
-        // ========================================
-        // 2. VERIFICAR SE USUÁRIO ESTÁ ATIVO
-        // ========================================
+        // Verificar se está ativo
         if (!usuario.getIsAtivo()) {
-            throw new BusinessException("Usuário inativo. Entre em contato com o administrador.");
+            throw new BusinessException("Usuário inativo");
         }
 
-        // ========================================
-        // 3. VALIDAR SENHA
-        // ========================================
+        // Validar senha
         if (!passwordEncoder.matches(dto.getSenha(), usuario.getSenha())) {
             throw new BusinessException("Email ou senha inválidos");
         }
 
-        // ========================================
-        // 4. GERAR TOKEN JWT
-        // ========================================
+        // ✅ Buscar perfis do usuário nas empresas
+        List<EmpresaUsuario> empresaUsuarios = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+        List<String> perfis = empresaUsuarios.stream()
+                .map(eu -> eu.getPerfil().name())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Se não tiver perfis, adicionar VISUALIZADOR como padrão
+        if (perfis.isEmpty()) {
+            perfis.add("VISUALIZADOR");
+        }
+
+        // ✅ Gerar token com perfis
         String token = jwtService.gerarToken(
                 usuario.getId(),
                 usuario.getEmail(),
-                usuario.getNome()
+                usuario.getNome(),
+                perfis
         );
 
-        // ========================================
-        // 5. BUSCAR EMPRESAS DO USUÁRIO
-        // ========================================
-        UsuarioResponseDTO usuarioDTO = usuarioMapper.toResponseDTO(usuario);
+        // Mapear empresas
+        List<EmpresaUsuarioSimpleResponseDTO> empresasDTO = empresaUsuarios.stream()
+                .map(eu -> new EmpresaUsuarioSimpleResponseDTO(
+                        eu.getEmpresa().getId(),
+                        eu.getEmpresa().getNomeFantasia(),
+                        eu.getPerfil()
+                ))
+                .collect(Collectors.toList());
 
-        // ========================================
-        // 6. MONTAR RESPOSTA
-        // ========================================
-        return new LoginResponseDTO(
-                token,
-                "Bearer",
-                usuarioDTO.getId(),
-                usuarioDTO.getNome(),
-                usuarioDTO.getEmail(),
-                usuarioDTO.getEmpresas()
-        );
+        // Criar LoginResponseDTO com todos os campos
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setToken(token);
+        response.setTipo("Bearer");
+        response.setUsuarioId(usuario.getId());
+        response.setNome(usuario.getNome());
+        response.setEmail(usuario.getEmail());
+        response.setEmpresas(empresasDTO);
+
+        return response;
     }
 }

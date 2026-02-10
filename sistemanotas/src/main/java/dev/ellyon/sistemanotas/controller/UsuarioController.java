@@ -14,8 +14,10 @@ import dev.ellyon.sistemanotas.service.mapper.UsuarioMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -48,6 +50,7 @@ public class UsuarioController {
 
     // Rota para atualizar um usuário existente
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
     public ResponseEntity<SuccessResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UsuarioUpdateRequestDTO dto) {
         UsuarioResponseDTO usuarioResponseDTO = usuarioService.update(id, dto);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -72,6 +75,7 @@ public class UsuarioController {
 
     // Rota para desativar (soft delete) um usuário
     @PutMapping("/update/soft-delete/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
     public ResponseEntity<SuccessResponseDTO> softDelete(@PathVariable Long id) {
         usuarioService.softDelete(id);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -84,6 +88,7 @@ public class UsuarioController {
 
     // Rota para ativar um usuário
     @PutMapping("/update/activate/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
     public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id) {
         usuarioService.activate(id);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -108,6 +113,7 @@ public class UsuarioController {
 
     // Rota para obter um usuário por ID
     @GetMapping("/findById/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
     public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long id) {
         UsuarioResponseDTO usuarioResponseDTO = usuarioService.findById(id);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -120,6 +126,7 @@ public class UsuarioController {
 
     // Rota para obter todos os usuários
     @GetMapping("/findAll")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponseDTO> findAll() {
         List<UsuarioResponseDTO> usuarios = usuarioService.findAll();
         SuccessResponseDTO response = new SuccessResponseDTO(

@@ -6,8 +6,11 @@ import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
+import dev.ellyon.sistemanotas.model.ItemNota;
+import dev.ellyon.sistemanotas.model.Nota;
 import dev.ellyon.sistemanotas.model.Produto;
 import dev.ellyon.sistemanotas.model.TipoProduto;
+import dev.ellyon.sistemanotas.repository.ItemNotaRepository;
 import dev.ellyon.sistemanotas.repository.ProdutoRepository;
 import dev.ellyon.sistemanotas.repository.TipoProdutoRepository;
 import dev.ellyon.sistemanotas.service.ProdutoService;
@@ -29,15 +32,12 @@ import java.util.stream.Collectors;
 public class ProdutoServiceImpl implements ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final TipoProdutoRepository tipoProdutoRepository;
+    private final ItemNotaRepository itemNotaRepository;
     private final ProdutoMapper produtoMapper;
-
-    public ProdutoServiceImpl(
-            ProdutoRepository produtoRepository,
-            TipoProdutoRepository tipoProdutoRepository,
-            ProdutoMapper produtoMapper
-    ) {
+    public ProdutoServiceImpl(ProdutoRepository produtoRepository, TipoProdutoRepository tipoProdutoRepository, ItemNotaRepository itemNotaRepository, ProdutoMapper produtoMapper) {
         this.produtoRepository = produtoRepository;
         this.tipoProdutoRepository = tipoProdutoRepository;
+        this.itemNotaRepository = itemNotaRepository;
         this.produtoMapper = produtoMapper;
     }
 
@@ -113,11 +113,21 @@ public class ProdutoServiceImpl implements ProdutoService {
     // Deletar um produto
     @Override
     public void delete(Long id) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
 
-        if (produto.getId() == null) {
-            throw new BusinessException("Produto não existe!");
+        // Verificar sem o produto tem vinculo com algum item de alguma nota
+        List<ItemNota> itemNota = itemNotaRepository.findByProdutoId(id);
+        if (!itemNota.isEmpty()){
+            errors.put("itemNota", "Esse produto tem vinculo com alguma nota. É recomendavel a desativação do produto!");
+        }
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
         produtoRepository.delete(produto);
