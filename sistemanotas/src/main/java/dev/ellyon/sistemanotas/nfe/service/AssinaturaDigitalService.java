@@ -33,10 +33,12 @@ public class AssinaturaDigitalService {
     /**
      * Assina o XML da NF-e com certificado digital
      */
-    public String assinar(String xmlSemAssinatura, String idElemento) throws Exception {
-        // Carregar certificado
-        PrivateKey privateKey = certificadoService.getPrivateKey();
-        X509Certificate certificate = certificadoService.getCertificate();
+    public String assinar(Long empresaId, String xmlSemAssinatura, String idElemento) throws Exception {
+
+        // ✅ Carregar certificado da empresa específica
+        CertificadoService.CertificadoData certificadoData = certificadoService.carregarCertificadoDaEmpresa(empresaId);
+        PrivateKey privateKey = certificadoData.getPrivateKey();
+        X509Certificate certificate = certificadoData.getCertificate();
 
         // Parsear XML
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -84,25 +86,14 @@ public class AssinaturaDigitalService {
     /**
      * Encontra elemento por nome de tag e valor de atributo
      */
-    private Element findElementByAttributeValue(Document doc, String tagName, String attrName, String attrValue) {
+    private Element findElementByAttributeValue(Document doc, String tagName, String attributeName, String attributeValue) {
         NodeList elements = doc.getElementsByTagNameNS("*", tagName);
 
         for (int i = 0; i < elements.getLength(); i++) {
             Element element = (Element) elements.item(i);
-            String id = element.getAttribute(attrName);
+            String attrValue = element.getAttribute(attributeName);
 
-            if (attrValue.equals(id)) {
-                return element;
-            }
-        }
-
-        // Se não encontrar com namespace, tenta sem namespace
-        elements = doc.getElementsByTagName(tagName);
-        for (int i = 0; i < elements.getLength(); i++) {
-            Element element = (Element) elements.item(i);
-            String id = element.getAttribute(attrName);
-
-            if (attrValue.equals(id)) {
+            if (attrValue != null && attrValue.equals(attributeValue)) {
                 return element;
             }
         }
@@ -116,13 +107,12 @@ public class AssinaturaDigitalService {
     private String documentToString(Document doc) throws Exception {
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION, "no");
-        transformer.setOutputProperty(javax.xml.transform.OutputKeys.METHOD, "xml");
+        transformer.setOutputProperty(javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "no");
-        transformer.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
 
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(doc), new StreamResult(writer));
-        return writer.toString();
+
+        return writer.getBuffer().toString();
     }
 }

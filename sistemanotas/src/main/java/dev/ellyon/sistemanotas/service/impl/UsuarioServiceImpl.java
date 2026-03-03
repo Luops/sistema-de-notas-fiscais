@@ -82,6 +82,14 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
         }
 
+        // Verificar quantos usuários a empresa já possui
+        int qtdUsuariosEmpresa = empresaUsuarioRepository.countEmpresaUsuarioByEmpresaId(dto.getEmpresaId());
+
+        // Regra: Se já existe usuário na empresa, não pode criar outro ADMIN
+        if (perfil == Perfil.ADMIN && qtdUsuariosEmpresa > 0) {
+            errors.put("perfil", "Esta empresa já possui usuários. Não é possível criar outro ADMIN.");
+        }
+
         // Se houver erros, lança exceção
         if (!errors.isEmpty()) {
             throw new ValidationException("Erro de validação nos dados do usuário", errors);
@@ -102,8 +110,36 @@ public class UsuarioServiceImpl implements UsuarioService {
         // ========================================
         // 3. ASSOCIAR USUÁRIO À EMPRESA
         // ========================================
-        EmpresaUsuario empresaUsuario = new EmpresaUsuario(empresa, usuarioSalvo, perfil);
-        empresaUsuarioRepository.save(empresaUsuario);
+        //  Se é o PRIMEIRO usuário da empresa → SEMPRE será ADMIN
+        //  Se JÁ EXISTEM usuários → usa o perfil informado (mas não pode ser ADMIN, validado acima)
+
+        Perfil perfilFinal;
+        if (qtdUsuariosEmpresa == 0) {
+            // Primeiro usuário da empresa SEMPRE é ADMIN
+            perfilFinal = Perfil.ADMIN;
+        } else {
+            // Usuários subsequentes usam o perfil informado
+            perfilFinal = perfil;
+        }
+
+        // Verificar se já existe vínculo (evita duplicação)
+        boolean vinculoExiste = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuarioSalvo.getId(),
+                empresa.getId()
+        );
+
+        if (!vinculoExiste) {
+            EmpresaUsuario empresaUsuario = new EmpresaUsuario(empresa, usuarioSalvo, perfilFinal);
+            empresaUsuarioRepository.save(empresaUsuario);
+        } else {
+            // Se por algum motivo já existe, apenas atualiza o perfil
+            EmpresaUsuario empresaUsuarioExistente = empresaUsuarioRepository
+                    .findByUsuarioIdAndEmpresaId(usuarioSalvo.getId(), empresa.getId())
+                    .orElseThrow(() -> new BusinessException("Erro ao buscar vínculo empresa-usuário"));
+
+            empresaUsuarioExistente.setPerfil(perfilFinal);
+            empresaUsuarioRepository.save(empresaUsuarioExistente);
+        }
 
         // ========================================
         // 4. RETORNAR DTO (SEM SENHA)

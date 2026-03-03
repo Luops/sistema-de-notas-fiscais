@@ -4,6 +4,8 @@ public enum StatusNota {
   CANCELADA,
   EMITIDA,
   RASCUNHO,
-  AUTORIZADA
+  AUTORIZADA,
+  REJEITADA,
+  ERRO
 }
 

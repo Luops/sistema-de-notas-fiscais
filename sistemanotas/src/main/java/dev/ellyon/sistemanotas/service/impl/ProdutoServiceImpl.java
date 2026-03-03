@@ -13,6 +13,7 @@ import dev.ellyon.sistemanotas.model.TipoProduto;
 import dev.ellyon.sistemanotas.repository.ItemNotaRepository;
 import dev.ellyon.sistemanotas.repository.ProdutoRepository;
 import dev.ellyon.sistemanotas.repository.TipoProdutoRepository;
+import dev.ellyon.sistemanotas.service.NcmService;
 import dev.ellyon.sistemanotas.service.ProdutoService;
 import dev.ellyon.sistemanotas.service.mapper.ProdutoMapper;
 import jakarta.transaction.Transactional;
@@ -30,16 +31,19 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ProdutoServiceImpl implements ProdutoService {
+    private final NcmService ncmService;
     private final ProdutoRepository produtoRepository;
     private final TipoProdutoRepository tipoProdutoRepository;
     private final ItemNotaRepository itemNotaRepository;
     private final ProdutoMapper produtoMapper;
-    public ProdutoServiceImpl(ProdutoRepository produtoRepository, TipoProdutoRepository tipoProdutoRepository, ItemNotaRepository itemNotaRepository, ProdutoMapper produtoMapper) {
+    public ProdutoServiceImpl(NcmService ncmService, ProdutoRepository produtoRepository, TipoProdutoRepository tipoProdutoRepository, ItemNotaRepository itemNotaRepository, ProdutoMapper produtoMapper) {
+        this.ncmService = ncmService;
         this.produtoRepository = produtoRepository;
         this.tipoProdutoRepository = tipoProdutoRepository;
         this.itemNotaRepository = itemNotaRepository;
         this.produtoMapper = produtoMapper;
     }
+
 
     // Criar um novo produto
     @Override
@@ -76,6 +80,13 @@ public class ProdutoServiceImpl implements ProdutoService {
             errors.put("precoVenda", "Preço de venda deve ser maior que zero");
         }
 
+        // Validar NCM se informado
+        if (dto.getNcm() != null && !dto.getNcm().isBlank()) {
+            if (!ncmService.validarNCM(dto.getNcm())) {
+                errors.put("ncm", "NCM inválido ou não encontrado na base da Receita Federal");
+            }
+        }
+
         // Se houver erros de validação, lança ValidationException
         if (!errors.isEmpty()) {
             throw new ValidationException("Erro de validação nos dados do produto", errors);
@@ -85,6 +96,30 @@ public class ProdutoServiceImpl implements ProdutoService {
         TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
                 .orElseThrow(() -> new EntityNotFoundException("TipoProduto", dto.getTipoProduto()));
 
+        // BUSCAR ALÍQUOTAS AUTOMATICAMENTE SE NCM FOR INFORMADO
+        BigDecimal aliquotaIcms = dto.getAliquotaIcmsPadrao();
+        BigDecimal aliquotaPis = dto.getAliquotaPisPadrao();
+        BigDecimal aliquotaCofins = dto.getAliquotaCofinsPadrao();
+
+        if (dto.getNcm() != null && !dto.getNcm().isBlank()) {
+            try {
+                Map<String, BigDecimal> aliquotasSugeridas = ncmService.buscarAliquotasSugeridas(dto.getNcm());
+
+                // Se não foi informado alíquota, usar a REAL da API
+                if (aliquotaIcms == null || aliquotaIcms.compareTo(BigDecimal.ZERO) == 0) {
+                    aliquotaIcms = aliquotasSugeridas.get("icms");
+                }
+                if (aliquotaPis == null || aliquotaPis.compareTo(BigDecimal.ZERO) == 0) {
+                    aliquotaPis = aliquotasSugeridas.get("pis");
+                }
+                if (aliquotaCofins == null || aliquotaCofins.compareTo(BigDecimal.ZERO) == 0) {
+                    aliquotaCofins = aliquotasSugeridas.get("cofins");
+                }
+            } catch (BusinessException e) {
+                // Se der erro ao buscar alíquotas, lançar exceção
+                throw new BusinessException("Erro ao buscar alíquotas do NCM: " + e.getMessage());
+            }
+        }
 
         /*
         * CRIAÇÃO DO PRODUTO
@@ -96,11 +131,11 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setTipoProduto(tipoProduto);
         produto.setUnidade(dto.getUnidade());
         produto.setPrecoVenda(dto.getPrecoVenda());
-        produto.setNcm(dto.getNcm());
+        produto.setNcm(dto.getNcm() != null ? dto.getNcm().replaceAll("[^0-9]", "") : null);
         produto.setCfopPadrao(dto.getCfopPadrao());
-        produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
-        produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
-        produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
+        produto.setAliquotaIcmsPadrao(aliquotaIcms != null ? aliquotaIcms : BigDecimal.ZERO);
+        produto.setAliquotaPisPadrao(aliquotaPis != null ? aliquotaPis : BigDecimal.ZERO);
+        produto.setAliquotaCofinsPadrao(aliquotaCofins != null ? aliquotaCofins : BigDecimal.ZERO);
         produto.setAtivo(true);
 
         /*
@@ -185,7 +220,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setTipoProduto(tipoProduto);
         produto.setUnidade(dto.getUnidade());
         produto.setPrecoVenda(dto.getPrecoVenda());
-        produto.setNcm(dto.getNcm());
+        produto.setNcm(dto.getNcm() != null ? dto.getNcm().replaceAll("[^0-9]", "") : null);
         produto.setCfopPadrao(dto.getCfopPadrao());
         produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
         produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());

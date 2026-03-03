@@ -7,7 +7,7 @@ import dev.ellyon.sistemanotas.model.Nota;
 import dev.ellyon.sistemanotas.model.Usuario;
 import dev.ellyon.sistemanotas.model.enums.StatusNota;
 import dev.ellyon.sistemanotas.model.enums.TipoNota;
-import dev.ellyon.sistemanotas.nfe.dto.NFeRetornoDTO;
+import dev.ellyon.sistemanotas.nfe.dto.NFeResponseDTO;
 import dev.ellyon.sistemanotas.repository.NotaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -65,7 +65,7 @@ class NFeCancelamentoServiceTest {
         )).thenReturn(gerarRespostaCancelamentoSucesso());
 
         // Act
-        NFeRetornoDTO resultado = nfeService.cancelar(notaId, justificativa);
+        NFeResponseDTO resultado = nfeService.cancelar(notaId, justificativa);
 
         // Assert
         assertNotNull(resultado);
@@ -183,7 +183,7 @@ class NFeCancelamentoServiceTest {
         )).thenReturn(gerarRespostaCancelamentoSucesso());
 
         // Act
-        NFeRetornoDTO resultado = nfeService.cancelar(notaId, justificativa);
+        NFeResponseDTO resultado = nfeService.cancelar(notaId, justificativa);
 
         // Assert
         assertNotNull(resultado.getChaveAcesso());

@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 
 import dev.ellyon.sistemanotas.model.enums.Perfil;
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "tb_empresa_usuario",
         uniqueConstraints = @UniqueConstraint(columnNames = {"empresa_id", "usuario_id"}))
+@Data
 public class EmpresaUsuario extends Entidade{
   @ManyToOne
   @JoinColumn(name = "empresa_id", nullable = false)

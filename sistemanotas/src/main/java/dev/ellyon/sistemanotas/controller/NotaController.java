@@ -5,6 +5,7 @@ import dev.ellyon.sistemanotas.dto.itemNota.ItemNotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaListResponseDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
+import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.service.NotaService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,8 +35,9 @@ public class NotaController {
     // Rota para criar uma nova rascunho
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<SuccessResponseDTO> create(@RequestBody @Valid NotaRequestDTO dto) {
-        NotaResponseDTO notaResponseDTO = notaService.create(dto);
+    public ResponseEntity<SuccessResponseDTO> create(@RequestBody @Valid NotaRequestDTO dto,
+                                                     Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.create(dto, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.CREATED.value(),
                 "Nota criada com sucesso",
@@ -45,16 +49,30 @@ public class NotaController {
     // Rota para adicionar item a nota
     @PostMapping("/{notaId}/add-item")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> addItem(
             @PathVariable Long notaId,
-            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO) {
-        NotaResponseDTO notaResponseDTO = notaService.addItem(notaId, itemNotaRequestDTO);
-        SuccessResponseDTO response = new SuccessResponseDTO(
-                HttpStatus.OK.value(),
-                "Item adicionado com sucesso",
-                notaResponseDTO
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO,
+            Authentication authentication) {
+
+        try {
+            NotaResponseDTO nota = notaService.addItem(notaId, itemNotaRequestDTO, authentication);
+
+            SuccessResponseDTO response = new SuccessResponseDTO(
+                    HttpStatus.OK.value(),
+                    "Item adicionado à nota com sucesso",
+                    nota
+            );
+            return ResponseEntity.ok(response);
+
+        } catch (ValidationException e) {
+            SuccessResponseDTO response = new SuccessResponseDTO(
+                    HttpStatus.BAD_REQUEST.value(),
+                    e.getMessage(),
+                    e.getErrors()
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // Rota para atualizar item da nota
@@ -63,8 +81,8 @@ public class NotaController {
     public ResponseEntity<SuccessResponseDTO> updateItem(
             @PathVariable Long notaId,
             @PathVariable Long itemId,
-            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO) {
-        NotaResponseDTO notaResponseDTO = notaService.updateItem(notaId, itemId, itemNotaRequestDTO);
+            @RequestBody @Valid ItemNotaRequestDTO itemNotaRequestDTO, Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.updateItem(notaId, itemId, itemNotaRequestDTO, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Item atualizado com sucesso",
@@ -78,8 +96,8 @@ public class NotaController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> removeItem(
             @PathVariable Long notaId,
-            @PathVariable Long itemId) {
-        NotaResponseDTO notaResponseDTO = notaService.removeItem(notaId, itemId);
+            @PathVariable Long itemId, Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.removeItem(notaId, itemId, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Item removido com sucesso",
@@ -91,8 +109,8 @@ public class NotaController {
     // Rota para emitir nota
     @PostMapping("/{notaId}/emitir")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<SuccessResponseDTO> emitirNota(@PathVariable Long notaId) {
-        NotaResponseDTO notaResponseDTO = notaService.emitirNota(notaId);
+    public ResponseEntity<SuccessResponseDTO> emitirNota(@PathVariable Long notaId, Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.emitirNota(notaId, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Nota emitida com sucesso",
@@ -106,8 +124,8 @@ public class NotaController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> updateNota(
             @PathVariable Long notaId,
-            @RequestBody @Valid NotaRequestDTO dto) {
-        NotaResponseDTO notaResponseDTO = notaService.updateNota(notaId, dto);
+            @RequestBody @Valid NotaRequestDTO dto, Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.updateNota(notaId, dto, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Nota atualizada com sucesso",
@@ -119,8 +137,8 @@ public class NotaController {
     // Rota para cancelar nota
     @PutMapping("/cancel/{notaId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<SuccessResponseDTO> cancelarNota(@PathVariable Long notaId) {
-        notaService.cancelarNota(notaId);
+    public ResponseEntity<SuccessResponseDTO> cancelarNota(@PathVariable Long notaId, Authentication authentication) {
+        notaService.cancelarNota(notaId, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Nota cancelada com sucesso",

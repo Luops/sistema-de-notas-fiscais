@@ -1,12 +1,31 @@
 package dev.ellyon.sistemanotas.nfe.dto;
 
-public class NFeRetornoDTO {
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.time.LocalDateTime;
+
+public class NFeResponseDTO {
     private String chaveAcesso;
     private String codigoStatus;
     private String mensagem;
     private String protocolo;
-    private String dataHoraAutorizacao;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime dataHoraAutorizacao;
     private String xmlResposta;
+
+    // Construtor padrao
+    public NFeResponseDTO() {
+    }
+
+    // Construtor completo
+    public NFeResponseDTO(String chaveAcesso, String codigoStatus, String mensagem, String protocolo, LocalDateTime dataHoraAutorizacao, String xmlResposta) {
+        this.chaveAcesso = chaveAcesso;
+        this.codigoStatus = codigoStatus;
+        this.mensagem = mensagem;
+        this.protocolo = protocolo;
+        this.dataHoraAutorizacao = dataHoraAutorizacao;
+        this.xmlResposta = xmlResposta;
+    }
 
     // Getters e Setters
     public String getChaveAcesso() {
@@ -41,11 +60,11 @@ public class NFeRetornoDTO {
         this.protocolo = protocolo;
     }
 
-    public String getDataHoraAutorizacao() {
+    public LocalDateTime getDataHoraAutorizacao() {
         return dataHoraAutorizacao;
     }
 
-    public void setDataHoraAutorizacao(String dataHoraAutorizacao) {
+    public void setDataHoraAutorizacao(LocalDateTime dataHoraAutorizacao) {
         this.dataHoraAutorizacao = dataHoraAutorizacao;
     }
 

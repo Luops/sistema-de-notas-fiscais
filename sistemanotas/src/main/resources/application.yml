@@ -28,7 +28,7 @@ nfe:
   certificado:
     tipo: A1  # A1 ou A3
     caminho: classpath:certificados/certificado-homologacao.pfx
-    senha: 123456
+    senha: Fabrios12361236
 
   # Dados do Emitente
   emitente:
@@ -43,3 +43,9 @@ nfe:
     url-status-servico: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx
     url-inutilizacao: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeInutilizacao/NfeInutilizacao4.asmx
     url-cancelamento: https://nfe-homologacao.svrs.rs.gov.br/ws/NfeCancelamento/NfeCancelamento4.asmx
+
+security:
+  encryption:
+    # ⚠️ CRÍTICO: Chave deve ter EXATAMENTE 32 caracteres (256 bits)
+    # Use variável de ambiente em produção!
+    key: ${ENCRYPTION_KEY:12345678901234567890123456789012}

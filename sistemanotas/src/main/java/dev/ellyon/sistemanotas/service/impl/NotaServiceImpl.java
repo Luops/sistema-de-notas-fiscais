@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,22 +35,29 @@ public class NotaServiceImpl implements NotaService {
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProdutoRepository produtoRepository;
+    private final EmpresaUsuarioRepository empresaUsuarioRepository;
     private final NotaMapper notaMapper;
-    public NotaServiceImpl(NotaRepository notaRepository, EmpresaRepository empresaRepository, ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, ProdutoRepository produtoRepository, NotaMapper notaMapper) {
+    public NotaServiceImpl(NotaRepository notaRepository, EmpresaRepository empresaRepository, ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, ProdutoRepository produtoRepository, EmpresaUsuarioRepository empresaUsuarioRepository, NotaMapper notaMapper) {
         this.notaRepository = notaRepository;
         this.empresaRepository = empresaRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.produtoRepository = produtoRepository;
+        this.empresaUsuarioRepository = empresaUsuarioRepository;
         this.notaMapper = notaMapper;
     }
 
     // criar nota
     @Override
-    public NotaResponseDTO create(NotaRequestDTO dto) {
+    public NotaResponseDTO create(NotaRequestDTO dto, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Empresa é obrigatória
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Empresa é obrigatória
         if (dto.getEmpresaId() == null) {
             errors.put("empresaId", "Empresa é obrigatória");
         }
@@ -58,7 +66,7 @@ public class NotaServiceImpl implements NotaService {
             errors.put("empresaId", "Empresa informada está inativa ou não existe");
         }
 
-        // 2. Usuário é obrigatório
+        // Usuário é obrigatório
         if (dto.getUsuarioId() == null) {
             errors.put("usuarioId", "Usuário é obrigatório");
         }
@@ -67,7 +75,16 @@ public class NotaServiceImpl implements NotaService {
             errors.put("usuarioId", "Usuário informado está inativo ou não existe");
         }
 
-        // 3. Validar observações (se informado)
+        // Verificar se usuário tem acesso à empresa da nota
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                dto.getUsuarioId(),
+                dto.getEmpresaId()
+        );
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
+        }
+
+        // Validar observações (se informado)
         if (dto.getObservacoes() != null && dto.getObservacoes().length() > 500) {
             errors.put("observacoes", "Observações devem ter no máximo 500 caracteres");
         }
@@ -90,7 +107,7 @@ public class NotaServiceImpl implements NotaService {
         // ========================================
         // BUSCAR USUÁRIO
         // ========================================
-        Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
+        Usuario usuarioId = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new EntityNotFoundException("Usuário", dto.getUsuarioId()));
 
         // ========================================
@@ -117,7 +134,7 @@ public class NotaServiceImpl implements NotaService {
         Nota nota = new Nota();
         nota.setEmpresa(empresa);
         nota.setCliente(cliente);
-        nota.setCreatedBy(usuario);
+        nota.setCreatedBy(usuarioId);
         nota.setNumero(numeroFormatado);
         nota.setSerie("1");
         nota.setTipo(TipoNota.SAIDA);
@@ -142,29 +159,45 @@ public class NotaServiceImpl implements NotaService {
 
     // adicionar item na nota
     @Override
-    public NotaResponseDTO addItem(Long notaId, ItemNotaRequestDTO itemNotaRequestDTO) {
+    public NotaResponseDTO addItem(Long notaId, ItemNotaRequestDTO itemNotaRequestDTO, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Verificar se a nota existe e está em rascunho
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
         if (nota.getStatus() != StatusNota.RASCUNHO) {
             errors.put("nota", "Só é possível adicionar itens em notas com status RASCUNHO");
         }
 
-        // 2. Validar se o produto existe e está ativo
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
+        }
+
+        // Validar se o produto existe e está ativo
         Produto produto = produtoRepository.findByIdAndIsAtivo(itemNotaRequestDTO.getProdutoId(), true)
                 .orElseGet(() -> {
                     errors.put("produtoId", "Produto informado está inativo ou não existe");
                     return null;
                 });
 
-        // 3. Validar quantidade
+        // Validar quantidade
         if (itemNotaRequestDTO.getQuantidade() == null || itemNotaRequestDTO.getQuantidade().compareTo(BigDecimal.ZERO) <= 0) {
             errors.put("quantidade", "Quantidade deve ser maior que zero");
         }
 
-        // 4. Validar preço unitário
+        // Validar preço unitário
         if (itemNotaRequestDTO.getPrecoUnitario() == null || itemNotaRequestDTO.getPrecoUnitario().compareTo(BigDecimal.ZERO) <= 0) {
             errors.put("precoUnitario", "Preço unitário deve ser maior que zero");
         }
@@ -174,10 +207,10 @@ public class NotaServiceImpl implements NotaService {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // 5. Criar ItemNota com snapshot do produto (usando construtor)
+        // Criar ItemNota com snapshot do produto (usando construtor)
         ItemNota itemNota = new ItemNota(nota, produto, itemNotaRequestDTO.getQuantidade());
 
-        // 6. Se alíquotas não informadas, usa as do produto
+        // Se alíquotas não informadas, usa as do produto
         if (itemNotaRequestDTO.getAliquotaIcms() != null) {
             itemNotaRequestDTO.setAliquotaIcms(produto.getAliquotaIcmsPadrao());
         }
@@ -188,17 +221,17 @@ public class NotaServiceImpl implements NotaService {
             itemNotaRequestDTO.setAliquotaCofins(produto.getAliquotaCofinsPadrao());
         }
 
-        // 7. Se preço unitário for informado, sobrescreve o do produto
+        // Se preço unitário for informado, sobrescreve o do produto
         if (itemNotaRequestDTO.getPrecoUnitario() != null) {
             itemNota.setPrecoUnitario(itemNotaRequestDTO.getPrecoUnitario());
         }
 
         // Nota: calcularValores() já foi chamado automaticamente pelos setters
 
-        // 8. Adicionar item à nota
+        // Adicionar item à nota
         nota.getItens().add(itemNota);
 
-        // 9. Recalcular totais da nota
+        // Recalcular totais da nota
         nota.setValorProdutos(nota.getValorProdutos().add(itemNota.getSubtotal()));
         BigDecimal valorImpostosItem = itemNota.getValorIcms()
                 .add(itemNota.getValorPis())
@@ -206,43 +239,57 @@ public class NotaServiceImpl implements NotaService {
         nota.setValorImpostosTotal(nota.getValorImpostosTotal().add(valorImpostosItem));
         nota.setValorTotal(nota.getValorProdutos().add(nota.getValorImpostosTotal()));
 
-        // 10. Salvar e retornar
+        // Salvar e retornar
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
     }
 
     // atualizar item da nota
     @Override
-    public NotaResponseDTO updateItem(Long notaId, Long itemId, ItemNotaRequestDTO itemNotaRequestDTO) {
+    public NotaResponseDTO updateItem(Long notaId, Long itemId, ItemNotaRequestDTO itemNotaRequestDTO, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Verificar se a nota existe e está em rascunho
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
         if (nota.getStatus() != StatusNota.RASCUNHO) {
             errors.put("nota", "Só é possível atualizar itens em notas com status RASCUNHO");
         }
 
-        // 2. Verificar se o item existe na nota
+        // Verificar se o item existe na nota
         ItemNota itemNota = nota.getItens().stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("ItemNota", itemId));
 
-        // ========================================
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
+        }
+
         // GUARDAR VALORES ANTIGOS ANTES DE ALTERAR
-        // ========================================
         BigDecimal subTotalAntigo = itemNota.getSubtotal();
         BigDecimal valorImpostosAntigo = itemNota.getValorIcms()
                 .add(itemNota.getValorPis())
                 .add(itemNota.getValorCofins());
 
-        // 3. Validar quantidade
+        // Validar quantidade
         if (itemNotaRequestDTO.getQuantidade() == null || itemNotaRequestDTO.getQuantidade().compareTo(BigDecimal.ZERO) <= 0) {
             errors.put("quantidade", "Quantidade deve ser maior que zero");
         }
 
-        // 4. Validar preço unitário
+        // Validar preço unitário
         BigDecimal precoParaValidar = itemNotaRequestDTO.getPrecoUnitario();
         if (precoParaValidar == null) {
             // Se não informado, usa o preço do produto
@@ -255,7 +302,7 @@ public class NotaServiceImpl implements NotaService {
             errors.put("precoUnitario", "Preço unitário deve ser maior que zero");
         }
 
-        // 5. Valida as alíquotas (se informadas)
+        // Valida as alíquotas (se informadas)
         if (itemNotaRequestDTO.getAliquotaIcms() != null && itemNotaRequestDTO.getAliquotaIcms().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("aliquotaIcms", "Alíquota ICMS não pode ser negativa");
         }
@@ -271,7 +318,7 @@ public class NotaServiceImpl implements NotaService {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // 6. Atualizar campos do item
+        // Atualizar campos do item
         itemNota.setQuantidade(itemNotaRequestDTO.getQuantidade());
 
         if (itemNotaRequestDTO.getPrecoUnitario() != null) {
@@ -291,7 +338,7 @@ public class NotaServiceImpl implements NotaService {
             itemNota.setAliquotaCofins(itemNotaRequestDTO.getAliquotaCofins());
         }
 
-        // 7. Recalcular totais da nota
+        // Recalcular totais da nota
         // Subtrai valores antigos
         nota.setValorProdutos(nota.getValorProdutos().subtract(subTotalAntigo));
         nota.setValorImpostosTotal(nota.getValorImpostosTotal().subtract(valorImpostosAntigo));
@@ -306,33 +353,54 @@ public class NotaServiceImpl implements NotaService {
         nota.setValorImpostosTotal(nota.getValorImpostosTotal().add(valorImpostosNovo));
         nota.setValorTotal(nota.getValorProdutos().add(nota.getValorImpostosTotal()));
 
-        // 8. Salvar e retornar
+        // Salvar e retornar
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
     }
 
     // remover item da nota
     @Override
-    public NotaResponseDTO removeItem(Long notaId, Long itemId) {
+    public NotaResponseDTO removeItem(Long notaId, Long itemId, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Verificar se a nota existe e está em rascunho
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
         if (nota.getStatus() != StatusNota.RASCUNHO) {
             errors.put("nota", "Só é possível remover itens em notas com status RASCUNHO");
         }
 
-        // 2. Verificar se o item existe na nota
+        // Verificar se o item existe na nota
         ItemNota itemNota = nota.getItens().stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("ItemNota", itemId));
 
-        // 3. Remover item da nota
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
+        }
+
+        // Se houver erros, lança exceção
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados da nota", errors);
+        }
+
+        // Remover item da nota
         nota.getItens().remove(itemNota);
 
-        // 4. Recalcular totais da nota
+        // Recalcular totais da nota
         nota.setValorProdutos(nota.getValorProdutos().subtract(itemNota.getSubtotal()));
         BigDecimal valorImpostosItem = itemNota.getValorIcms()
                 .add(itemNota.getValorPis())
@@ -340,7 +408,7 @@ public class NotaServiceImpl implements NotaService {
         nota.setValorImpostosTotal(nota.getValorImpostosTotal().subtract(valorImpostosItem));
         nota.setValorTotal(nota.getValorProdutos().add(nota.getValorImpostosTotal()));
 
-        // 5. Salvar e retornar
+        // Salvar e retornar
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
 
@@ -348,9 +416,15 @@ public class NotaServiceImpl implements NotaService {
 
     // emitir nota
     @Override
-    public NotaResponseDTO emitirNota(Long notaId) {
+    public NotaResponseDTO emitirNota(Long notaId, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
-        // 1. Verificar se a nota existe e está em rascunho
+
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
 
@@ -364,9 +438,20 @@ public class NotaServiceImpl implements NotaService {
             throw new BusinessException("Não é possível emitir nota cancelada");
         }
 
-        // 2. Verificar se a nota possui pelo menos um item
+        // Verificar se a nota possui pelo menos um item
         if (nota.getItens().isEmpty()) {
             errors.put("itens", "Não é possível emitir nota sem itens");
+        }
+
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
         }
 
         // Se houver erros, lança exceção
@@ -374,12 +459,12 @@ public class NotaServiceImpl implements NotaService {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // 3. Atualizar status e data de emissão
+        // Atualizar status e data de emissão
         nota.setStatus(StatusNota.EMITIDA);
         LocalDateTime now = LocalDateTime.now();
         nota.setDataEmissao(now);
 
-        // 4. Salvar e retornar
+        // Salvar e retornar
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
 
@@ -387,22 +472,22 @@ public class NotaServiceImpl implements NotaService {
 
     // atualizar dados da nota
     @Override
-    public NotaResponseDTO updateNota(Long notaId, NotaRequestDTO dto) {
+    public NotaResponseDTO updateNota(Long notaId, NotaRequestDTO dto, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Verificar se a nota existe e está em rascunho
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está em rascunho
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
         if (nota.getStatus() != StatusNota.RASCUNHO) {
             errors.put("nota", "Só é possível atualizar notas com status RASCUNHO");
         }
 
-        // Se houver erros, lança exceção
-        if (!errors.isEmpty()) {
-            throw new ValidationException("Erro de validação nos dados da nota", errors);
-        }
-
-        // 2. Atualizar campos permitidos
+        // Atualizar campos permitidos
         // Validar observações
         if (dto.getObservacoes() != null && dto.getObservacoes().length() > 500) {
             errors.put("observacoes", "Observações devem ter no máximo 500 caracteres");
@@ -438,12 +523,23 @@ public class NotaServiceImpl implements NotaService {
                     });
         }
 
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
+        }
+
         // Se houver erros, lança exceção
         if (!errors.isEmpty()) {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // 3. Atualizar campos
+        //  Atualizar campos
         nota.setObservacoes(dto.getObservacoes());
 
         // Atualizar empresa (se informada e diferente da atual)
@@ -471,7 +567,7 @@ public class NotaServiceImpl implements NotaService {
             nota.setCliente(null);
         }
 
-        // Atualizar frete (se informado)
+        // Pegar frete (se informado)
         BigDecimal freteAtual = nota.getFrete() != null ? nota.getFrete() : BigDecimal.ZERO;
         BigDecimal novoFrete = dto.getFrete() != null ? dto.getFrete() : BigDecimal.ZERO;
 
@@ -488,7 +584,7 @@ public class NotaServiceImpl implements NotaService {
         nota.setDataCancelamento(null);
         nota.setDataEmissao(null);
 
-        // 4. Salvar e retornar
+        //  Salvar e retornar
         Nota notaAtualizada = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaAtualizada);
 
@@ -496,14 +592,30 @@ public class NotaServiceImpl implements NotaService {
 
     // cancelar nota
     @Override
-    public void cancelarNota(Long notaId) {
+    public void cancelarNota(Long notaId, Authentication authentication) {
         Map<String, String> errors = new HashMap<>();
 
-        // 1. Verificar se a nota existe e está emitida
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se a nota existe e está emitida
         Nota nota = notaRepository.findById(notaId)
                 .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
         if (nota.getStatus() == StatusNota.CANCELADA) {
             errors.put("nota", "Só é possível cancelar notas com status EMITIDA ou RASCUNHO");
+        }
+
+        // Verificar se usuário tem acesso à empresa da nota
+        Long empresaIdDaNota = nota.getEmpresa().getId();
+        boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
+                usuario.getId(),
+                empresaIdDaNota
+        );
+
+        if (!usuarioTemAcesso) {
+            throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
         }
 
         // Se houver erros, lança exceção
@@ -511,12 +623,12 @@ public class NotaServiceImpl implements NotaService {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // 2. Atualizar status e data de cancelamento
+        // Atualizar status e data de cancelamento
         nota.setStatus(StatusNota.CANCELADA);
         LocalDateTime now = LocalDateTime.now();
         nota.setDataCancelamento(now);
 
-        // 3. Salvar
+        // Salvar
         notaRepository.save(nota);
 
 

@@ -2,11 +2,13 @@ package dev.ellyon.sistemanotas.model;
 
 import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_cliente")
+@Data
 public class Cliente extends Entidade{
     @Column(name = "nome", nullable = false, length = 255)
     private String nome;
@@ -42,6 +44,11 @@ public class Cliente extends Entidade{
     @Column(name = "bairro", nullable = false, length = 100)
     private String bairro;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresa;
+
+
     @Column(name = "is_ativo", nullable = false)
     private Boolean isAtivo;
 
@@ -53,7 +60,7 @@ public class Cliente extends Entidade{
     // Construtor com todos atributos
     public Cliente(Long id, String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual,
                    String email, String telefone, String enderecoCompleto, String cidade,
-                   String estadoUF, String cep, String bairro, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   String estadoUF, String cep, String bairro, Empresa empresa, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
@@ -66,6 +73,7 @@ public class Cliente extends Entidade{
         this.estadoUF = estadoUF;
         this.cep = cep;
         this.bairro = bairro;
+        this.empresa = empresa;
         this.isAtivo = isAtivo;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -74,7 +82,7 @@ public class Cliente extends Entidade{
     // Construtor sem id e timestamps
     public Cliente(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual,
                    String email, String telefone, String enderecoCompleto, String cidade,
-                   String estadoUF, String cep, String bairro, Boolean isAtivo) {
+                   String estadoUF, String cep, String bairro, Boolean isAtivo, Empresa empresa) {
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
         this.cpfCnpj = cpfCnpj;
@@ -87,6 +95,7 @@ public class Cliente extends Entidade{
         this.cep = cep;
         this.bairro = bairro;
         this.isAtivo = isAtivo;
+        this.empresa = empresa;
     }
 
     public String getNome() {
@@ -177,6 +186,14 @@ public class Cliente extends Entidade{
         this.bairro = bairro;
     }
 
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
+    }
+
     public Boolean getAtivo() {
         return isAtivo;
     }
@@ -196,13 +213,11 @@ public class Cliente extends Entidade{
                 ", telefone='" + telefone + '\'' +
                 ", enderecoCompleto='" + enderecoCompleto + '\'' +
                 ", cidade='" + cidade + '\'' +
-                ", estado='" + estadoUF + '\'' +
+                ", estadoUF='" + estadoUF + '\'' +
                 ", cep='" + cep + '\'' +
                 ", bairro='" + bairro + '\'' +
+                ", empresa=" + empresa +
                 ", isAtivo=" + isAtivo +
-                ", updatedAt=" + updatedAt +
-                ", createdAt=" + createdAt +
-                ", id=" + id +
                 '}';
     }
 }

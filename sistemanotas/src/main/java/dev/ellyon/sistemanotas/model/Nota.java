@@ -3,6 +3,7 @@ package dev.ellyon.sistemanotas.model;
 import dev.ellyon.sistemanotas.model.enums.StatusNota;
 import dev.ellyon.sistemanotas.model.enums.TipoNota;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "tb_nota")
+@Data
 public class Nota extends Entidade{
     @Column(name = "numero", nullable = false, length = 255)
     private String numero;

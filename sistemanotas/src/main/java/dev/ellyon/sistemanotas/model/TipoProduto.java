@@ -3,11 +3,13 @@ package dev.ellyon.sistemanotas.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_tipo_produto")
+@Data
 public class TipoProduto extends Entidade{
     @Column(name = "nome", nullable = false, length = 200, unique = true)
     private String nome;

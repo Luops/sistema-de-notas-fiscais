@@ -87,7 +87,7 @@ public class CertificadoTestGenerator {
 
         System.out.println("✅ Certificado criado com sucesso!");
         System.out.println("📁 Local: " + caminho);
-        System.out.println("🔐 Senha: senha123");
-        System.out.println("🏢 CNPJ: 12345678000190");
+        System.out.println("🔐 Senha: Fabrios12361236");
+        System.out.println("🏢 CNPJ: 04642472096");
     }
 }

@@ -2,11 +2,13 @@ package dev.ellyon.sistemanotas.model;
 
 import dev.ellyon.sistemanotas.model.enums.Unidade;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tb_item_nota")
+@Data
 public class ItemNota extends Entidade{
     @ManyToOne
     @JoinColumn(name = "nota_id", nullable = false)

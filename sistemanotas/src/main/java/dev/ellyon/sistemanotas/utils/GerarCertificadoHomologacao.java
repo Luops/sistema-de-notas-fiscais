@@ -77,8 +77,8 @@ public class GerarCertificadoHomologacao {
 
         System.out.println("✅ Certificado de homologação criado!");
         System.out.println("📁 Local: " + caminho);
-        System.out.println("🔐 Senha: 123456");
-        System.out.println("🏢 CNPJ: 11222333000181");
+        System.out.println("🔐 Senha: Fabrios12361236");
+        System.out.println("🏢 CNPJ: 04642472096");
         System.out.println("\n⚠️ IMPORTANTE: Use o CNPJ 11222333000181 em todas as notas de teste!");
     }
 }

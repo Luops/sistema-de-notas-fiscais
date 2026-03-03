@@ -12,6 +12,9 @@ public class LoginRequestDTO {
     @NotBlank(message = "Senha é obrigatória")
     private String senha;
 
+    public LoginRequestDTO() {
+    }
+
     public LoginRequestDTO(String email, String senha) {
         this.email = email;
         this.senha = senha;

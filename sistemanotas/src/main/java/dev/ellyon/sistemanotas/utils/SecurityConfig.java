@@ -102,6 +102,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/empresa-usuario/**").hasRole("ADMIN")
 
                         // ========================================
+                        // NCM
+                        // ========================================
+                        .requestMatchers("/api/v1/ncm/**").permitAll()
+
+                        // ========================================
                         // QUALQUER OUTRA ROTA: AUTENTICADO
                         // ========================================
                         .anyRequest().authenticated()

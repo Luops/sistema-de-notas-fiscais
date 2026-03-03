@@ -3,9 +3,11 @@ package dev.ellyon.sistemanotas.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table (name = "tb_empresa")
+@Data
 public class Empresa extends Entidade{
   @Column(name = "razao_social", nullable = false, length = 255)
   private String razaoSocial;
@@ -42,6 +44,27 @@ public class Empresa extends Entidade{
 
   @Column(name = "is_ativo", nullable = false)
   private Boolean isAtivo;
+
+  @Column(name = "certificado_digital")
+  private byte[] certificadoDigital;
+
+  @Column(name = "certificado_senha_criptografada", length = 255)
+  private String certificadoSenhaCriptografada;  // Senha criptografada
+
+  @Column(name = "certificado_tipo", length = 10)
+  private String certificadoTipo = "A1";  // A1 ou A3
+
+  @Column(name = "certificado_validade")
+  private LocalDateTime certificadoValidade;  // Data de vencimento
+
+  @Column(name = "certificado_cnpj", length = 14)
+  private String certificadoCnpj;  // CNPJ do certificado
+
+  @Column(name = "certificado_ativo")
+  private Boolean certificadoAtivo = false;  // Se está configurado
+
+  @Column(name = "certificado_upload_date")
+  private LocalDateTime certificadoUploadDate;  // Data do upload
 
   // Construtor padrão
   public Empresa(){
@@ -177,6 +200,84 @@ public class Empresa extends Entidade{
 
   public void setAtivo(Boolean ativo) {
     isAtivo = ativo;
+  }
+
+  public byte[] getCertificadoDigital() {
+    return certificadoDigital;
+  }
+
+  public void setCertificadoDigital(byte[] certificadoDigital) {
+    this.certificadoDigital = certificadoDigital;
+  }
+
+  public String getCertificadoSenhaCriptografada() {
+    return certificadoSenhaCriptografada;
+  }
+
+  public void setCertificadoSenhaCriptografada(String certificadoSenhaCriptografada) {
+    this.certificadoSenhaCriptografada = certificadoSenhaCriptografada;
+  }
+
+  public String getCertificadoTipo() {
+    return certificadoTipo;
+  }
+
+  public void setCertificadoTipo(String certificadoTipo) {
+    this.certificadoTipo = certificadoTipo;
+  }
+
+  public LocalDateTime getCertificadoValidade() {
+    return certificadoValidade;
+  }
+
+  public void setCertificadoValidade(LocalDateTime certificadoValidade) {
+    this.certificadoValidade = certificadoValidade;
+  }
+
+  public String getCertificadoCnpj() {
+    return certificadoCnpj;
+  }
+
+  public void setCertificadoCnpj(String certificadoCnpj) {
+    this.certificadoCnpj = certificadoCnpj;
+  }
+
+  public Boolean getCertificadoAtivo() {
+    return certificadoAtivo;
+  }
+
+  public void setCertificadoAtivo(Boolean certificadoAtivo) {
+    this.certificadoAtivo = certificadoAtivo;
+  }
+
+  public LocalDateTime getCertificadoUploadDate() {
+    return certificadoUploadDate;
+  }
+
+  public void setCertificadoUploadDate(LocalDateTime certificadoUploadDate) {
+    this.certificadoUploadDate = certificadoUploadDate;
+  }
+
+  /**
+   * Verifica se certificado está válido
+   */
+  @Transient
+  public boolean isCertificadoValido() {
+    if (certificadoDigital == null || certificadoValidade == null) {
+      return false;
+    }
+    return LocalDateTime.now().isBefore(certificadoValidade) || LocalDateTime.now().isEqual(certificadoValidade);
+  }
+
+  /**
+   * Dias restantes até vencer
+   */
+  @Transient
+  public long diasParaVencer() {
+    if (certificadoValidade == null) {
+      return 0;
+    }
+    return java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), certificadoValidade);
   }
 
 

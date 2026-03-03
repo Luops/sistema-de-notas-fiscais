@@ -2,7 +2,7 @@ package dev.ellyon.sistemanotas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.ellyon.sistemanotas.nfe.dto.CancelamentoNFeDTORequest;
-import dev.ellyon.sistemanotas.nfe.dto.NFeRetornoDTO;
+import dev.ellyon.sistemanotas.nfe.dto.NFeResponseDTO;
 import dev.ellyon.sistemanotas.nfe.service.NFeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,14 +53,14 @@ class NFeCancelamentoControllerTest {
     private dev.ellyon.sistemanotas.nfe.config.NFeConfig nfeConfig;
 
     private CancelamentoNFeDTORequest cancelamentoRequest;
-    private NFeRetornoDTO nfeRetorno;
+    private NFeResponseDTO nfeRetorno;
 
     @BeforeEach
     void setUp() {
         cancelamentoRequest = new CancelamentoNFeDTORequest();
         cancelamentoRequest.setJustificativa("Devolução do produto por defeito de fabricação");
 
-        nfeRetorno = new NFeRetornoDTO();
+        nfeRetorno = new NFeResponseDTO();
         nfeRetorno.setCodigoStatus("135");
         nfeRetorno.setMensagem("Cancelamento de NF-e autorizado");
         nfeRetorno.setProtocolo("352350001234567");

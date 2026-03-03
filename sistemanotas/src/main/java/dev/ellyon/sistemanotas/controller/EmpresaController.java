@@ -1,8 +1,6 @@
 package dev.ellyon.sistemanotas.controller;
 
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaRequestDTO;
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
+import dev.ellyon.sistemanotas.dto.empresa.*;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
 import dev.ellyon.sistemanotas.service.EmpresaService;
 import jakarta.validation.Valid;
@@ -13,7 +11,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -80,6 +80,80 @@ public class EmpresaController {
                 null
         );
         return ResponseEntity.ok(response);
+    }
+
+    // Rota para fazer upload do certificado
+    @PostMapping(value = "/{empresaId}/certificado/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> upload(
+            @PathVariable Long empresaId,
+            @Valid @ModelAttribute CertificadoUploadDTO dto) {
+
+        try {
+            CertificadoResponseDTO response = empresaService.uploadCertificado(empresaId, dto);
+
+            SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                    HttpStatus.OK.value(),
+                    "Certificado digital configurado com sucesso!",
+                    response
+            );
+            return ResponseEntity.ok(successResponse);
+
+        } catch (Exception e) {
+            SuccessResponseDTO errorResponse = new SuccessResponseDTO(
+                    HttpStatus.BAD_REQUEST.value(),
+                    e.getMessage(),
+                    null
+            );
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    // Rota para buscar informações do certificado
+    @GetMapping("/{empresaId}/certificado")
+    public ResponseEntity<SuccessResponseDTO> buscar(@PathVariable Long empresaId) {
+        try {
+            CertificadoResponseDTO response = empresaService.buscarCertificado(empresaId);
+
+            SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                    HttpStatus.OK.value(),
+                    "Certificado encontrado",
+                    response
+            );
+            return ResponseEntity.ok(successResponse);
+
+        } catch (Exception e) {
+            SuccessResponseDTO errorResponse = new SuccessResponseDTO(
+                    HttpStatus.NOT_FOUND.value(),
+                    e.getMessage(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+
+    // Rota para remover certificado
+    @DeleteMapping("/{empresaId}/certificado")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> remover(@PathVariable Long empresaId) {
+        try {
+            empresaService.removerCertificado(empresaId);
+
+            SuccessResponseDTO response = new SuccessResponseDTO(
+                    HttpStatus.OK.value(),
+                    "Certificado removido com sucesso",
+                    null
+            );
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            SuccessResponseDTO errorResponse = new SuccessResponseDTO(
+                    HttpStatus.BAD_REQUEST.value(),
+                    e.getMessage(),
+                    null
+            );
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
     }
 
     // Rota para buscar uma empresa por ID

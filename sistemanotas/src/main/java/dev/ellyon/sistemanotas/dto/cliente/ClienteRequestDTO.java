@@ -49,6 +49,11 @@ public class ClienteRequestDTO {
 
     private Boolean isAtivo;
 
+    // Construtor padrão
+    public ClienteRequestDTO() {
+    }
+
+    // Construtor completo
     public ClienteRequestDTO(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo) {
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;

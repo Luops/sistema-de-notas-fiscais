@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "tb_usuario")
+@Data
 public class Usuario extends Entidade {
   @Column(name = "nome", nullable = false, length = 255)
   private String nome;

@@ -21,4 +21,6 @@ public interface EmpresaUsuarioRepository extends JpaRepository<EmpresaUsuario, 
     boolean existsByUsuarioIdAndEmpresaId(Long usuarioId, Long empresaId);
 
     List<EmpresaUsuario> findByPerfil(Perfil perfil);
+
+    int countEmpresaUsuarioByEmpresaId(Long empresaId); // Contar quantas associacoes contem
 }

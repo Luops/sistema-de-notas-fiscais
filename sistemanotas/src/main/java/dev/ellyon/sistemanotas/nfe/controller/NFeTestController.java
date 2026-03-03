@@ -3,8 +3,6 @@ package dev.ellyon.sistemanotas.nfe.controller;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
 import dev.ellyon.sistemanotas.model.Nota;
 import dev.ellyon.sistemanotas.nfe.config.NFeConfig;
-import dev.ellyon.sistemanotas.nfe.dto.NFeRetornoDTO;
-import dev.ellyon.sistemanotas.nfe.dto.NFeStatusDTO;
 import dev.ellyon.sistemanotas.nfe.service.*;
 import dev.ellyon.sistemanotas.nfe.xml.NFeXmlGenerator;
 import dev.ellyon.sistemanotas.repository.NotaRepository;
@@ -85,16 +83,17 @@ public class NFeTestController {
     /**
      * Teste 2: Carregar Certificado Digital
      */
-    @GetMapping("/test/certificado")
-    public ResponseEntity<SuccessResponseDTO> testarCertificado() {
+    @GetMapping("/test/certificado/{empresaId}")
+    public ResponseEntity<SuccessResponseDTO> testarCertificado(@PathVariable Long empresaId) {
         try {
-            String cnpj = certificadoService.getCNPJ();
+            // ✅ Carregar certificado da empresa específica
+            CertificadoService.CertificadoData certificado =
+                    certificadoService.carregarCertificadoDaEmpresa(empresaId);
 
             Map<String, Object> data = new HashMap<>();
-            data.put("cnpj", cnpj);
+            data.put("cnpj", certificado.getCnpj());
             data.put("status", "Certificado carregado com sucesso");
-            data.put("tipo", nfeConfig.getCertificado().getTipo());
-            data.put("caminho", nfeConfig.getCertificado().getCaminho());
+            data.put("empresaId", empresaId);
 
             SuccessResponseDTO response = new SuccessResponseDTO(
                     HttpStatus.OK.value(),
@@ -102,11 +101,11 @@ public class NFeTestController {
                     data
             );
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("erro", e.getMessage());
             error.put("stack", e.getClass().getName());
-            error.put("dica", "Verifique se o certificado está em: " + nfeConfig.getCertificado().getCaminho());
 
             SuccessResponseDTO response = new SuccessResponseDTO(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -182,7 +181,8 @@ public class NFeTestController {
             );
 
             String xmlSemAssinatura = xmlGenerator.gerar(nota, chaveAcesso);
-            String xmlAssinado = assinaturaService.assinar(xmlSemAssinatura, "NFe" + chaveAcesso);
+            Long empresaId = nota.getEmpresa().getId();
+            String xmlAssinado = assinaturaService.assinar(empresaId, xmlSemAssinatura, "NFe" + chaveAcesso);
 
             return ResponseEntity.ok()
                     .header("Content-Type", "application/xml; charset=UTF-8")
@@ -367,7 +367,8 @@ public class NFeTestController {
             String xmlAssinado;
             String erro = null;
             try {
-                xmlAssinado = assinaturaService.assinar(xmlSemAssinatura, "NFe" + chaveAcesso);
+                Long empresaId = nota.getEmpresa().getId();
+                xmlAssinado = assinaturaService.assinar(empresaId, xmlSemAssinatura, "NFe" + chaveAcesso);
             } catch (Exception e) {
                 xmlAssinado = null;
                 erro = e.getMessage();

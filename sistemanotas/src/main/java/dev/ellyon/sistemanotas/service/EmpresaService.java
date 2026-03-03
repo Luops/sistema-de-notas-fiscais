@@ -1,8 +1,6 @@
 package dev.ellyon.sistemanotas.service;
 
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaListResponseDTO;
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaRequestDTO;
-import dev.ellyon.sistemanotas.dto.empresa.EmpresaResponseDTO;
+import dev.ellyon.sistemanotas.dto.empresa.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,6 +15,9 @@ public interface EmpresaService {
     EmpresaResponseDTO update(Long id, EmpresaRequestDTO dto); // Atualizar uma empresa por ID
     void softDelete(Long id); // Desativar uma empresa por ID
     void activate(Long id); // Ativar uma empresa por ID
+    CertificadoResponseDTO uploadCertificado(Long empresaId, CertificadoUploadDTO dto); // Fazer upload
+    CertificadoResponseDTO buscarCertificado(Long empresaId); // Buscar certificado
+    public void removerCertificado(Long empresaId); // Remover certificado da empresa
 
     // Buscas
     EmpresaResponseDTO findById(Long id); // Buscar empresa por ID

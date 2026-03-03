@@ -2,12 +2,14 @@ package dev.ellyon.sistemanotas.model;
 
 import dev.ellyon.sistemanotas.model.enums.Unidade;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_produto")
+@Data
 public class Produto extends Entidade{
     @Column(name = "codigo", nullable = false, length = 100, unique = true)
     private String codigoProduto;

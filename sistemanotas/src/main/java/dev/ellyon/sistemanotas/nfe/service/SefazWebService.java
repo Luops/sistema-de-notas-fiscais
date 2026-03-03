@@ -1,6 +1,7 @@
 package dev.ellyon.sistemanotas.nfe.service;
 
 import dev.ellyon.sistemanotas.nfe.config.NFeConfig;
+import dev.ellyon.sistemanotas.service.EmpresaService;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
@@ -16,16 +17,20 @@ import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLContext;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 
 @Service
 public class SefazWebService {
 
     private final NFeConfig nfeConfig;
     private final SefazMockService mockService;
-
-    public SefazWebService(NFeConfig nfeConfig, SefazMockService mockService) {
+    private final EmpresaService empresaService;
+    private final CertificadoService certificadoService;
+    public SefazWebService(NFeConfig nfeConfig, SefazMockService mockService, EmpresaService empresaService, CertificadoService certificadoService) {
         this.nfeConfig = nfeConfig;
         this.mockService = mockService;
+        this.empresaService = empresaService;
+        this.certificadoService = certificadoService;
     }
 
     /**
@@ -242,5 +247,101 @@ public class SefazWebService {
                 return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             }
         }
+    }
+
+    /**
+     * Envia NF-e para SEFAZ
+     */
+    public String enviarNFe(Long empresaId, String xmlAssinado) {
+        try {
+            // ✅ Se modo mock ativo, retorna simulação
+            if (Boolean.TRUE.equals(nfeConfig.getMockSefaz())) {
+                // Extrair chave de acesso do XML para passar para o mock
+                int inicio = xmlAssinado.indexOf("<infNFe Id=\"NFe");
+                int fim = xmlAssinado.indexOf("\"", inicio + 15);
+                String chaveAcesso = xmlAssinado.substring(inicio + 15, fim);
+                return mockService.simularAutorizacao(chaveAcesso);
+            }
+
+            // ✅ Carregar certificado da empresa usando CertificadoService
+            CertificadoService.CertificadoData certificado =
+                    certificadoService.carregarCertificadoDaEmpresa(empresaId);
+
+            // Configurar SSL com certificado da empresa
+            SSLContext sslContext = SSLContextBuilder.create()
+                    .loadKeyMaterial(
+                            criarKeyStore(certificado),
+                            "".toCharArray()
+                    )
+                    .loadTrustMaterial(new TrustAllStrategy())
+                    .build();
+
+            // Criar SSLConnectionSocketFactory
+            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
+                    sslContext,
+                    (hostname, session) -> true
+            );
+
+            // Criar HttpClientConnectionManager com SSL configurado
+            HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                    .setSSLSocketFactory(sslSocketFactory)
+                    .build();
+
+            CloseableHttpClient httpClient = HttpClients.custom()
+                    .setConnectionManager(connectionManager)
+                    .build();
+
+            // Enviar requisição SOAP
+            HttpPost request = new HttpPost(nfeConfig.getSefaz().getUrlAutorizacao());
+            request.setHeader("Content-Type", "application/soap+xml; charset=utf-8");
+            request.setEntity(new StringEntity(
+                    montarEnvelopeSoap(xmlAssinado),
+                    StandardCharsets.UTF_8
+            ));
+
+            CloseableHttpResponse response = httpClient.execute(request);
+            String xmlResposta = EntityUtils.toString(response.getEntity());
+
+            return extrairXmlResposta(xmlResposta);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao enviar NF-e para SEFAZ: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Cria KeyStore temporário a partir do certificado
+     */
+    private KeyStore criarKeyStore(CertificadoService.CertificadoData certificado) throws Exception {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(null, null);
+        keyStore.setKeyEntry(
+                "cert",
+                certificado.getPrivateKey(),
+                "".toCharArray(),
+                new java.security.cert.Certificate[]{certificado.getCertificate()}
+        );
+        return keyStore;
+    }
+
+    /**
+     * Monta envelope SOAP (você precisa implementar)
+     */
+    private String montarEnvelopeSoap(String xmlAssinado) {
+        return criarEnvelopeAutorizacao(xmlAssinado, "");
+    }
+
+    /**
+     * Extrai XML de resposta (você precisa implementar)
+     */
+    private String extrairXmlResposta(String soapResponse) {
+        int inicio = soapResponse.indexOf("<retEnviNFe");
+        int fim = soapResponse.indexOf("</retEnviNFe>") + 13;
+
+        if (inicio >= 0 && fim > inicio) {
+            return soapResponse.substring(inicio, fim);
+        }
+
+        return soapResponse;
     }
 }

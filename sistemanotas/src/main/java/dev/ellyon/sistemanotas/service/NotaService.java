@@ -6,6 +6,7 @@ import dev.ellyon.sistemanotas.dto.nota.NotaRequestDTO;
 import dev.ellyon.sistemanotas.dto.nota.NotaResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,13 +15,13 @@ import java.util.List;
 public interface NotaService {
     // "Contratos" - O que esse serviço deve oferecer
     // Create - Update - Delete
-    NotaResponseDTO create(NotaRequestDTO dto);// Criar nova nota
-    NotaResponseDTO addItem(Long notaId, ItemNotaRequestDTO itemNotaRequestDTO); // Adicionar item a nota
-    NotaResponseDTO updateItem(Long notaId, Long itemId, ItemNotaRequestDTO itemNotaRequestDTO); // Atualizar item da nota
-    NotaResponseDTO removeItem(Long notaId, Long itemId); // Remover item da nota
-    NotaResponseDTO emitirNota(Long notaId); // Emitir nota
-    NotaResponseDTO updateNota(Long notaId, NotaRequestDTO dto); // Atualizar dados da nota
-    void cancelarNota(Long notaId); // Cancelar nota
+    NotaResponseDTO create(NotaRequestDTO dto, Authentication authentication);// Criar nova nota
+    NotaResponseDTO addItem(Long notaId, ItemNotaRequestDTO itemNotaRequestDTO, Authentication authentication); // Adicionar item a nota
+    NotaResponseDTO updateItem(Long notaId, Long itemId, ItemNotaRequestDTO itemNotaRequestDTO, Authentication authentication); // Atualizar item da nota
+    NotaResponseDTO removeItem(Long notaId, Long itemId, Authentication authentication); // Remover item da nota
+    NotaResponseDTO emitirNota(Long notaId, Authentication authentication); // Emitir nota
+    NotaResponseDTO updateNota(Long notaId, NotaRequestDTO dto, Authentication authentication); // Atualizar dados da nota
+    void cancelarNota(Long notaId, Authentication authentication); // Cancelar nota
 
     // Buscas
     NotaResponseDTO findById(Long notaId); // Buscar nota por ID

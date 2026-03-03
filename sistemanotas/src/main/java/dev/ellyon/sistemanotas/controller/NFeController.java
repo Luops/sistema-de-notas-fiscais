@@ -3,28 +3,22 @@ package dev.ellyon.sistemanotas.controller;
 import dev.ellyon.sistemanotas.dto.generics.SuccessResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
-import dev.ellyon.sistemanotas.model.Nota;
 import dev.ellyon.sistemanotas.nfe.config.NFeConfig;
 import dev.ellyon.sistemanotas.nfe.dto.CancelamentoNFeDTORequest;
-import dev.ellyon.sistemanotas.nfe.dto.NFeRetornoDTO;
+import dev.ellyon.sistemanotas.nfe.dto.NFeResponseDTO;
 import dev.ellyon.sistemanotas.nfe.dto.NFeStatusDTO;
 import dev.ellyon.sistemanotas.nfe.service.*;
 import dev.ellyon.sistemanotas.nfe.xml.NFeXmlGenerator;
 import dev.ellyon.sistemanotas.repository.NotaRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/nfe")
 public class NFeController {
-
     private final ChaveAcessoService chaveAcessoService;
     private final CertificadoService certificadoService;
     private final DanfeService danfeService;
@@ -81,27 +75,32 @@ public class NFeController {
      * Emitir NF-e
      */
     @PostMapping("/emitir/{notaId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> emitir(@PathVariable Long notaId) {
         try {
-            NFeRetornoDTO retorno = nfeService.emitir(notaId);
+            System.out.println("🚀 Iniciando emissão da nota: " + notaId);
+            NFeResponseDTO retorno = nfeService.emitir(notaId);
 
-            String mensagem = "100".equals(retorno.getCodigoStatus())
-                    ? "NF-e autorizada com sucesso!"
-                    : "Erro ao autorizar NF-e";
+            System.out.println("✅ NF-e emitida! Chave: " + retorno.getChaveAcesso());
+            System.out.println("   Status: " + retorno.getCodigoStatus());
+            System.out.println("   Mensagem: " + retorno.getMensagem());
 
             SuccessResponseDTO response = new SuccessResponseDTO(
-                    HttpStatus.OK.value(),
-                    mensagem,
+                    200,
+                    "NF-e emitida com sucesso!",
                     retorno
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("❌ Erro de negócio: " + e.getMessage());
+            e.printStackTrace();
+
             SuccessResponseDTO response = new SuccessResponseDTO(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Erro ao emitir NF-e: " + e.getMessage(),
+                    400,
+                    e.getMessage(),
                     null
             );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -113,7 +112,7 @@ public class NFeController {
             @PathVariable Long notaId,
             @RequestBody @Valid CancelamentoNFeDTORequest dto) {
         try {
-            NFeRetornoDTO retorno = nfeService.cancelar(notaId, dto.getJustificativa());
+            NFeResponseDTO retorno = nfeService.cancelar(notaId, dto.getJustificativa());
 
             String mensagem = "135".equals(retorno.getCodigoStatus()) || "101".equals(retorno.getCodigoStatus())
                     ? "NF-e cancelada com sucesso!"

@@ -19,6 +19,10 @@ public class NotaRequestDTO {
     @Size(max = 500, message = "Observações devem ter no máximo 500 caracteres")
     private String observacoes;
 
+    // Construtor padrao
+    public NotaRequestDTO() {}
+
+    // Construtor completo
     public NotaRequestDTO(Long empresaId, Long clienteId, Long usuarioId, BigDecimal frete, String observacoes) {
         this.empresaId = empresaId;
         this.clienteId = clienteId;

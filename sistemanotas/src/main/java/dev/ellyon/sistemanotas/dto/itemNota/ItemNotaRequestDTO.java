@@ -17,6 +17,10 @@ public class ItemNotaRequestDTO {
     private BigDecimal aliquotaPis;
     private BigDecimal aliquotaCofins;
 
+    // Construtor padrao
+    public ItemNotaRequestDTO(){}
+
+    // Construtor completo
     public ItemNotaRequestDTO(Long produtoId, BigDecimal quantidade, BigDecimal precoUnitario, BigDecimal aliquotaIcms, BigDecimal aliquotaPis, BigDecimal aliquotaCofins) {
         this.produtoId = produtoId;
         this.quantidade = quantidade;

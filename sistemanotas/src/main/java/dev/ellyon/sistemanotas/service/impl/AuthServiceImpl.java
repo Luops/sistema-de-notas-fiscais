@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Email ou senha inválidos");
         }
 
-        // ✅ Buscar perfis do usuário nas empresas
+        // Buscar perfis do usuário nas empresas
         List<EmpresaUsuario> empresaUsuarios = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
         List<String> perfis = empresaUsuarios.stream()
                 .map(eu -> eu.getPerfil().name())
@@ -62,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
             perfis.add("VISUALIZADOR");
         }
 
-        // ✅ Gerar token com perfis
+        // Gerar token com perfis
         String token = jwtService.gerarToken(
                 usuario.getId(),
                 usuario.getEmail(),
