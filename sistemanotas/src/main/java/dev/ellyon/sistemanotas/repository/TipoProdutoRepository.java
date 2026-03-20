@@ -1,0 +1,27 @@
+package dev.ellyon.sistemanotas.repository;
+
+import dev.ellyon.sistemanotas.dto.tipoProduto.TipoProdutoResponseDTO;
+import dev.ellyon.sistemanotas.model.TipoProduto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+// Repositório JPA para a entidade. Fazer operações de CRUD no banco de dados.
+public interface TipoProdutoRepository extends JpaRepository<TipoProduto, Long> {
+    boolean existsByNomeIgnoreCase(String nome);
+
+    List<TipoProduto> findByIsAtivo(Boolean ativo);
+    Optional<TipoProduto> findByNome(String nome);
+    List<TipoProduto> findByNomeContainingIgnoreCase(String nome);
+    List<TipoProduto> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim);
+
+    Optional<TipoProduto> findByEmpresaIdAndId(Long empresaId, Long id);
+    List<TipoProduto> findByEmpresaId(Long empresaId);
+    List<TipoProduto> findByEmpresaIdAndIsAtivo(Long empresaId, Boolean ativo);
+    List<TipoProduto> findByEmpresaIdAndNomeContainingIgnoreCase(Long empresaId, String nome);
+    List<TipoProduto> findByEmpresaIdAndCreatedAtBetween(Long empresaId, LocalDateTime inicio, LocalDateTime fim);
+}

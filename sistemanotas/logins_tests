@@ -1,0 +1,14 @@
+login: teste@teste.com
+senha: Fa123456
+empresaId: 39
+admin
+
+login: joao@example.com
+senha: Senha123
+empresaId: 1
+vendedor
+
+login: joao@example2.com
+senha: Senha123
+empresaId: 1
+admin

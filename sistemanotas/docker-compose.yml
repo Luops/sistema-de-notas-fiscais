@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:17.7
+    container_name: sistema_notas
+    environment:
+      POSTGRES_DB: db_sistema_notas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5433"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
+
