@@ -35,6 +35,7 @@ public class NotaController {
     // Rota para criar uma nova rascunho
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> create(@RequestBody @Valid NotaRequestDTO dto,
                                                      Authentication authentication) {
         NotaResponseDTO notaResponseDTO = notaService.create(dto, authentication);
@@ -78,6 +79,7 @@ public class NotaController {
     // Rota para atualizar item da nota
     @PutMapping("/{notaId}/update-item/{itemId}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> updateItem(
             @PathVariable Long notaId,
             @PathVariable Long itemId,
@@ -94,6 +96,7 @@ public class NotaController {
     // Rota para remover item da nota
     @DeleteMapping("/{notaId}/remove-item/{itemId}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> removeItem(
             @PathVariable Long notaId,
             @PathVariable Long itemId, Authentication authentication) {
@@ -109,6 +112,7 @@ public class NotaController {
     // Rota para emitir nota
     @PostMapping("/{notaId}/emitir")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> emitirNota(@PathVariable Long notaId, Authentication authentication) {
         NotaResponseDTO notaResponseDTO = notaService.emitirNota(notaId, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -121,6 +125,7 @@ public class NotaController {
 
     // Rota para atualizar dados da nota
     @PutMapping("/update/{notaId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> updateNota(
             @PathVariable Long notaId,
@@ -136,6 +141,7 @@ public class NotaController {
 
     // Rota para cancelar nota
     @PutMapping("/cancel/{notaId}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> cancelarNota(@PathVariable Long notaId, Authentication authentication) {
         notaService.cancelarNota(notaId, authentication);
@@ -149,6 +155,7 @@ public class NotaController {
 
     // Rota para buscar nota por ID
     @GetMapping("/findById/{notaId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long notaId) {
         NotaResponseDTO notaResponseDTO = notaService.findById(notaId);
@@ -162,6 +169,7 @@ public class NotaController {
 
     // Rota para buscar todas as notas
     @GetMapping("/findAll")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> findAll() {
         List<NotaListResponseDTO> notas = notaService.findAll();
@@ -175,6 +183,7 @@ public class NotaController {
 
     // Rota para buscar todas as notas com paginação
     @GetMapping("/paginated")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<Page<NotaListResponseDTO>> findAllPaged(
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
@@ -183,7 +192,8 @@ public class NotaController {
     }
 
     // Rota para buscar nota por número e empresa
-    @GetMapping
+    @GetMapping("/find-by-numero-and-empresa")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByNumeroAndEmpresaId(
             @RequestParam(required = true) Long empresaId,
             @RequestParam(required = true) String numero) {
@@ -198,6 +208,7 @@ public class NotaController {
 
     // Rota para buscar notas por tipo
     @GetMapping("/tipo/{tipo}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByTipo(@PathVariable String tipo) {
         List<NotaListResponseDTO> notas = notaService.findByTipo(tipo);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -210,6 +221,7 @@ public class NotaController {
 
     // Rota para buscar notas por status
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByStatus(@PathVariable String status) {
         List<NotaListResponseDTO> notas = notaService.findByStatus(status);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -222,6 +234,7 @@ public class NotaController {
 
     // Rota para buscar notas por empresa
     @GetMapping("/empresa/{empresaId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByEmpresaId(@PathVariable Long empresaId) {
         List<NotaListResponseDTO> notas = notaService.findByEmpresaId(empresaId);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -234,6 +247,7 @@ public class NotaController {
 
     // Rota para buscar notas por cliente
     @GetMapping("/cliente/{clienteId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByClienteId(@PathVariable Long clienteId) {
         List<NotaListResponseDTO> notas = notaService.findByClienteId(clienteId);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -246,6 +260,7 @@ public class NotaController {
 
     // Rota para buscar notas por usuário que criou
     @GetMapping("/created-by/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByCreatedByUserId(@PathVariable Long userId) {
         List<NotaListResponseDTO> notas = notaService.findByCreatedByUserId(userId);
         SuccessResponseDTO response = new SuccessResponseDTO(
@@ -258,6 +273,7 @@ public class NotaController {
 
     // Rota para buscar notas por intervalo de datas de emissão
     @GetMapping("/data-emissao")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByDataEmissaoBetween(
             @RequestParam(value = "dataInicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
@@ -289,6 +305,7 @@ public class NotaController {
 
     // Rota para buscar notas por intervalo de datas de emissão
     @GetMapping("/data-cancelamento")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByDataCancelamentoBetween(
             @RequestParam(value = "dataInicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
@@ -320,6 +337,7 @@ public class NotaController {
 
     // Rota para buscar notas por intervalo de valor total
     @GetMapping("/valor-total")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByValorTotalBetween(
             @RequestParam(value = "valorMinimo", required = true) String valorMinimo,
             @RequestParam(value = "valorMaximo", required = true) String valorMaximo
@@ -339,6 +357,7 @@ public class NotaController {
 
     // Rota para buscar notas por intervalo de valor total de impostos
     @GetMapping("/valor-impostos-total")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByValorImpostosTotalBetween(
             @RequestParam(value = "valorMinimo", required = true) String valorMinimo,
             @RequestParam(value = "valorMaximo", required = true) String valorMaximo

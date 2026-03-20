@@ -1,12 +1,16 @@
 package dev.ellyon.sistemanotas.dto.tipoProduto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class TipoProdutoResponseDTO {
     private Long id;
     private String nome;
     private Boolean isAtivo;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
 
     // Construtor padrão

@@ -49,6 +49,11 @@ public class ProdutoRequestDTO {
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de COFINS deve ser menor ou igual a 100")
     private BigDecimal aliquotaCofinsPadrao;
 
+    // Construtor padrão
+    public ProdutoRequestDTO() {
+    }
+
+    // Construtor completo
     public ProdutoRequestDTO(String codigoProduto, String nome, String descricao, Long tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao) {
         this.codigoProduto = codigoProduto;
         this.nome = nome;

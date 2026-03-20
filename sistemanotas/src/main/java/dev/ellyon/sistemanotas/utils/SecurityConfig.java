@@ -74,7 +74,7 @@ public class SecurityConfig {
                         // ========================================
                         // NOTAS
                         // ========================================
-                        .requestMatchers(HttpMethod.GET, "/api/v1/notas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notas/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/notas/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notas/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notas/**").hasRole("ADMIN")

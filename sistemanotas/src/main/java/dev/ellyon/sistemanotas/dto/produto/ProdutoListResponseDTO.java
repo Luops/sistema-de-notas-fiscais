@@ -1,5 +1,7 @@
 package dev.ellyon.sistemanotas.dto.produto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -11,6 +13,7 @@ public class ProdutoListResponseDTO {
     private String unidade;
     private BigDecimal precoVenda;
     private Boolean isAtivo;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
     // Construtor padrao

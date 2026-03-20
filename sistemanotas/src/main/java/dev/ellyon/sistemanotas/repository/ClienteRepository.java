@@ -39,4 +39,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     List<Cliente> findByEmpresaIdAndTipoPessoa(Long empresaId, TipoPessoa tipoPessoa); // Buscar clientes por empresa e tipo
 
     Optional<Cliente> findByIdAndIsAtivo(Long id, Boolean isAtivo); // Buscar cliente por Id e status (Ativo/Inativo)
+    Optional<Cliente> findByCpfCnpjHash(String cpfCnpjHash); // Buscar cliente por hash do CPF/CNPJ
 }

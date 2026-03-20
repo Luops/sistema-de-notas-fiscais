@@ -38,9 +38,7 @@ public class NFeController {
         this.nfeConfig = nfeConfig;
     }
 
-    /**
-     * Consultar status do serviço SEFAZ
-     */
+    // Consultar status do serviço SEFAZ
     @GetMapping("/status-servico")
     public ResponseEntity<SuccessResponseDTO> consultarStatusServico() {
         try {
@@ -71,9 +69,7 @@ public class NFeController {
         }
     }
 
-    /**
-     * Emitir NF-e
-     */
+    // Emitir NF-e
     @PostMapping("/emitir/{notaId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> emitir(@PathVariable Long notaId) {
@@ -104,10 +100,9 @@ public class NFeController {
         }
     }
 
-    /**
-     * Cancelar NF-e autorizada
-     */
+    // Cancelar NF-e
     @PostMapping("/cancelar/{notaId}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<SuccessResponseDTO> cancelar(
             @PathVariable Long notaId,
             @RequestBody @Valid CancelamentoNFeDTORequest dto) {
@@ -149,9 +144,7 @@ public class NFeController {
         }
     }
 
-    /**
-     * Gerar e baixar DANFE em PDF
-     */
+    // Gerar DANFE
     @GetMapping("/{notaId}/danfe")
     public ResponseEntity<byte[]> downloadDanfe(@PathVariable Long notaId) {
         try {
@@ -170,9 +163,7 @@ public class NFeController {
         }
     }
 
-    /**
-     * Visualizar DANFE (inline no navegador)
-     */
+    // Visualizar DANFE no navegador
     @GetMapping("/{notaId}/danfe/visualizar")
     public ResponseEntity<byte[]> visualizarDanfe(@PathVariable Long notaId) {
         try {

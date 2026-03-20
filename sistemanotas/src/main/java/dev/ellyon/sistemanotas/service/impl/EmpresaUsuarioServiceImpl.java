@@ -17,6 +17,7 @@ import dev.ellyon.sistemanotas.service.EmpresaUsuarioService;
 import dev.ellyon.sistemanotas.service.UsuarioService;
 import dev.ellyon.sistemanotas.service.mapper.EmpresaUsuarioMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -46,23 +47,45 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
     // Associar Empresa e Usuário
     @Override
-    public EmpresaUsuarioResponseDTO associarEmpresaUsuario(EmpresaUsuarioRequestDTO dto) {
-        // Declaracao dos errors
+    public EmpresaUsuarioResponseDTO associarEmpresaUsuario(EmpresaUsuarioRequestDTO dto, Authentication authentication) {
+        // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
-        // Verifica se o usuário existe
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
+
+        // Verificar permissão ADMIN na empresa e se a empresa a ser vinculada é a mesma do usuário logado
+        boolean isAdmin = empresasUsuarioLogged.stream()
+                .anyMatch(eu -> eu.getEmpresa().getId().equals(empresaLogged.getId()));
+        if (!isAdmin) {
+            errors.put("permissao", "Usuário logado não tem permissão de ADMIN nesta empresa");
+        }
+
+        // Verifica se o usuário a ser vinculado existe
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseGet(() -> {
                     errors.put("usuarioId", "Usuário com ID " + dto.getUsuarioId() + " não encontrado");
                     return null;
                 });
 
-        // Verificar se usuário está ativo
+        // Verificar se usuário a ser vinculado está ativo
         if (usuario != null && !usuario.getIsAtivo()) {
             errors.put("usuarioId", "Usuário está inativo");
         }
 
-        // Verifica se a empresa existe
+        // Verifica se a empresa a ser vinculada existe
         Empresa empresa = empresaRepository.findByIdAndIsAtivo(dto.getEmpresaId(), true)
                 .orElseGet(() -> {
                     errors.put("empresaId", "Empresa com ID " + dto.getEmpresaId() + " não encontrada ou inativa");
@@ -71,7 +94,7 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
         // Verifica se já existe uma associação entre a empresa e o usuário
         if (empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(dto.getUsuarioId(), dto.getEmpresaId())) {
-            errors.put("associacao", "Usuário já está associado a esta empresa");
+            errors.put("associacao", "Usuário já está associado a esta empresa!");
         }
 
         // Valida o perfil
@@ -101,9 +124,24 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
     // Alterar perfil
     @Override
-    public EmpresaUsuarioResponseDTO alterarPerfil(EmpresaUsuarioRequestDTO dto) {
-        // Declaracao dos errors
+    public EmpresaUsuarioResponseDTO alterarPerfil(EmpresaUsuarioRequestDTO dto, Authentication authentication) {
+        // Validações das exceções
         Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
 
         // Buscar usuario
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
@@ -126,6 +164,13 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
                     errors.put("associacao", "Usuário não está associado a esta empresa");
                     return null;
                 });
+
+        // Verificar permissão ADMIN na empresa e se a empresa a ser vinculada é a mesma do usuário logado
+        boolean isAdmin = empresasUsuarioLogged.stream()
+                .anyMatch(eu -> eu.getEmpresa().getId().equals(empresaLogged.getId()));
+        if (!isAdmin) {
+            errors.put("permissao", "Usuário logado não tem permissão de ADMIN nesta empresa");
+        }
 
         // Valida o perfil
         Perfil perfil = null;
@@ -160,10 +205,35 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
     // Obter usuários por empresa
     @Override
-    public List<EmpresaUsuarioResponseDTO> findByEmpresaId(Long empresaId) {
+    public List<EmpresaUsuarioResponseDTO> findByEmpresaId(Long empresaId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
+
         // Verificar se empresa existe
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa", empresaId));
+
+        // Verificar permissão ADMIN na empresa e se a empresa a ser vinculada é a mesma do usuário logado
+        boolean isAdmin = empresasUsuarioLogged.stream()
+                .anyMatch(eu -> eu.getEmpresa().getId().equals(empresaLogged.getId()));
+        if (!isAdmin) {
+            errors.put("permissao", "Usuário logado não tem permissão de ADMIN nesta empresa");
+        }
 
         // Buscar associações
         List<EmpresaUsuario> empresaUsuarios = empresaUsuarioRepository.findByEmpresaId(empresaId);
@@ -179,7 +249,25 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
     // Obter usuários por perfil
     @Override
-    public List<EmpresaUsuarioResponseDTO> findByPerfil(String perfilStr) {
+    public List<EmpresaUsuarioResponseDTO> findByPerfil(String perfilStr, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
+
         // Converter a string do perfil para o enum Perfil
         Perfil perfil;
         try {
@@ -188,26 +276,57 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
             throw new BusinessException("Perfil inválido: " + perfilStr + ". Valores permitidos: ADMIN, VENDEDOR, VISUALIZADOR");
         }
 
+        // Buscar associações por perfil
         List<EmpresaUsuario> usuarios = empresaUsuarioRepository.findByPerfil(perfil);
 
-        if (usuarios.isEmpty()){
+        // Filtrar apenas os usuários que estão vinculados à mesma empresa do usuário logado (se necessário)
+        List<EmpresaUsuario> usuariosEmpresa = usuarios.stream()
+                .filter(eu -> eu.getEmpresa().getId().equals(empresaLogged.getId()))
+                .collect(Collectors.toList());
+
+
+        if (usuariosEmpresa.isEmpty()){
             throw new EntityNotFoundException("Nenhum usuário encontrado com o perfil: " + perfilStr);
         }
 
-        return usuarios.stream()
+        return usuariosEmpresa.stream()
                 .map(empresaUsuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Obter empresas por usuario
     @Override
-    public List<EmpresaUsuarioResponseDTO> findByUsuarioId(Long usuarioId) {
+    public List<EmpresaUsuarioResponseDTO> findByUsuarioId(Long usuarioId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
+
         // Verificar se usuario existe
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario", usuarioId));
 
         // Buscar associações
         List<EmpresaUsuario> empresaUsuarios = empresaUsuarioRepository.findByUsuarioId(usuarioId);
+
+        // Verificar se o usuario logado é o mesmo do usuarioId
+        boolean isSameUser = usuarioLogged.getId().equals(usuarioId);
+        if (!isSameUser) {
+            throw new BusinessException("Usuário logado pode visualizar apenas suas próprias associações com empresas");
+        }
 
         if (empresaUsuarios.isEmpty()) {
             throw new EntityNotFoundException("Nenhuma empresa encontrada para o usuario com ID: " + usuarioId);
@@ -220,7 +339,25 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
 
     // Buscar vinculo especifico e uma empresa e usuario
     @Override
-    public EmpresaUsuarioResponseDTO findByEmpresaIdUsuarioId(Long empresaId, Long usuarioId) {
+    public EmpresaUsuarioResponseDTO findByEmpresaIdUsuarioId(Long empresaId, Long usuarioId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuarioLogged = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuarioLogged = empresaUsuarioRepository.findByUsuarioId(usuarioLogged.getId());
+
+        if (empresasUsuarioLogged.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresaLogged = empresasUsuarioLogged.get(0).getEmpresa();
+
         // Verificar se empresa existe
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa", empresaId));
@@ -236,6 +373,12 @@ public class EmpresaUsuarioServiceImpl implements EmpresaUsuarioService {
                         String.format("Nenhum vínculo encontrado entre o usuário '%s' e a empresa '%s'",
                                 usuario.getNome(), empresa.getNomeFantasia())
                 ));
+
+        // Verificar se o usuario logado é o mesmo do usuarioId
+        boolean isSameUser = usuarioLogged.getId().equals(usuarioId);
+        if (!isSameUser) {
+            throw new BusinessException("Usuário logado pode visualizar apenas suas próprias associações com empresas");
+        }
 
         return empresaUsuarioMapper.toResponseDTO(empresaUsuario);
     }

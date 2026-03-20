@@ -1,8 +1,10 @@
 package dev.ellyon.sistemanotas.model;
 
 import dev.ellyon.sistemanotas.model.enums.TipoPessoa;
+import dev.ellyon.sistemanotas.security.CpfCnpjEncryptor;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.time.LocalDateTime;
 
@@ -17,8 +19,12 @@ public class Cliente extends Entidade{
     @Column(name = "tipo_pessoa", nullable = false, length = 50)
     private TipoPessoa tipoPessoa;
 
+    @Convert(converter = CpfCnpjEncryptor.class)
     @Column(name = "cpf_cnpj", nullable = false, length = 20, unique = true)
     private String cpfCnpj;
+
+    @Column(name = "cpf_cnpj_hash", unique = true)
+    private String cpfCnpjHash;
 
     @Column(name = "inscricao_estadual", length = 20)
     private String inscricaoEstadual;
@@ -47,7 +53,6 @@ public class Cliente extends Entidade{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empresa_id", nullable = false)
     private Empresa empresa;
-
 
     @Column(name = "is_ativo", nullable = false)
     private Boolean isAtivo;
@@ -120,6 +125,8 @@ public class Cliente extends Entidade{
 
     public void setCpfCnpj(String cpfCnpj) {
         this.cpfCnpj = cpfCnpj;
+        // Gerar hash para indexação
+        this.cpfCnpjHash = DigestUtils.sha256Hex(cpfCnpj);
     }
 
     public String getInscricaoEstadual() {

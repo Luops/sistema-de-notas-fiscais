@@ -1,5 +1,6 @@
 package dev.ellyon.sistemanotas.repository;
 
+import dev.ellyon.sistemanotas.dto.tipoProduto.TipoProdutoResponseDTO;
 import dev.ellyon.sistemanotas.model.TipoProduto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,9 @@ public interface TipoProdutoRepository extends JpaRepository<TipoProduto, Long> 
     List<TipoProduto> findByNomeContainingIgnoreCase(String nome);
     List<TipoProduto> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim);
 
+    Optional<TipoProduto> findByEmpresaIdAndId(Long empresaId, Long id);
+    List<TipoProduto> findByEmpresaId(Long empresaId);
+    List<TipoProduto> findByEmpresaIdAndIsAtivo(Long empresaId, Boolean ativo);
+    List<TipoProduto> findByEmpresaIdAndNomeContainingIgnoreCase(Long empresaId, String nome);
+    List<TipoProduto> findByEmpresaIdAndCreatedAtBetween(Long empresaId, LocalDateTime inicio, LocalDateTime fim);
 }

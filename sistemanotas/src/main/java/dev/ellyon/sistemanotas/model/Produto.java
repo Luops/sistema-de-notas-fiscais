@@ -46,6 +46,10 @@ public class Produto extends Entidade{
     @Column(name = "aliquota_cofins_padrao", nullable = false, precision = 5, scale = 2)
     private BigDecimal aliquotaCofinsPadrao;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresa;
+
     @Column(name = "is_ativo")
     private Boolean isAtivo;
 
@@ -55,7 +59,7 @@ public class Produto extends Entidade{
     }
 
     // Construtor com todos atributos
-    public Produto(Long id, String codigoProduto, String nome, String descricaoProduto, TipoProduto tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Produto(Long id, String codigoProduto, String nome, String descricaoProduto, TipoProduto tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Empresa empresa, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.codigoProduto = codigoProduto;
         this.nome = nome;
@@ -68,13 +72,14 @@ public class Produto extends Entidade{
         this.aliquotaIcmsPadrao = aliquotaIcmsPadrao;
         this.aliquotaPisPadrao = aliquotaPisPadrao;
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
+        this.empresa = empresa;
         this.isAtivo = isAtivo;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
     // Construtor sem id e timestamps
-    public Produto(String codigoProduto, String nome, String descricaoProduto, TipoProduto tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Boolean isAtivo) {
+    public Produto(String codigoProduto, String nome, String descricaoProduto, TipoProduto tipoProduto, Unidade unidade, BigDecimal precoVenda, String ncm, String cfopPadrao, BigDecimal aliquotaIcmsPadrao, BigDecimal aliquotaPisPadrao, BigDecimal aliquotaCofinsPadrao, Empresa empresa, Boolean isAtivo) {
         this.codigoProduto = codigoProduto;
         this.nome = nome;
         this.descricaoProduto = descricaoProduto;
@@ -86,6 +91,7 @@ public class Produto extends Entidade{
         this.aliquotaIcmsPadrao = aliquotaIcmsPadrao;
         this.aliquotaPisPadrao = aliquotaPisPadrao;
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
+        this.empresa = empresa;
         this.isAtivo = isAtivo;
     }
 
@@ -175,6 +181,14 @@ public class Produto extends Entidade{
 
     public void setAliquotaCofinsPadrao(BigDecimal aliquotaCofinsPadrao) {
         this.aliquotaCofinsPadrao = aliquotaCofinsPadrao;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 
     public Boolean getAtivo() {

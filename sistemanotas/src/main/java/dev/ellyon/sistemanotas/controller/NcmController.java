@@ -18,9 +18,7 @@ public class NcmController {
         this.ncmService = ncmService;
     }
 
-    /**
-     * Consultar dados completos do NCM
-     */
+    // Consultar dados de um NCM
     @GetMapping("/consultar/{ncm}")
     public ResponseEntity<SuccessResponseDTO> consultarNCM(@PathVariable String ncm) {
         try {
@@ -51,9 +49,7 @@ public class NcmController {
         }
     }
 
-    /**
-     * Buscar alíquotas sugeridas para um NCM
-     */
+    // Buscar alíquotas sugeridas para um NCM
     @GetMapping("/aliquotas/{ncm}")
     public ResponseEntity<SuccessResponseDTO> buscarAliquotas(@PathVariable String ncm) {
         try {

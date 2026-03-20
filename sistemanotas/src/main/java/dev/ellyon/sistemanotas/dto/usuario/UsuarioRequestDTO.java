@@ -27,6 +27,11 @@ public class UsuarioRequestDTO {
     @NotBlank(message = "Perfil é obrigatório")
     private String perfil;
 
+    // Construtor padrão
+    public UsuarioRequestDTO() {
+    }
+
+    // Construtor completo
     public UsuarioRequestDTO(String nome, String email, String senha, Long empresaId, String perfil) {
         this.nome = nome;
         this.email = email;

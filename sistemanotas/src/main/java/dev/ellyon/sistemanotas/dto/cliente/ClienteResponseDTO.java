@@ -1,5 +1,7 @@
 package dev.ellyon.sistemanotas.dto.cliente;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class ClienteResponseDTO {
@@ -16,7 +18,9 @@ public class ClienteResponseDTO {
     private String cep;
     private String bairro;
     private Boolean isAtivo;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime updatedAt;
 
     // Construtor padrão

@@ -101,8 +101,17 @@ public class ClienteServiceImpl implements ClienteService {
             // Valida tamanho: CPF = 11 dígitos, CNPJ = 14 dígitos
             if (cpfCnpjLimpo.length() < 11 && cpfCnpjLimpo.length() > 14) {
                 errors.put("cpfCnpj", "CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos");
-            } else if (clienteRepository.existsByCpfCnpj(cpfCnpjLimpo)) {
-                errors.put("cpfCnpj", "O CPF/CNPJ já está cadastrado");
+            }  else {
+                // Buscar todos clientes da empresa
+                List<Cliente> clientesDaEmpresa = clienteRepository.findByEmpresaId(empresa.getId());
+
+                // Verificar se já existe CPF/CNPJ duplicado
+                boolean cpfJaExiste = clientesDaEmpresa.stream()
+                        .anyMatch(c -> c.getCpfCnpj().equals(cpfCnpjLimpo));
+
+                if (cpfJaExiste) {
+                    errors.put("cpfCnpj", "O CPF/CNPJ já está cadastrado");
+                }
             }
         }
 
@@ -161,7 +170,6 @@ public class ClienteServiceImpl implements ClienteService {
         // Normalização final dos dados
         String emailNormalizado = dto.getEmail().toLowerCase().trim();
         String estadoUFNormalizado = dto.getEstadoUF().toUpperCase().trim();
-
 
         // Criação da entidade Cliente a partir do DTO
         Cliente cliente = new Cliente();

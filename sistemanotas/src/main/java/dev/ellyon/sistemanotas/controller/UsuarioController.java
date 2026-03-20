@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -51,52 +52,53 @@ public class UsuarioController {
     // Rota para atualizar um usuário existente
     @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
-    public ResponseEntity<SuccessResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UsuarioUpdateRequestDTO dto) {
-        UsuarioResponseDTO usuarioResponseDTO = usuarioService.update(id, dto);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    public ResponseEntity<SuccessResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UsuarioUpdateRequestDTO dto, Authentication authentication) {
+        UsuarioResponseDTO response = usuarioService.update(id, dto, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário atualizado com sucesso",
-                usuarioResponseDTO
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para deletar um usuário
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id) {
-        usuarioService.delete(id);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id, Authentication authentication) {
+        usuarioService.delete(id, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário deletado com sucesso",
                 null
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para desativar (soft delete) um usuário
     @PutMapping("/update/soft-delete/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
-    public ResponseEntity<SuccessResponseDTO> softDelete(@PathVariable Long id) {
-        usuarioService.softDelete(id);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> softDelete(@PathVariable Long id, Authentication authentication) {
+        usuarioService.softDelete(id, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário desativado com sucesso",
                 null
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para ativar um usuário
     @PutMapping("/update/activate/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
-    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id) {
-        usuarioService.activate(id);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id, Authentication authentication) {
+        usuarioService.activate(id, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário ativado com sucesso",
                 null
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     @PostMapping("/auth/login")
@@ -114,63 +116,66 @@ public class UsuarioController {
     // Rota para obter um usuário por ID
     @GetMapping("/findById/{id}")
     @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfile(#id)")
-    public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long id) {
-        UsuarioResponseDTO usuarioResponseDTO = usuarioService.findById(id);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long id, Authentication authentication) {
+        UsuarioResponseDTO response = usuarioService.findById(id, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário encontrado com sucesso",
-                usuarioResponseDTO
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para obter todos os usuários
     @GetMapping("/findAll")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponseDTO> findAll() {
-        List<UsuarioResponseDTO> usuarios = usuarioService.findAll();
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    public ResponseEntity<SuccessResponseDTO> findAll(Authentication authentication) {
+        List<UsuarioResponseDTO> response = usuarioService.findAll(authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuários encontrados com sucesso",
-                usuarios
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para obter usuários por email
     @GetMapping("/findByEmail/{email}")
-    public ResponseEntity<SuccessResponseDTO> findByEmail(@PathVariable String email) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.findByEmail(email);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("hasRole('ADMIN') or @usuarioServiceImpl.isOwnProfileByEmail(#email)")
+    public ResponseEntity<SuccessResponseDTO> findByEmail(@PathVariable String email, Authentication authentication) {
+        List<UsuarioResponseDTO> response = usuarioService.findByEmail(email, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuários encontrados com sucesso",
-                usuarios
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para obter usuários por nome
     @GetMapping("/findByNome/{nome}")
-    public ResponseEntity<SuccessResponseDTO> findByNome(@PathVariable String nome) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.findByNome(nome);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SuccessResponseDTO> findByNome(@PathVariable String nome, Authentication authentication) {
+        List<UsuarioResponseDTO> response = usuarioService.findByNome(nome, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuários encontrados com sucesso",
-                usuarios
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para obter usuários por status de ativo
     @GetMapping("/findByAtivo/{ativo}")
-    public ResponseEntity<SuccessResponseDTO> findByAtivo(@PathVariable boolean ativo) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.findByAtivo(ativo);
-        SuccessResponseDTO response = new SuccessResponseDTO(
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SuccessResponseDTO> findByAtivo(@PathVariable boolean ativo, Authentication authentication) {
+        List<UsuarioResponseDTO> response = usuarioService.findByAtivo(ativo, authentication);
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuários encontrados com sucesso",
-                usuarios
+                response
         );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(successResponse);
     }
 
 }

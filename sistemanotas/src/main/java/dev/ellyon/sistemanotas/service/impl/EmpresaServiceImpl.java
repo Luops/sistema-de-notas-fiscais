@@ -7,6 +7,7 @@ import dev.ellyon.sistemanotas.exception.ValidationException;
 import dev.ellyon.sistemanotas.model.Empresa;
 import dev.ellyon.sistemanotas.model.EmpresaUsuario;
 import dev.ellyon.sistemanotas.model.Nota;
+import dev.ellyon.sistemanotas.model.Usuario;
 import dev.ellyon.sistemanotas.repository.EmpresaRepository;
 import dev.ellyon.sistemanotas.repository.EmpresaUsuarioRepository;
 import dev.ellyon.sistemanotas.repository.NotaRepository;
@@ -17,6 +18,7 @@ import dev.ellyon.sistemanotas.service.mapper.EmpresaMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,10 +59,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         // Declaracao dos errors
         Map<String, String> errors = new HashMap<>();
 
-        /*
-         * NORMALIZAÇÃO DE DADOS (REMOVER FORMATAÇÃO)
-         * */
-        // Remove pontos, traços e barras do CNPJ
+                // Remove pontos, traços e barras do CNPJ
         String cpfCnpjLimpo = dto.getCnpj() != null
                 ? dto.getCnpj().replaceAll("[^0-9]", "")
                 : "";
@@ -75,9 +74,7 @@ public class EmpresaServiceImpl implements EmpresaService {
                 ? dto.getTelefone().replaceAll("[^0-9]", "")
                 : "";
 
-        /*
-         * VALIDAÇÕES
-         * */
+        // Validacoes
         if(empresaRepository.existsByCnpj(cpfCnpjLimpo)){
             errors.put("cnpj", "CNPJ já cadastrado no sistema.");
         }
@@ -100,10 +97,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         String emailNormalizado = dto.getEmail().toLowerCase().trim();
         String estadoUFNormalizado = dto.getEstadoUF().toUpperCase().trim();
 
-        /*
-        * CRIAÇÃO DA EMPRESA
-        * */
-
+        // Criar nova empresa
         Empresa empresa = new Empresa();
         empresa.setRazaoSocial(dto.getRazaoSocial());
         empresa.setNomeFantasia(dto.getNomeFantasia());
@@ -118,23 +112,43 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setLogoUrl(dto.getLogoUrl());
         empresa.setAtivo(true); // Define como ativo por padrão
 
-        /* Salva a empresa no banco de dados */
+        // Salva a empresa no banco de dados
         Empresa empresaSalva = empresaRepository.save(empresa);
         return empresaMapper.toResponseDTO(empresaSalva);
     }
 
     // Deletar uma empresa
     @Override
-    public void delete(Long id) {
-        // Declaracao dos errors
+    public void delete(Long id, Authentication authentication) {
+        // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa por ID
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa com ID " + id + " não encontrada."));
 
-
         if (empresa.getId() == null) {
             throw new BusinessException("Empresa não existe!");
+        }
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para deletar essa empresa");
         }
 
         // Verificar se há usuário vinculados a empresa
@@ -143,7 +157,7 @@ public class EmpresaServiceImpl implements EmpresaService {
             errors.put("empresaUsuario", "Há vinculos dessa empresa com usuários. É recomendável somente desativar a empresa!");
         }
 
-        // Verificar se há notas vinculaas a empresa
+        // Verificar se há notas vinculadas a empresa
         List<Nota> notas = notaRepository.findByEmpresaId(id);
         if(!notas.isEmpty()){
             errors.put("notas", "Há vinculos dessa empresa com alguma nota. É recomendável somente desativar a empresa!");
@@ -158,17 +172,34 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Atualizar uma empresa
     @Override
-    public EmpresaResponseDTO update(Long id, EmpresaRequestDTO dto) {
-        // Declaracao dos errors
+    public EmpresaResponseDTO update(Long id, EmpresaRequestDTO dto, Authentication authentication) {
+        // Validações das exceções
         Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
 
         // Verifica se a empresa existe
         Empresa empresaExistente = empresaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa", id));
 
-        /*
-         * NORMALIZAÇÃO DE DADOS (REMOVER FORMATAÇÃO)
-         * */
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresaExistente.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para atualizar essa empresa");
+        }
+
         // Remove pontos, traços e barras do CNPJ
         String cnpjLimpo = dto.getCnpj() != null
                 ? dto.getCnpj().replaceAll("[^0-9]", "")
@@ -184,11 +215,7 @@ public class EmpresaServiceImpl implements EmpresaService {
                 ? dto.getTelefone().replaceAll("[^0-9]", "")
                 : "";
 
-        /*
-         * VALIDAÇÕES
-         * */
-
-        // Valida CNPJ
+        // Validacoes
         if (cnpjLimpo.isEmpty()) {
             errors.put("cnpj", "CNPJ é obrigatório");
         } else if (cnpjLimpo.length() != 14) {
@@ -234,10 +261,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         String emailNormalizado = dto.getEmail().toLowerCase().trim();
         String estadoUFNormalizado = dto.getEstadoUF().toUpperCase().trim();
 
-        /*
-         * ATUALIZAR EMPRESA
-         * */
-
+        // Atualizar empresa
         empresaExistente.setRazaoSocial(dto.getRazaoSocial().trim());
         empresaExistente.setNomeFantasia(dto.getNomeFantasia().trim());
         empresaExistente.setCnpj(cnpjLimpo);
@@ -253,19 +277,43 @@ public class EmpresaServiceImpl implements EmpresaService {
             empresaExistente.setAtivo(dto.getAtivo());
         }
 
-        /* Salva a empresa no banco de dados */
+        // Salva a empresa atualizada no banco de dados
         Empresa empresaAtualizada = empresaRepository.save(empresaExistente);
         return empresaMapper.toResponseDTO(empresaAtualizada);
     }
 
     // Desativar uma empresa
     @Override
-    public void softDelete(Long id) {
+    public void softDelete(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa por ID
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa", id));
 
         if (empresa.getId() == null) {
             throw new BusinessException("Empresa não existe!");
+        }
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para desativar essa empresa");
         }
 
         empresa.setAtivo(false);
@@ -274,12 +322,36 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Ativar uma empresa
     @Override
-    public void activate(Long id) {
+    public void activate(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa por ID
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa", id));
 
         if (empresa.getId() == null) {
             throw new BusinessException("Empresa não existe!");
+        }
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para ativar essa empresa");
         }
 
         empresa.setAtivo(true);
@@ -288,12 +360,35 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Fazer upload do certificado
     @Override
-    public CertificadoResponseDTO uploadCertificado(Long empresaId, CertificadoUploadDTO dto) {
+    public CertificadoResponseDTO uploadCertificado(Long empresaId, CertificadoUploadDTO dto, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
 
         // Buscar empresa
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa não encontrada"));
 
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para fazer upload do certificado nessa empresa");
+        }
+
+        // Pegar arquivo do DTO
         MultipartFile arquivo = dto.getArquivo();
 
         // Validar arquivo
@@ -351,7 +446,7 @@ public class EmpresaServiceImpl implements EmpresaService {
 
             // Salvar certificado na empresa
             empresa.setCertificadoDigital(certificadoBytes);
-            empresa.setCertificadoSenhaCriptografada(senhaCriptografada);  // ✅ Senha criptografada
+            empresa.setCertificadoSenhaCriptografada(senhaCriptografada);  // Senha criptografada
             empresa.setCertificadoTipo(dto.getTipo());
             empresa.setCertificadoValidade(validade);
             empresa.setCertificadoCnpj(cnpjCertificado);
@@ -359,11 +454,6 @@ public class EmpresaServiceImpl implements EmpresaService {
             empresa.setCertificadoUploadDate(LocalDateTime.now());
 
             empresaRepository.save(empresa);
-
-            System.out.println("✅ Certificado salvo para empresa: " + empresa.getNomeFantasia());
-            System.out.println("   CNPJ: " + cnpjCertificado);
-            System.out.println("   Validade: " + validade);
-            System.out.println("   Senha: [CRIPTOGRAFADA COM AES-256]");
 
             // Retornar informações
             return new CertificadoResponseDTO(
@@ -386,10 +476,35 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Buscar certificado
     @Override
-    public CertificadoResponseDTO buscarCertificado(Long empresaId) {
+    public CertificadoResponseDTO buscarCertificado(Long empresaId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa não encontrada"));
 
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para buscar o certificado nessa empresa");
+        }
+
+        // Verificar se a empresa possui certificado
         if (empresa.getCertificadoDigital() == null) {
             throw new BusinessException("Empresa não possui certificado cadastrado");
         }
@@ -408,9 +523,33 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Remover certificado
     @Override
-    public void removerCertificado(Long empresaId) {
+    public void removerCertificado(Long empresaId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa não encontrada"));
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para remover o certificado nessa empresa");
+        }
 
         empresa.setCertificadoDigital(null);
         empresa.setCertificadoSenhaCriptografada(null);
@@ -422,7 +561,7 @@ public class EmpresaServiceImpl implements EmpresaService {
 
         empresaRepository.save(empresa);
 
-        System.out.println("✅ Certificado removido da empresa: " + empresa.getNomeFantasia());
+        System.out.println("Certificado removido da empresa: " + empresa.getNomeFantasia());
     }
 
     // Extrair certificado
@@ -453,148 +592,500 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     // Buscar empresa por ID
     @Override
-    public EmpresaResponseDTO findById(Long id) {
+    public EmpresaResponseDTO findById(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa por ID
         Empresa empresa = empresaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Empresa", id));
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para acessar essa empresa");
+        }
+
         return empresaMapper.toResponseDTO(empresa);
     }
 
     // Buscar todas as empresas
-    @Override
-    public List<EmpresaListResponseDTO> findAll() {
+    /*@Override
+    public List<EmpresaListResponseDTO> findAll(Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar todas as empresas
         List<Empresa> empresas = empresaRepository.findAll();
+
         if(empresas.isEmpty()){
             throw new EntityNotFoundException("Nenhuma empresa encontrada.");
         }
-        return empresas.stream().map(empresaMapper::toListResponseDTO).collect(Collectors.toList());
-    }
 
+        // Filtrar apenas as empresas que pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada para o usuário logado.");
+        }
+
+        // Mapeia cada Empresa para EmpresaListResponseDTO
+        return empresasDoUsuario.stream()
+                .map(empresaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }*/
+
+    /*
     // Buscar todas as empresas com paginação
     @Override
-    public Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable) {
+    public Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar todas as empresas com paginação
         Page<Empresa> empresasPage = empresaRepository.findAll(pageable);
         if (empresasPage.isEmpty()) {
             throw new EntityNotFoundException("Nenhuma empresa encontrada.");
         }
+
+        // Filtrar apenas as empresas que pertencem ao usuário logado
+        return empresasPage
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .map(empresaMapper::toListResponseDTO);
+
         // Mapeia cada Empresa para EmpresaListResponseDTO
         return empresasPage.map(empresaMapper::toListResponseDTO);
-    }
+    }*/
 
     // Buscar empresa por CNPJ
     @Override
-    public EmpresaResponseDTO findByCnpj(String cnpj) {
+    public EmpresaResponseDTO findByCnpj(String cnpj, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresa por CNPJ
         Empresa empresa = empresaRepository.findByCnpj(cnpj)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa com CNPJ " + cnpj + " não encontrada."));
+
+        // Verificar se a empresa pertence ao usuário logado
+        if (!empresa.getId().equals(empresaIdByUserLogged.getId())) {
+            throw new BusinessException("Usuário não tem permissão para acessar essa empresa");
+        }
+
         return empresaMapper.toResponseDTO(empresa);
     }
 
     // Buscar empresas por razão social contendo um termo
     @Override
-    public List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial) {
+    public List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
         // Valida se o termo de busca não é vazio
         if (razaoSocial == null || razaoSocial.trim().isEmpty()) {
             throw new BusinessException("O termo de busca para razão social não pode ser vazio.");
         }
-
         String razaoSocialTrimmed = razaoSocial.trim();
+
+        // Buscar empresas por razão social contendo o termo (ignora maiúsculas/minúsculas)
         List<Empresa> empresas = empresaRepository.findByRazaoSocialContainingIgnoreCase(razaoSocialTrimmed);
 
         if(empresas.isEmpty()){
             throw new EntityNotFoundException("Nenhuma empresa encontrada com a razão social contendo: " + razaoSocialTrimmed);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com a razão social contendo: " + razaoSocialTrimmed + " para o usuário logado.");
+        }
+
+        // Mapeia cada Empresa para EmpresaListResponseDTO
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas pelo nome fantasia contendo um termo
     @Override
-    public List<EmpresaListResponseDTO> findByNomeFantasiaContainingIgnoreCase(String nomeFantasia) {
+    public List<EmpresaListResponseDTO> findByNomeFantasiaContainingIgnoreCase(String nomeFantasia, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por nome fantasia contendo o termo (ignora maiúsculas/minúsculas)
         List<Empresa> empresas = empresaRepository.findByNomeFantasiaContainingIgnoreCase(nomeFantasia);
         if (empresas.isEmpty()){
             throw new EntityNotFoundException("Nenhuma empresa encontrada com o nome fantasia contendo: " + nomeFantasia);
         }
 
-        return empresas.stream()
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o nome fantasia contendo: " + nomeFantasia + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por email
     @Override
-    public List<EmpresaListResponseDTO> findByEmailContainingIgnoreCase(String email) {
+    public List<EmpresaListResponseDTO> findByEmailContainingIgnoreCase(String email, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por email contendo o termo (ignora maiúsculas/minúsculas)
         List<Empresa> empresas = empresaRepository.findByEmailContainingIgnoreCase(email);
         if (empresas.isEmpty()){
             throw new EntityNotFoundException("Nenhuma empresa encontrada com o email contendo: " + email);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o email contendo: " + email + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por telefone
     @Override
-    public List<EmpresaListResponseDTO> findByTelefoneContaining(String telefone) {
+    public List<EmpresaListResponseDTO> findByTelefoneContaining(String telefone, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por telefone contendo o termo (ignora caracteres especiais)
         List<Empresa> empresas = empresaRepository.findByTelefoneContaining(telefone);
         if (empresas.isEmpty()){
             throw new EntityNotFoundException("Nenhuma empresa encontrada com o telefone contendo: " + telefone);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o telefone contendo: " + telefone + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por cidade
     @Override
-    public List<EmpresaListResponseDTO> findByCidadeIgnoreCase(String cidade) {
+    public List<EmpresaListResponseDTO> findByCidadeIgnoreCase(String cidade, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por cidade (ignora maiúsculas/minúsculas)
         List<Empresa> empresas = empresaRepository.findByCidadeIgnoreCase(cidade);
         if (empresas.isEmpty()) {
             throw new EntityNotFoundException("Nenhuma empresa encontrada na cidade: " + cidade);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada na cidade: " + cidade + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por estado (UF)
     @Override
-    public List<EmpresaListResponseDTO> findByEstadoUFIgnoreCase(String estadoUF) {
+    public List<EmpresaListResponseDTO> findByEstadoUFIgnoreCase(String estadoUF, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por estado (UF) (ignora maiúsculas/minúsculas)
         List<Empresa> empresas = empresaRepository.findByEstadoUFIgnoreCase(estadoUF);
         if (empresas.isEmpty()) {
             throw new EntityNotFoundException("Nenhuma empresa encontrada no estado (UF): " + estadoUF);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada no estado (UF): " + estadoUF + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por CEP
     @Override
-    public List<EmpresaListResponseDTO> findByCep(String cep) {
+    public List<EmpresaListResponseDTO> findByCep(String cep, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por CEP
         List<Empresa> empresas = empresaRepository.findByCep(cep);
         if (empresas.isEmpty()) {
             throw new EntityNotFoundException("Nenhuma empresa encontrada com o CEP: " + cep);
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            throw new EntityNotFoundException("Nenhuma empresa encontrada com o CEP: " + cep + " para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas por status de ativo/inativo
     @Override
-    public List<EmpresaListResponseDTO> findByIsAtivo(Boolean ativo) {
+    public List<EmpresaListResponseDTO> findByIsAtivo(Boolean ativo, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar empresas por status de ativo/inativo
         List<Empresa> empresas = empresaRepository.findByIsAtivo(ativo);
         if (empresas.isEmpty()) {
             String status = ativo ? "ativas" : "inativas";
             throw new EntityNotFoundException("Nenhuma empresa " + status + " encontrada.");
         }
-        return empresas.stream()
+
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+        if(empresasDoUsuario.isEmpty()) {
+            String status = ativo ? "ativas" : "inativas";
+            throw new EntityNotFoundException("Nenhuma empresa " + status + " encontrada para o usuário logado.");
+        }
+
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }
 
     // Buscar empresas criadas entre duas datas
     @Override
-    public List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim) {
+    public List<EmpresaListResponseDTO> findByCreatedAtBetween(LocalDateTime inicio, LocalDateTime fim, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao cliente criado (se necessário)
+        String emailLogged = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailLogged)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao cliente criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa
+        Empresa empresaIdByUserLogged = empresasUsuario.get(0).getEmpresa();
+
         if (inicio == null || fim == null) {
             throw new BusinessException("Data de início e data de fim são obrigatórias");
         }
@@ -603,21 +1094,26 @@ public class EmpresaServiceImpl implements EmpresaService {
             throw new BusinessException("Data de início não pode ser posterior à data de fim");
         }
 
+        // Buscar empresas criadas entre as datas
         List<Empresa> empresas = empresaRepository.findByCreatedAtBetween(inicio, fim);
 
+        // Validar se as empresas encontradas pertencem ao usuário logado
+        List<Empresa> empresasDoUsuario = empresas.stream()
+                .filter(e -> e.getId().equals(empresaIdByUserLogged.getId()))
+                .collect(Collectors.toList());
+
+
         // Formatação das datas para exibição na mensagem de erro
-        if (empresas.isEmpty()) {
-            // Formata a data para o padrão brasileiro
+        if(empresasDoUsuario.isEmpty()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String dataInicioFormatada = inicio.format(formatter);
             String dataFimFormatada = fim.format(formatter);
-
             throw new EntityNotFoundException(
-                    String.format("Nenhuma empresa encontrada entre %s e %s",
+                    String.format("Nenhuma empresa encontrada entre %s e %s para o usuário logado",
                             dataInicioFormatada, dataFimFormatada)
             );
         }
-        return empresas.stream()
+        return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
     }

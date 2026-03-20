@@ -6,13 +6,8 @@ import dev.ellyon.sistemanotas.dto.produto.ProdutoResponseDTO;
 import dev.ellyon.sistemanotas.exception.BusinessException;
 import dev.ellyon.sistemanotas.exception.EntityNotFoundException;
 import dev.ellyon.sistemanotas.exception.ValidationException;
-import dev.ellyon.sistemanotas.model.ItemNota;
-import dev.ellyon.sistemanotas.model.Nota;
-import dev.ellyon.sistemanotas.model.Produto;
-import dev.ellyon.sistemanotas.model.TipoProduto;
-import dev.ellyon.sistemanotas.repository.ItemNotaRepository;
-import dev.ellyon.sistemanotas.repository.ProdutoRepository;
-import dev.ellyon.sistemanotas.repository.TipoProdutoRepository;
+import dev.ellyon.sistemanotas.model.*;
+import dev.ellyon.sistemanotas.repository.*;
 import dev.ellyon.sistemanotas.service.NcmService;
 import dev.ellyon.sistemanotas.service.ProdutoService;
 import dev.ellyon.sistemanotas.service.mapper.ProdutoMapper;
@@ -20,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -35,27 +31,43 @@ public class ProdutoServiceImpl implements ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final TipoProdutoRepository tipoProdutoRepository;
     private final ItemNotaRepository itemNotaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final EmpresaUsuarioRepository empresaUsuarioRepository;
     private final ProdutoMapper produtoMapper;
-    public ProdutoServiceImpl(NcmService ncmService, ProdutoRepository produtoRepository, TipoProdutoRepository tipoProdutoRepository, ItemNotaRepository itemNotaRepository, ProdutoMapper produtoMapper) {
+    public ProdutoServiceImpl(NcmService ncmService, ProdutoRepository produtoRepository, TipoProdutoRepository tipoProdutoRepository, ItemNotaRepository itemNotaRepository, UsuarioRepository usuarioRepository, EmpresaUsuarioRepository empresaUsuarioRepository, ProdutoMapper produtoMapper) {
         this.ncmService = ncmService;
         this.produtoRepository = produtoRepository;
         this.tipoProdutoRepository = tipoProdutoRepository;
         this.itemNotaRepository = itemNotaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.empresaUsuarioRepository = empresaUsuarioRepository;
         this.produtoMapper = produtoMapper;
     }
 
-
     // Criar um novo produto
     @Override
-    public ProdutoResponseDTO create(ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO create(ProdutoRequestDTO dto, Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
         String codigoProdutoUpperCase = dto.getCodigoProduto().toUpperCase();
 
-        /*
-        * VALIDAÇÕES
-        * */
+        // Validacoes
         // Código obrigatório, único, max 50
         if (codigoProdutoUpperCase == null || codigoProdutoUpperCase.trim().isEmpty()) {
             errors.put("codigoProduto", "Código do produto é obrigatório");
@@ -121,9 +133,7 @@ public class ProdutoServiceImpl implements ProdutoService {
             }
         }
 
-        /*
-        * CRIAÇÃO DO PRODUTO
-        * */
+        // Criar produto
         Produto produto = new Produto();
         produto.setCodigoProduto(codigoProdutoUpperCase);
         produto.setNome(dto.getNome());
@@ -136,23 +146,43 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaIcmsPadrao(aliquotaIcms != null ? aliquotaIcms : BigDecimal.ZERO);
         produto.setAliquotaPisPadrao(aliquotaPis != null ? aliquotaPis : BigDecimal.ZERO);
         produto.setAliquotaCofinsPadrao(aliquotaCofins != null ? aliquotaCofins : BigDecimal.ZERO);
+        produto.setEmpresa(empresa);
         produto.setAtivo(true);
 
-        /*
-        * SALVA E RETORNA DTO DE RESPOSTA
-        * */
+        // Salva e retorna DTO de resposta
         Produto produtoSalvo = produtoRepository.save(produto);
         return produtoMapper.toResponseDTO(produtoSalvo);
     }
 
     // Deletar um produto
     @Override
-    public void delete(Long id) {
+    public void delete(Long id, Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar o produto (lança EntityNotFoundException se não existir)
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        // Verificar se o produto pertence à empresa do usuário logado
+        if (!produto.getEmpresa().getId().equals(empresa.getId())) {
+            throw new BusinessException("Produto não pertence à empresa do usuário logado");
+        }
 
         // Verificar sem o produto tem vinculo com algum item de alguma nota
         List<ItemNota> itemNota = itemNotaRepository.findByProdutoId(id);
@@ -170,15 +200,28 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Atualizar um produto
     @Override
-    public ProdutoResponseDTO update(Long id, ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO update(Long id, ProdutoRequestDTO dto, Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
         String codigoProdutoUpperCase = dto.getCodigoProduto().toUpperCase();
 
-        /*
-         * VALIDAÇÕES
-         * */
+        // Validacoes
         // Código obrigatório, único, max 50
         if (codigoProdutoUpperCase == null || codigoProdutoUpperCase.trim().isEmpty()) {
             errors.put("codigoProduto", "Código do produto é obrigatório");
@@ -200,20 +243,23 @@ public class ProdutoServiceImpl implements ProdutoService {
             errors.put("precoVenda", "Preço de venda deve ser maior que zero");
         }
 
+        // Busca o tipo de produto (lança EntityNotFoundException se não existir)
+        TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
+                .orElseThrow(() -> new EntityNotFoundException("TipoProduto", dto.getTipoProduto()));
+
+        // Buscar o produto (lança EntityNotFoundException se não existir)
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        if (!produto.getEmpresa().getId().equals(empresa.getId())) {
+            throw new BusinessException("Produto não pertence à empresa do usuário logado!");
+        }
+
         // Se houver erros de validação, lança ValidationException
         if (!errors.isEmpty()) {
             throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
-        // Busca o tipo de produto (lança EntityNotFoundException se não existir)
-        TipoProduto tipoProduto = tipoProdutoRepository.findById(dto.getTipoProduto())
-                .orElseThrow(() -> new EntityNotFoundException("TipoProduto", dto.getTipoProduto()));
-
-        /*
-         * ATUALIZAÇÃO DO PRODUTO
-         * */
-        Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto", id));
         produto.setCodigoProduto(codigoProdutoUpperCase);
         produto.setNome(dto.getNome());
         produto.setDescricaoProduto(dto.getDescricao());
@@ -227,21 +273,48 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
         produto.setAtivo(true);
 
-        /*
-         * SALVA E RETORNA DTO DE RESPOSTA
-         * */
+        // Salva e retorna DTO de resposta
         Produto produtoAtualizado = produtoRepository.save(produto);
         return produtoMapper.toResponseDTO(produtoAtualizado);
     }
 
     // Desativar um produto (soft delete)
     @Override
-    public void softDelete(Long id) {
+    public void softDelete(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar o produto (lança EntityNotFoundException se não existir)
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
 
+        // Verificar se o produto pertence à empresa do usuário logado
+        if (!produto.getEmpresa().getId().equals(empresa.getId())) {
+            throw new BusinessException("Produto não pertence à empresa do usuário logado!");
+        }
+
         if (produto.getId() == null) {
             throw new BusinessException("Produto não existe!");
+        }
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
         produto.setAtivo(false);
@@ -251,12 +324,41 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Ativar um produto
     @Override
-    public void activate(Long id) {
+    public void activate(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar o produto (lança EntityNotFoundException se não existir)
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
 
+        // Verificar se o produto pertence à empresa do usuário logado
+        if (!produto.getEmpresa().getId().equals(empresa.getId())) {
+            throw new BusinessException("Produto não pertence à empresa do usuário logado!");
+        }
+
         if (produto.getId() == null) {
             throw new BusinessException("Produto não existe!");
+        }
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
         produto.setAtivo(true);
@@ -265,16 +367,64 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produto por ID
     @Override
-    public ProdutoResponseDTO findById(Long id) {
-        Produto produto = produtoRepository.findById(id)
+    public ProdutoResponseDTO findById(Long id, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Buscar o produto pela empresa (lança EntityNotFoundException se não existir)
+        Produto produto = produtoRepository.findByEmpresaIdAndId(empresa.getId(), id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
         return produtoMapper.toResponseDTO(produto);
     }
 
     // Buscar todos os produtos
     @Override
-    public List<ProdutoListResponseDTO> findAll() {
-        List<Produto> produtos = produtoRepository.findAll();
+    public List<ProdutoListResponseDTO> findAll(Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        List<Produto> produtos = produtoRepository.findAllByEmpresaId(empresa.getId());
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
@@ -282,11 +432,36 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por tipo de produto ID
     @Override
-    public List<ProdutoListResponseDTO> findByTipoProdutoId(Long tipoProdutoId) {
-        List<Produto> produtos = produtoRepository.findByTipoProdutoId(tipoProdutoId);
+    public List<ProdutoListResponseDTO> findByTipoProdutoId(Long tipoProdutoId, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por tipo de produto ID
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndTipoProdutoId(empresa.getId(), tipoProdutoId);
         if (produtos.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado para o Tipo Produto ID: " + tipoProdutoId);
         }
+
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
@@ -294,11 +469,36 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por tipo de produto nome
     @Override
-    public List<ProdutoListResponseDTO> findByTipoProdutoNome(String tipoProdutoNome) {
-        List<Produto> produtos = produtoRepository.findByTipoProdutoNome(tipoProdutoNome);
+    public List<ProdutoListResponseDTO> findByTipoProdutoNome(String tipoProdutoNome, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por tipo de produto nome
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndTipoProdutoNome(empresa.getId(),tipoProdutoNome);
         if (produtos.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado para o Tipo Produto nome: " + tipoProdutoNome);
         }
+
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
@@ -306,8 +506,32 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por status (ativo/inativo)
     @Override
-    public List<ProdutoListResponseDTO> findByIsAtivo(Boolean ativo) {
-        List<Produto> produtos = produtoRepository.findByIsAtivo(ativo);
+    public List<ProdutoListResponseDTO> findByIsAtivo(Boolean ativo, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por status (ativo/inativo)
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndIsAtivo(empresa.getId(),ativo);
         if (produtos.isEmpty()) {
             String status = ativo ? "ativos" : "inativos";
             throw new EntityNotFoundException("Nenhum produto " + status + " encontrado.");
@@ -319,8 +543,32 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por nome (contendo, case insensitive)
     @Override
-    public List<ProdutoListResponseDTO> findByNomeContainingIgnoreCase(String nome) {
-        List<Produto> produtos = produtoRepository.findByNomeContainingIgnoreCase(nome);
+    public List<ProdutoListResponseDTO> findByNomeContainingIgnoreCase(String nome, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por nome (contendo, case insensitive)
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndNomeContainingIgnoreCase(empresa.getId(),nome);
         if (produtos.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado contendo o nome: " + nome);
         }
@@ -331,11 +579,36 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por código (contendo, case insensitive)
     @Override
-    public List<ProdutoListResponseDTO> findByCodigoProdutoContainingIgnoreCase(String codigoProduto) {
-        List<Produto> produtos = produtoRepository.findByCodigoProdutoContainingIgnoreCase(codigoProduto);
+    public List<ProdutoListResponseDTO> findByCodigoProdutoContainingIgnoreCase(String codigoProduto, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por código (contendo, case insensitive)
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndCodigoProdutoContainingIgnoreCase(empresa.getId(),codigoProduto);
         if (produtos.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado contendo o código: " + codigoProduto);
         }
+
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
@@ -343,11 +616,36 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por faixa de preço de venda
     @Override
-    public List<ProdutoListResponseDTO> findByPrecoVendaBetween(BigDecimal precoMinimo, BigDecimal precoMaximo) {
-        List<Produto> produtos = produtoRepository.findByPrecoVendaBetween(precoMinimo, precoMaximo);
+    public List<ProdutoListResponseDTO> findByPrecoVendaBetween(BigDecimal precoMinimo, BigDecimal precoMaximo, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por faixa de preço de venda
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndPrecoVendaBetween(empresa.getId(),precoMinimo, precoMaximo);
         if (produtos.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado na faixa de preço: " + "R$ " + precoMinimo + " ~ " + "R$ " + precoMaximo);
         }
+
         return produtos.stream()
                 .map(produtoMapper::toListResponseDTO)
                 .collect(Collectors.toList());
@@ -355,7 +653,26 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar produtos por faixa de data de criação
     @Override
-    public List<ProdutoListResponseDTO> findByCreatedAtBetween(java.time.LocalDateTime dataInicio, java.time.LocalDateTime dataFim) {
+    public List<ProdutoListResponseDTO> findByCreatedAtBetween(java.time.LocalDateTime dataInicio, java.time.LocalDateTime dataFim, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Validação das datas
         if (dataInicio == null || dataFim == null) {
             throw new BusinessException("Data de início e data de fim são obrigatórias");
         }
@@ -364,7 +681,13 @@ public class ProdutoServiceImpl implements ProdutoService {
             throw new BusinessException("Data de início não pode ser posterior à data de fim");
         }
 
-        List<Produto> produtos = produtoRepository.findByCreatedAtBetween(dataInicio, dataFim);
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar produtos por faixa de data de criação
+        List<Produto> produtos = produtoRepository.findByEmpresaIdAndCreatedAtBetween(empresa.getId(),dataInicio, dataFim);
 
         // Formatação das datas para exibição na mensagem de erro
         if (produtos.isEmpty()) {
@@ -385,8 +708,32 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     // Buscar todos os produtos com paginação
     @Override
-    public Page<ProdutoListResponseDTO> findAllPaged(Pageable pageable) {
-        Page<Produto> produtosPage = produtoRepository.findAll(pageable);
+    public Page<ProdutoListResponseDTO> findAllPaged(Pageable pageable, Authentication authentication) {
+        // Validações das exceções
+        Map<String, String> errors = new HashMap<>();
+
+        // Pegar o usuário logado para associar ao produto criado (se necessário)
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Pegar primeira empresa do usuário logado para associar ao produto criado (se necessário)
+        List<EmpresaUsuario> empresasUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+
+        if (empresasUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Pegar a primeira empresa (você pode melhorar isso deixando o usuário escolher)
+        Empresa empresa = empresasUsuario.get(0).getEmpresa();
+
+        // Se houver erros de validação, lança ValidationException
+        if (!errors.isEmpty()) {
+            throw new ValidationException("Erro de validação nos dados do produto", errors);
+        }
+
+        // Buscar todos os produtos com paginação
+        Page<Produto> produtosPage = produtoRepository.findAllByEmpresaId(empresa.getId(), pageable);
 
         if (produtosPage.isEmpty()) {
             throw new EntityNotFoundException("Nenhum produto encontrado");

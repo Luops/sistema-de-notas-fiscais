@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -32,20 +33,38 @@ public class EmpresaController {
     // Rota para criar uma nova empresa
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public EmpresaResponseDTO create(@RequestBody @Valid EmpresaRequestDTO dto){
-        return empresaService.create(dto);
+    public ResponseEntity<SuccessResponseDTO> create(@RequestBody @Valid EmpresaRequestDTO dto){
+        EmpresaResponseDTO response = empresaService.create(dto);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.CREATED.value(),
+                "Empresa criada com sucesso",
+                response
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
     }
 
     // Rota para atualizar uma empresa
     @PutMapping("/update/{id}")
-    public EmpresaResponseDTO update(@PathVariable Long id, @RequestBody @Valid EmpresaRequestDTO dto) {
-        return empresaService.update(id, dto);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> update(@PathVariable Long id, @RequestBody @Valid EmpresaRequestDTO dto, Authentication authentication) {
+        EmpresaResponseDTO response = empresaService.update(id, dto, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresa atualizada com sucesso",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para deletar uma empresa
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id) {
-        empresaService.delete(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id, Authentication authentication) {
+        empresaService.delete(id, authentication);
 
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
@@ -58,8 +77,9 @@ public class EmpresaController {
 
     // Rota para desativar uma empresa
     @PutMapping("/update/softDelete/{id}")
-    public ResponseEntity<SuccessResponseDTO> softDelete(@PathVariable Long id) {
-        empresaService.softDelete(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> softDelete(@PathVariable Long id, Authentication authentication) {
+        empresaService.softDelete(id, authentication);
 
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
@@ -72,13 +92,16 @@ public class EmpresaController {
 
     // Rota para ativar uma empresa
     @PutMapping("/update/activate/{id}")
-    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id) {
-        empresaService.activate(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id, Authentication authentication) {
+        empresaService.activate(id, authentication);
+
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Empresa ativada com sucesso",
                 null
         );
+
         return ResponseEntity.ok(response);
     }
 
@@ -87,10 +110,10 @@ public class EmpresaController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponseDTO> upload(
             @PathVariable Long empresaId,
-            @Valid @ModelAttribute CertificadoUploadDTO dto) {
+            @Valid @ModelAttribute CertificadoUploadDTO dto, Authentication authentication) {
 
         try {
-            CertificadoResponseDTO response = empresaService.uploadCertificado(empresaId, dto);
+            CertificadoResponseDTO response = empresaService.uploadCertificado(empresaId, dto, authentication);
 
             SuccessResponseDTO successResponse = new SuccessResponseDTO(
                     HttpStatus.OK.value(),
@@ -111,9 +134,10 @@ public class EmpresaController {
 
     // Rota para buscar informações do certificado
     @GetMapping("/{empresaId}/certificado")
-    public ResponseEntity<SuccessResponseDTO> buscar(@PathVariable Long empresaId) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> buscar(@PathVariable Long empresaId, Authentication authentication) {
         try {
-            CertificadoResponseDTO response = empresaService.buscarCertificado(empresaId);
+            CertificadoResponseDTO response = empresaService.buscarCertificado(empresaId, authentication);
 
             SuccessResponseDTO successResponse = new SuccessResponseDTO(
                     HttpStatus.OK.value(),
@@ -135,9 +159,9 @@ public class EmpresaController {
     // Rota para remover certificado
     @DeleteMapping("/{empresaId}/certificado")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponseDTO> remover(@PathVariable Long empresaId) {
+    public ResponseEntity<SuccessResponseDTO> remover(@PathVariable Long empresaId, Authentication authentication) {
         try {
-            empresaService.removerCertificado(empresaId);
+            empresaService.removerCertificado(empresaId, authentication);
 
             SuccessResponseDTO response = new SuccessResponseDTO(
                     HttpStatus.OK.value(),
@@ -158,110 +182,209 @@ public class EmpresaController {
 
     // Rota para buscar uma empresa por ID
     @GetMapping("/findById/{id}")
-    public EmpresaResponseDTO findById(@PathVariable Long id) {
-        return empresaService.findById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findById(@PathVariable Long id, Authentication authentication) {
+        EmpresaResponseDTO response = empresaService.findById(id, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresa encontrada",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar todas as empresas
-    @GetMapping("/findAll")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findAll() {
-        List<EmpresaListResponseDTO> empresas = empresaService.findAll();
-        return ResponseEntity.ok(empresas);
-    }
+    /*@GetMapping("/findAll")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findAll(Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findAll(authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
+    }*/
+
 
     // Rota para buscar empresas com paginação
-    @GetMapping("/paginated")
+    /*@GetMapping("/paginated")
     public ResponseEntity<Page<EmpresaListResponseDTO>> findAllPaged(
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<EmpresaListResponseDTO> empresasPage = empresaService.findAllPaged(pageable);
         return ResponseEntity.ok(empresasPage);
-    }
+    }*/
 
     // Rota para buscar empresa por CNPJ
     @GetMapping("/findByCnpj/{cnpj}")
-    public EmpresaResponseDTO findByCnpj(@PathVariable String cnpj) {
-        return empresaService.findByCnpj(cnpj);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByCnpj(@PathVariable String cnpj, Authentication authentication) {
+        EmpresaResponseDTO response = empresaService.findByCnpj(cnpj, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por razão social contendo um termo
     @GetMapping("/findByRazaoSocial")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByRazaoSocialContainingIgnoreCase(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByRazaoSocialContainingIgnoreCase(
             @RequestParam(name = "razaoSocial")
-            @NotBlank(message = "Razão Social não pode ser vazia") String razaoSocial){
-        List<EmpresaListResponseDTO> empresas = empresaService.findByRazaoSocialContainingIgnoreCase(razaoSocial);
-        return ResponseEntity.ok(empresas);
+            @NotBlank(message = "Razão Social não pode ser vazia") String razaoSocial, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByRazaoSocialContainingIgnoreCase(razaoSocial, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas pelo nome fantasia contendo um termo
     @GetMapping("/findByNomeFantasia")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByNomeFantasiaContainingIgnoreCase(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByNomeFantasiaContainingIgnoreCase(
             @RequestParam(name = "nomeFantasia")
-            @NotBlank(message = "Nome Fantasia não pode ser vazio") String nomeFantasia) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByNomeFantasiaContainingIgnoreCase(nomeFantasia);
-        return ResponseEntity.ok(empresas);
+            @NotBlank(message = "Nome Fantasia não pode ser vazio") String nomeFantasia, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByNomeFantasiaContainingIgnoreCase(nomeFantasia, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por email
     @GetMapping("/findByEmail/{email}")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByEmailContainingIgnoreCase(
-            @PathVariable String email) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByEmailContainingIgnoreCase(email);
-        return ResponseEntity.ok(empresas);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByEmailContainingIgnoreCase(
+            @PathVariable String email, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByEmailContainingIgnoreCase(email, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por telefone
     @GetMapping("/findByTelefone/{telefone}")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByTelefoneContaining(
-            @PathVariable String telefone) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByTelefoneContaining(telefone);
-        return ResponseEntity.ok(empresas);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByTelefoneContaining(
+            @PathVariable String telefone, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByTelefoneContaining(telefone, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por cidade
     @GetMapping("/findByCidade")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByCidadeIgnoreCase(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByCidadeIgnoreCase(
             @RequestParam(name = "cidade")
-            @NotBlank(message = "Cidade não pode ser vazia") String cidade) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByCidadeIgnoreCase(cidade);
-        return ResponseEntity.ok(empresas);
+            @NotBlank(message = "Cidade não pode ser vazia") String cidade, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByCidadeIgnoreCase(cidade, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por estado (UF)
     @GetMapping("/findByEstadoUF/{estadoUF}")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByEstadoUFIgnoreCase(
-            @PathVariable String estadoUF) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByEstadoUFIgnoreCase(estadoUF);
-        return ResponseEntity.ok(empresas);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByEstadoUFIgnoreCase(
+            @PathVariable String estadoUF, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByEstadoUFIgnoreCase(estadoUF, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por CEP
     @GetMapping("/findByCep/{cep}")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByCep(
-            @PathVariable String cep) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByCep(cep);
-        return ResponseEntity.ok(empresas);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByCep(
+            @PathVariable String cep, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByCep(cep, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas por status de ativo/inativo
     @GetMapping("/findByAtivoInativo/{ativo}")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByEmpresaAtivoInativo(
-            @PathVariable Boolean ativo) {
-        List<EmpresaListResponseDTO> empresas = empresaService.findByIsAtivo(ativo);
-        return ResponseEntity.ok(empresas);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByEmpresaAtivoInativo(
+            @PathVariable Boolean ativo, Authentication authentication) {
+        List<EmpresaListResponseDTO> response = empresaService.findByIsAtivo(ativo, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 
     // Rota para buscar empresas criadas entre duas datas
     @GetMapping("/findByCreatedAtBetween")
-    public ResponseEntity<List<EmpresaListResponseDTO>> findByCreatedAtBetween(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponseDTO> findByCreatedAtBetween(
             @RequestParam(name = "dataInicio")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(name = "dataFim")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim)  {
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim, Authentication authentication) {
         // Converter LocalDate para LocalDateTime no início do dia e fim do dia
         LocalDateTime inicioDateTime = dataInicio.atStartOfDay(); // 00:00:00
         LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59); // 23:59:59
 
-        List<EmpresaListResponseDTO> empresas = empresaService.findByCreatedAtBetween(inicioDateTime, fimDateTime);
-        return ResponseEntity.ok(empresas);
+        List<EmpresaListResponseDTO> response = empresaService.findByCreatedAtBetween(inicioDateTime, fimDateTime, authentication);
+
+        SuccessResponseDTO successResponse = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Empresas encontradas",
+                response
+        );
+
+        return ResponseEntity.ok(successResponse);
     }
 }
