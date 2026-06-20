@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public class NotaRequestDTO {
-    @NotNull(message = "ID da empresa é obrigatório")
     private Long empresaId;
 
     private Long clienteId;

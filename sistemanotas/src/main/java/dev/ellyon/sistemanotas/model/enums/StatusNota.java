@@ -1,11 +1,12 @@
 package dev.ellyon.sistemanotas.model.enums;
 
 public enum StatusNota {
-  CANCELADA,
-  EMITIDA,
   RASCUNHO,
-  AUTORIZADA,
-  REJEITADA,
-  ERRO
+  PAGA_SEM_NOTA,
+  AGUARDANDO_EMISSAO,
+  EMITIDA,
+  CANCELADA,
+  ERRO,
+  REJEITADA
 }
 

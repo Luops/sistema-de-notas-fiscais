@@ -88,8 +88,8 @@ public class TipoProdutoController {
     // Rota para ativar um tipo de produto
     @PutMapping("/update/activate/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
-    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id) {
-        tipoProdutoService.activate(id, null);
+    public ResponseEntity<SuccessResponseDTO> activate(@PathVariable Long id, Authentication authentication) {
+        tipoProdutoService.activate(id, authentication);
         SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Tipo de produto ativado com sucesso",

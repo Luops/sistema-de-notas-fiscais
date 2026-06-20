@@ -22,7 +22,7 @@ public class EmpresaMapper {
                 FormatUtils.formatTelefone(empresa.getTelefone()),
                 empresa.getEmail(),
                 empresa.getLogoUrl(),
-                empresa.getAtivo(),
+                empresa.getIsAtivo(),
                 empresa.getCreatedAt(),
                 empresa.getUpdatedAt()
         );
@@ -38,7 +38,7 @@ public class EmpresaMapper {
                 empresa.getEstadoUF(),
                 FormatUtils.formatTelefone(empresa.getTelefone()),
                 empresa.getEmail(),
-                empresa.getAtivo()
+                empresa.getIsAtivo()
         );
     }
 }

@@ -11,7 +11,7 @@ public class TipoProdutoMapper {
         return new TipoProdutoResponseDTO(
                 tipoProduto.getId(),
                 tipoProduto.getNome(),
-                tipoProduto.getAtivo(),
+                tipoProduto.getIsAtivo(),
                 tipoProduto.getCreatedAt(),
                 tipoProduto.getUpdatedAt()
         );

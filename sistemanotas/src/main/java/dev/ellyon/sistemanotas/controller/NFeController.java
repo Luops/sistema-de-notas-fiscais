@@ -44,7 +44,7 @@ public class NFeController {
         try {
             NFeStatusDTO status = nfeService.consultarStatusServico();
 
-            // ✅ Verificação segura contra null
+            // Verificação segura contra null
             Boolean online = status.getOnline();
             String mensagem = (online != null && online)
                     ? "Serviço SEFAZ online"
@@ -57,7 +57,7 @@ public class NFeController {
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // ✅ Log completo do erro
+            // Log completo do erro
             e.printStackTrace();
 
             SuccessResponseDTO response = new SuccessResponseDTO(
@@ -77,9 +77,9 @@ public class NFeController {
             System.out.println("🚀 Iniciando emissão da nota: " + notaId);
             NFeResponseDTO retorno = nfeService.emitir(notaId);
 
-            System.out.println("✅ NF-e emitida! Chave: " + retorno.getChaveAcesso());
-            System.out.println("   Status: " + retorno.getCodigoStatus());
-            System.out.println("   Mensagem: " + retorno.getMensagem());
+            System.out.println("NF-e emitida! Chave: " + retorno.getChaveAcesso());
+            System.out.println("Status: " + retorno.getCodigoStatus());
+            System.out.println("Mensagem: " + retorno.getMensagem());
 
             SuccessResponseDTO response = new SuccessResponseDTO(
                     200,
@@ -88,7 +88,7 @@ public class NFeController {
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("❌ Erro de negócio: " + e.getMessage());
+            System.err.println(" Erro de negócio: " + e.getMessage());
             e.printStackTrace();
 
             SuccessResponseDTO response = new SuccessResponseDTO(

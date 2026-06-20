@@ -70,15 +70,15 @@ public class NFeService {
             // 1. Gerar chave de acesso
             String chaveAcesso = gerarChaveAcesso(nota);
             nota.setChaveAcesso(chaveAcesso);
-            System.out.println("✅ Chave gerada: " + chaveAcesso);
+            System.out.println(" Chave gerada: " + chaveAcesso);
 
             // 2. Gerar XML
             String xmlSemAssinatura = gerarXml(nota);
-            System.out.println("✅ XML gerado (primeiros 100 chars): " + xmlSemAssinatura.substring(0, Math.min(100, xmlSemAssinatura.length())));
+            System.out.println(" XML gerado (primeiros 100 chars): " + xmlSemAssinatura.substring(0, Math.min(100, xmlSemAssinatura.length())));
 
             // 3. Pegar ID da empresa
             Long empresaId = nota.getEmpresa().getId();
-            System.out.println("✅ Empresa ID: " + empresaId);
+            System.out.println(" Empresa ID: " + empresaId);
 
             // 4. Assinar XML
             String xmlAssinado = assinaturaService.assinar(
@@ -86,13 +86,13 @@ public class NFeService {
                     xmlSemAssinatura,
                     "NFe" + chaveAcesso
             );
-            System.out.println("✅ XML assinado!");
+            System.out.println(" XML assinado!");
 
             nota.setXmlNfe(xmlAssinado);
 
             // 5. Enviar para SEFAZ ✅ Passar empresaId
             String xmlRetorno = sefazWebService.enviarNFe(empresaId, xmlAssinado);
-            System.out.println("✅ XML retorno recebido (primeiros 100 chars): " + xmlRetorno.substring(0, Math.min(100, xmlRetorno.length())));
+            System.out.println(" XML retorno recebido (primeiros 100 chars): " + xmlRetorno.substring(0, Math.min(100, xmlRetorno.length())));
 
             // 6. Processar retorno
             NFeResponseDTO retorno = processarRetornoAutorizacao(xmlRetorno);
@@ -111,8 +111,8 @@ public class NFeService {
                 nota.setProtocoloAutorizacao(retorno.getProtocolo());
                 nota.setDataEmissao(LocalDateTime.now());
             } else {
-                // Rejeitada
-                nota.setStatus(StatusNota.REJEITADA);
+                // Erro
+                nota.setStatus(StatusNota.ERRO);
             }
 
             notaRepository.save(nota);
@@ -165,9 +165,7 @@ public class NFeService {
             throw new ValidationException("Erro de validação", errors);
         }
 
-        // ========================================
-        // 2. VALIDAR STATUS DA NOTA
-        // ========================================
+        // Validar status da nota
         if (nota.getStatus() != StatusNota.EMITIDA) {
             throw new BusinessException("Apenas notas emitidas podem ser canceladas. Status atual: " + nota.getStatus());
         }
@@ -186,9 +184,7 @@ public class NFeService {
             throw new BusinessException("Nota não possui protocolo de autorização");
         }
 
-        // ========================================
-        // 3. VALIDAR PRAZO DE CANCELAMENTO (24 horas)
-        // ========================================
+        // Validar prazo de 24 horas para cancelamento
         if (nota.getDataEmissao() != null) {
             LocalDateTime prazoLimite = nota.getDataEmissao().plusHours(24);
             if (LocalDateTime.now().isAfter(prazoLimite)) {
@@ -199,29 +195,25 @@ public class NFeService {
             }
         }
 
-        // ========================================
-        // 4. ENVIAR CANCELAMENTO PARA SEFAZ
-        // ========================================
+        // Enviar cancelamento para SEFAZ
         String respostaCancelamento = sefazWebService.cancelarNFe(
                 nota.getChaveAcesso(),
                 nota.getProtocoloAutorizacao(),
                 justificativa
         );
 
-        // ========================================
-        // 5. PROCESSAR RETORNO
-        // ========================================
+        // Processar retorno do cancelamento
         NFeResponseDTO retorno = processarRetornoCancelamento(respostaCancelamento);
 
-        // ========================================
-        // 6. ATUALIZAR NOTA (se cancelamento aprovado)
-        // ========================================
+        // Atualizar status da nota se cancelamento for homologado
         // Código 135 = Evento registrado e vinculado a NF-e
         // Código 101 = Cancelamento homologado (pode aparecer em alguns casos)
         if ("135".equals(retorno.getCodigoStatus()) || "101".equals(retorno.getCodigoStatus())) {
             nota.setStatus(StatusNota.CANCELADA);
             nota.setProtocoloCancelamento(retorno.getProtocolo());
             nota.setJustificativaCancelamento(justificativa);
+            LocalDateTime now = LocalDateTime.now();
+            nota.setDataCancelamento(now);
             notaRepository.save(nota);
         }
 

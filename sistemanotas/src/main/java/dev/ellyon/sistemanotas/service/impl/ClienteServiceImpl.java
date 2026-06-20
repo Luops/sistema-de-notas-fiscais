@@ -22,6 +22,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,13 +41,15 @@ public class ClienteServiceImpl implements ClienteService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaUsuarioRepository empresaUsuarioRepository;
     private final ClienteMapper clienteMapper;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     // Construtor para injeção de dependências
-    public ClienteServiceImpl(ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, EmpresaUsuarioRepository empresaUsuarioRepository, ClienteMapper clienteMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, EmpresaUsuarioRepository empresaUsuarioRepository, ClienteMapper clienteMapper, BCryptPasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.empresaUsuarioRepository = empresaUsuarioRepository;
         this.clienteMapper = clienteMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Criar um novo cliente
@@ -180,12 +183,13 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setEmail(emailNormalizado);
         cliente.setTelefone(telefoneLimpo);
         cliente.setEnderecoCompleto(dto.getEnderecoCompleto());
+        cliente.setNumeroEndereco(dto.getNumeroEndereco());
         cliente.setCidade(dto.getCidade());
         cliente.setEstadoUF(estadoUFNormalizado);
         cliente.setCep(cepLimpo);
         cliente.setBairro(dto.getBairro());
         cliente.setEmpresa(empresa);
-        cliente.setAtivo(true); // Novo cliente sempre ativo
+        cliente.setIsAtivo(true); // Novo cliente sempre ativo
 
         // Persiste a entidade e retorna o DTO de resposta
         Cliente clienteSalvo = clienteRepository.save(cliente);
@@ -194,7 +198,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     // Deletar um cliente por ID
     @Override
-    public void delete(Long id, Authentication authentication) {
+    public void delete(Long id, String senha, Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
@@ -212,6 +216,17 @@ public class ClienteServiceImpl implements ClienteService {
 
         if (empresasUsuario.isEmpty()) {
             throw new BusinessException("Usuário não está vinculado a nenhuma empresa");
+        }
+
+        // Verificar senha do usuário logado para confirmar a ação
+        if (senha == null || senha.isBlank()) {
+            errors.put("senha", "A senha é obrigatória para confirmar a exclusão do usuário");
+            throw new ValidationException("Erro de validação. Insira a sua senha!", errors);
+        }
+        // Verificar se a senha fornecida corresponde à senha do usuário logado
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            errors.put("senha", "Senha incorreta. A exclusão do usuário não foi confirmada.");
+            throw new ValidationException("Erro de validação. Senha incorreta!", errors);
         }
 
         // A empresa do usuário deve ser a mesma do cliente para permitir exclusão
@@ -374,12 +389,13 @@ public class ClienteServiceImpl implements ClienteService {
         clienteExistente.setEmail(emailNormalizado);
         clienteExistente.setTelefone(telefoneLimpo);
         clienteExistente.setEnderecoCompleto(dto.getEnderecoCompleto().toLowerCase().trim());
+        clienteExistente.setNumeroEndereco(dto.getNumeroEndereco().toLowerCase().trim());
         clienteExistente.setCidade(dto.getCidade().toLowerCase().trim());
         clienteExistente.setEstadoUF(estadoUFNormalizado);
         clienteExistente.setCep(cepLimpo);
         clienteExistente.setBairro(dto.getBairro().toLowerCase().trim());
         if (dto.getAtivo() != null) {
-            clienteExistente.setAtivo(dto.getAtivo());
+            clienteExistente.setIsAtivo(dto.getAtivo());
         }
 
         // Persiste as alterações e retorna o DTO de resposta
@@ -421,7 +437,7 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         // Se o cliente existe, realiza a desativação (soft delete) e salva a entidade
-        cliente.setAtivo(false);
+        cliente.setIsAtivo(false);
         clienteRepository.save(cliente);
     }
 
@@ -459,7 +475,7 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         // Se o cliente existe, realiza a ativação e salva a entidade
-        cliente.setAtivo(true);
+        cliente.setIsAtivo(true);
         clienteRepository.save(cliente);
     }
 

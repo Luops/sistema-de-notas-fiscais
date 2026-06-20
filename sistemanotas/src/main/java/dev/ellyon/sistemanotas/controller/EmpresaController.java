@@ -196,7 +196,7 @@ public class EmpresaController {
     }
 
     // Rota para buscar todas as empresas
-    /*@GetMapping("/findAll")
+    @GetMapping("/findAll")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponseDTO> findAll(Authentication authentication) {
         List<EmpresaListResponseDTO> response = empresaService.findAll(authentication);
@@ -208,7 +208,7 @@ public class EmpresaController {
         );
 
         return ResponseEntity.ok(successResponse);
-    }*/
+    }
 
 
     // Rota para buscar empresas com paginação

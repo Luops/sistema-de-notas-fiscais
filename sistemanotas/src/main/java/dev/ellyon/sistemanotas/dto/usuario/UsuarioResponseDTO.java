@@ -11,6 +11,11 @@ public class UsuarioResponseDTO {
     private Long id;
     private String nome;
     private String email;
+    private String telefone;
+    private String cidade;
+    private String endereco;
+    private String cep;
+    private String numeroEndereco;
     private Boolean isAtivo;
     private List<EmpresaUsuarioSimpleResponseDTO> empresas;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -22,12 +27,15 @@ public class UsuarioResponseDTO {
     public UsuarioResponseDTO() {}
 
     // Construtor completo
-    public UsuarioResponseDTO(Long id, String nome, String email, Boolean isAtivo,
-                              List<EmpresaUsuarioSimpleResponseDTO> empresas,
-                              LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public UsuarioResponseDTO(Long id, String nome, String email, String telefone, String cidade, String endereco, String cep, String numeroEndereco, Boolean isAtivo, List<EmpresaUsuarioSimpleResponseDTO> empresas, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nome = nome;
         this.email = email;
+        this.telefone = telefone;
+        this.cidade = cidade;
+        this.endereco = endereco;
+        this.cep = cep;
+        this.numeroEndereco = numeroEndereco;
         this.isAtivo = isAtivo;
         this.empresas = empresas;
         this.createdAt = createdAt;
@@ -58,11 +66,51 @@ public class UsuarioResponseDTO {
         this.email = email;
     }
 
-    public Boolean getAtivo() {
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getCidade() {
+        return cidade;
+    }
+
+    public void setCidade(String cidade) {
+        this.cidade = cidade;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getNumeroEndereco() {
+        return numeroEndereco;
+    }
+
+    public void setNumeroEndereco(String numeroEndereco) {
+        this.numeroEndereco = numeroEndereco;
+    }
+
+    public Boolean getIsAtivo() {
         return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
+    public void setIsAtivo(Boolean ativo) {
         isAtivo = ativo;
     }
 

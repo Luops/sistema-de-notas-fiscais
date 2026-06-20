@@ -55,10 +55,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     public UsuarioResponseDTO create(UsuarioRequestDTO dto) {
         Map<String, String> errors = new HashMap<>();
 
-        // ========================================
-        // 1. VALIDAÇÕES
-        // ========================================
-
         // Verificar unicidade do email
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
             errors.put("email", "Email já cadastrado no sistema");
@@ -86,34 +82,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Verificar quantos usuários a empresa já possui
         int qtdUsuariosEmpresa = empresaUsuarioRepository.countEmpresaUsuarioByEmpresaId(dto.getEmpresaId());
 
-        // Se já existe usuário na empresa, não pode criar outro ADMIN
-        if (perfil == Perfil.ADMIN && qtdUsuariosEmpresa > 0) {
-            errors.put("perfil", "Esta empresa já possui usuários. Não é possível criar outro ADMIN.");
-        }
-
         // Se houver erros, lança exceção
         if (!errors.isEmpty()) {
             throw new ValidationException("Erro de validação nos dados do usuário", errors);
         }
 
-        // ========================================
-        // 2. CRIAR USUÁRIO
-        // ========================================
+        // Criar usuário
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Criptografar senha
+        usuario.setTelefone(dto.getTelefone());
+        usuario.setCidade(dto.getCidade());
+        usuario.setEndereco(dto.getEndereco());
+        usuario.setCep(dto.getCep());
+        usuario.setNumeroEndereco(dto.getNumeroEndereco());
         usuario.setIsAtivo(true);
 
         // Salvar usuário
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
 
-        // ========================================
-        // 3. ASSOCIAR USUÁRIO À EMPRESA
-        // ========================================
         //  Se é o PRIMEIRO usuário da empresa → SEMPRE será ADMIN
         //  Se JÁ EXISTEM usuários → usa o perfil informado (mas não pode ser ADMIN, validado acima)
-
         Perfil perfilFinal;
         if (qtdUsuariosEmpresa == 0) {
             // Primeiro usuário da empresa SEMPRE é ADMIN
@@ -142,9 +132,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             empresaUsuarioRepository.save(empresaUsuarioExistente);
         }
 
-        // ========================================
-        // 4. RETORNAR DTO (SEM SENHA)
-        // ========================================
+        // Retornar resposta
         return usuarioMapper.toResponseDTO(usuarioSalvo);
     }
 
@@ -200,6 +188,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Atualizar dados do usuário, pessoais
         usuarioExistente.setNome(dto.getNome());
         usuarioExistente.setEmail(dto.getEmail());
+        usuarioExistente.setTelefone(dto.getTelefone());
+        usuarioExistente.setCidade(dto.getCidade());
+        usuarioExistente.setEndereco(dto.getEndereco());
+        usuarioExistente.setCep(dto.getCep());
+        usuarioExistente.setNumeroEndereco(dto.getNumeroEndereco());
 
         // Atualizar senha apenas se fornecida
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
@@ -213,7 +206,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     // Deletar um usuário
     @Override
-    public void delete(Long id, Authentication authentication) {
+    public void delete(Long id, String senha, Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
 
@@ -260,6 +253,17 @@ public class UsuarioServiceImpl implements UsuarioService {
                     qtdNotasVinculadas
             ));
             throw new ValidationException("Erro de validação", errors);
+        }
+
+        // Verificar senha do usuário logado para confirmar a ação
+        if (senha == null || senha.isBlank()) {
+            errors.put("senha", "A senha é obrigatória para confirmar a exclusão do usuário");
+            throw new ValidationException("Erro de validação. Insira a sua senha!", errors);
+        }
+        // Verificar se a senha fornecida corresponde à senha do usuário logado
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            errors.put("senha", "Senha incorreta. A exclusão do usuário não foi confirmada.");
+            throw new ValidationException("Erro de validação. Senha incorreta!", errors);
         }
 
         // Se houver erros, lança exceção

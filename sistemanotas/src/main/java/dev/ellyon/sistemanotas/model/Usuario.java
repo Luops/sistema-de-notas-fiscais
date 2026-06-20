@@ -20,6 +20,21 @@ public class Usuario extends Entidade {
   @Column(name = "senha", nullable = false, length = 255)
   private String senha;
 
+  @Column(name = "telefone", nullable = false, length = 20)
+  private String telefone;
+
+  @Column(name="cidade", nullable = false, length = 100)
+  private String cidade;
+
+  @Column(name = "endereco", nullable = false, length = 255)
+  private String endereco;
+
+  @Column(name = "cep", nullable = false, length = 20)
+  private  String cep;
+
+  @Column(name = "numero_endereco", nullable = false, length = 20)
+  private  String numeroEndereco;
+
   @Column(name = "is_ativo", nullable = false)
   private Boolean isAtivo;
 
@@ -29,27 +44,37 @@ public class Usuario extends Entidade {
   }
 
   // Construtor com todos os atributos
-  public Usuario(Long id, String nome, String email, String senha, Boolean isAtivo, LocalDateTime createdAt,
+  public Usuario(Long id, String nome, String email, String senha, String telefone, String cidade, String endereco, String cep, String numeroEndereco, Boolean isAtivo, LocalDateTime createdAt,
                  LocalDateTime updatedAt) {
     this.id = id;
     this.nome = nome;
     this.email = email;
     this.senha = senha;
+    this.telefone = telefone;
+    this.cidade = cidade;
+    this.endereco = endereco;
+    this.cep = cep;
+    this.numeroEndereco = numeroEndereco;
     this.isAtivo = isAtivo;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
 
   // Construtor sem id e timestamps
-  public Usuario(String nome, String email, String senha, Boolean isAtivo) {
+  public Usuario(String nome, String email, String senha, String telefone, String cidade, String endereco, String cep, String numeroEndereco, Boolean isAtivo) {
     this.nome = nome;
     this.email = email;
     this.senha = senha;
+    this.telefone = telefone;
+    this.cidade = cidade;
+    this.endereco = endereco;
+    this.cep = cep;
+    this.numeroEndereco = numeroEndereco;
     this.isAtivo = isAtivo;
   }
 
   public String getNome() {
-    return this.nome;
+    return nome;
   }
 
   public void setNome(String nome) {
@@ -57,7 +82,7 @@ public class Usuario extends Entidade {
   }
 
   public String getEmail() {
-    return this.email;
+    return email;
   }
 
   public void setEmail(String email) {
@@ -65,21 +90,60 @@ public class Usuario extends Entidade {
   }
 
   public String getSenha() {
-    return this.senha;
+    return senha;
   }
 
   public void setSenha(String senha) {
     this.senha = senha;
   }
 
+  public String getTelefone() {
+    return telefone;
+  }
+
+  public void setTelefone(String telefone) {
+    this.telefone = telefone;
+  }
+
+  public String getCidade() {
+    return cidade;
+  }
+
+  public void setCidade(String cidade) {
+    this.cidade = cidade;
+  }
+
+  public String getEndereco() {
+    return endereco;
+  }
+
+  public void setEndereco(String endereco) {
+    this.endereco = endereco;
+  }
+
+  public String getCep() {
+    return cep;
+  }
+
+  public void setCep(String cep) {
+    this.cep = cep;
+  }
+
+  public String getNumeroEndereco() {
+    return numeroEndereco;
+  }
+
+  public void setNumeroEndereco(String numeroEndereco) {
+    this.numeroEndereco = numeroEndereco;
+  }
+
   public Boolean getIsAtivo() {
-    return this.isAtivo;
+    return isAtivo;
   }
 
-  public void setIsAtivo(Boolean isAtivo) {
-    this.isAtivo = isAtivo;
+  public void setIsAtivo(Boolean ativo) {
+    isAtivo = ativo;
   }
-
 
   @Override
   public String toString() {

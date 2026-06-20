@@ -55,11 +55,11 @@ public class TipoProduto extends Entidade{
         this.nome = nome;
     }
 
-    public Boolean getAtivo() {
+    public Boolean getIsAtivo() {
         return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
+    public void setIsAtivo(Boolean ativo) {
         isAtivo = ativo;
     }
 

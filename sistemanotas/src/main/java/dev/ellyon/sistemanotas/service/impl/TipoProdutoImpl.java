@@ -91,7 +91,7 @@ public class TipoProdutoImpl implements TipoProdutoService {
         // Cria o tipo de produto
         TipoProduto tipoProduto = new TipoProduto();
         tipoProduto.setNome(nomeCapitalize);
-        tipoProduto.setAtivo(true);
+        tipoProduto.setIsAtivo(true);
         tipoProduto.setEmpresa(empresa);
 
         // Salva o tipo de produto no banco de dados
@@ -210,7 +210,7 @@ public class TipoProdutoImpl implements TipoProdutoService {
 
         // Atualiza os dados do tipo de produto existente com os dados do DTO
         tipoProdutoExistente.setNome(nomeCapitalize);
-        tipoProdutoExistente.setAtivo(true);
+        tipoProdutoExistente.setIsAtivo(true);
 
         // Salva o tipo de produto no banco de dados
         TipoProduto updatedTipoProduto = tipoProdutoRepository.save(tipoProdutoExistente);
@@ -261,7 +261,7 @@ public class TipoProdutoImpl implements TipoProdutoService {
             throw new ValidationException("Erro de validação nos dados do cliente", errors);
         }
 
-        tipoProduto.setAtivo(false);
+        tipoProduto.setIsAtivo(false);
         tipoProdutoRepository.save(tipoProduto);
 
     }
@@ -301,7 +301,7 @@ public class TipoProdutoImpl implements TipoProdutoService {
             throw new ValidationException("Erro de validação nos dados do cliente", errors);
         }
 
-        tipoProduto.setAtivo(true);
+        tipoProduto.setIsAtivo(true);
         tipoProdutoRepository.save(tipoProduto);
     }
 

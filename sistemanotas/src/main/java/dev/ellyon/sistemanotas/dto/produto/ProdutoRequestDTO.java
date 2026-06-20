@@ -14,8 +14,6 @@ public class ProdutoRequestDTO {
     @Size(min = 3, max = 255, message = "Nome do produto deve ter entre 3 e 255 caracteres")
     private String nome;
 
-    @NotBlank
-    @Size(min = 10, max = 255, message = "Descrição deve ter entre 10 e 255 caracteres")
     private String descricao;
 
     @NotNull(message = "Tipo de produto é obrigatório")
@@ -34,17 +32,14 @@ public class ProdutoRequestDTO {
     @Pattern(regexp = "\\d{4}", message = "CFOP deve ter exatamente 4 dígitos")
     private String cfopPadrao;
 
-    @NotNull(message = "Alíquota de ICMS é obrigatória")
     @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de ICMS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de ICMS deve ser menor ou igual a 100")
     private BigDecimal aliquotaIcmsPadrao;
 
-    @NotNull(message = "Alíquota de PIS é obrigatória")
     @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de PIS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de PIS deve ser menor ou igual a 100")
     private BigDecimal aliquotaPisPadrao;
 
-    @NotNull(message = "Alíquota de COFINS é obrigatória")
     @DecimalMin(value = "0.0", inclusive = true, message = "Alíquota de COFINS deve ser maior que zero")
     @DecimalMax(value = "100.0", inclusive = true, message = "Alíquota de COFINS deve ser menor ou igual a 100")
     private BigDecimal aliquotaCofinsPadrao;

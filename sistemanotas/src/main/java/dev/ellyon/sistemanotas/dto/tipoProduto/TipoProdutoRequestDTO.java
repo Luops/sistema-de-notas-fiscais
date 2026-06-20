@@ -11,6 +11,10 @@ public class TipoProdutoRequestDTO {
 
     private Empresa empresa;
 
+    // Construtor padrao
+    public TipoProdutoRequestDTO() {
+    }
+
     public TipoProdutoRequestDTO(String nome) {
         this.nome = nome;
     }

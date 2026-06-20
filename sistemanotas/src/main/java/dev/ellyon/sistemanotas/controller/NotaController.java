@@ -153,6 +153,17 @@ public class NotaController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // Rota para marcar nota como paga sem emissão
+    @PutMapping("/{notaId}/marcar-paga-sem-nota")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    public ResponseEntity<NotaResponseDTO> marcarComoPagaSemNota(
+            @PathVariable Long notaId,
+            Authentication authentication
+    ) {
+        NotaResponseDTO nota = notaService.marcarComoPagaSemNota(notaId, authentication);
+        return ResponseEntity.ok(nota);
+    }
+
     // Rota para buscar nota por ID
     @GetMapping("/findById/{notaId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
@@ -192,12 +203,11 @@ public class NotaController {
     }
 
     // Rota para buscar nota por número e empresa
-    @GetMapping("/find-by-numero-and-empresa")
+    @GetMapping("/findByNumero")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
-    public ResponseEntity<SuccessResponseDTO> findByNumeroAndEmpresaId(
-            @RequestParam(required = true) Long empresaId,
-            @RequestParam(required = true) String numero) {
-        NotaResponseDTO notaResponseDTO = notaService.findByNumeroAndEmpresaId(empresaId, numero);
+    public ResponseEntity<SuccessResponseDTO> findByNumero(
+            @RequestParam(required = true) String numero, Authentication authentication) {
+        NotaResponseDTO notaResponseDTO = notaService.findByNumero(numero, authentication);
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Nota encontrada com sucesso",
@@ -304,6 +314,38 @@ public class NotaController {
     }
 
     // Rota para buscar notas por intervalo de datas de emissão
+    @GetMapping("/data-criacao")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    public ResponseEntity<SuccessResponseDTO> findByCreatedAtBetween(
+            @RequestParam(value = "dataInicio", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+
+            @RequestParam(value = "dataFim", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) {
+        // Validar se ambos foram enviados
+        if (dataInicio == null || dataFim == null) {
+            throw new IllegalArgumentException(
+                    "Os parâmetros 'dataInicio' e 'dataFim' são obrigatórios. " +
+                            "Formato: YYYY-MM-DD. Exemplo: ?dataInicio=2026-01-01&dataFim=2026-01-31"
+            );
+        }
+
+        // Converte LocalDate para LocalDateTime
+        LocalDateTime dataInicioTime = dataInicio.atStartOfDay();
+        LocalDateTime dataFimTime = dataFim.atTime(23, 59, 59);
+
+        List<NotaListResponseDTO> notas = notaService.findByCreatedAtBetween(dataInicioTime, dataFimTime);
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar notas por intervalo de datas de emissão
     @GetMapping("/data-cancelamento")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByDataCancelamentoBetween(
@@ -366,6 +408,24 @@ public class NotaController {
                 new BigDecimal(valorMinimo),
                 new BigDecimal(valorMaximo)
         );
+
+        SuccessResponseDTO response = new SuccessResponseDTO(
+                HttpStatus.OK.value(),
+                "Notas encontradas com sucesso",
+                notas
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Rota para buscar notas por filtros combinados (período, status, tipo de data)
+    @GetMapping("/filtros")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    public ResponseEntity<SuccessResponseDTO>  findByFilters(
+            @RequestParam(defaultValue = "30days") String periodo,
+            @RequestParam(defaultValue = "TODOS") String status,
+            @RequestParam(defaultValue = "emissao") String tipoDeData
+    ) {
+        List<NotaListResponseDTO> notas = notaService.findByFilters(periodo, status, tipoDeData);
 
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),

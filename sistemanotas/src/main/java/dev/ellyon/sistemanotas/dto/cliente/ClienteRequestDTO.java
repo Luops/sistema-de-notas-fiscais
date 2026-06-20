@@ -31,6 +31,10 @@ public class ClienteRequestDTO {
     @Size(min = 10, max = 255, message = "Endereço completo deve ter no mínimo 10 e no máximo 255 caracteres.")
     private String enderecoCompleto;
 
+    @NotBlank(message = "Numero do endereço é obrigatório.")
+    @Size(min = 1, max = 255, message = "Número do enredeço deve ter no mínimo 1 e no máximo 255 caracteres.")
+    private String numeroEndereco;
+
     @NotBlank(message = "Cidade é obrigatória.")
     @Size(min = 3, max = 255, message = "Cidade deve ter no mínimo 3 e no máximo 255 caracteres.")
     private String cidade;
@@ -54,7 +58,7 @@ public class ClienteRequestDTO {
     }
 
     // Construtor completo
-    public ClienteRequestDTO(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo) {
+    public ClienteRequestDTO(String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String numeroEndereco, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo) {
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
         this.cpfCnpj = cpfCnpj;
@@ -62,6 +66,7 @@ public class ClienteRequestDTO {
         this.email = email;
         this.telefone = telefone;
         this.enderecoCompleto = enderecoCompleto;
+        this.numeroEndereco = numeroEndereco;
         this.cidade = cidade;
         this.estadoUF = estadoUF;
         this.cep = cep;
@@ -123,6 +128,14 @@ public class ClienteRequestDTO {
 
     public void setEnderecoCompleto(String enderecoCompleto) {
         this.enderecoCompleto = enderecoCompleto;
+    }
+
+    public String getNumeroEndereco() {
+        return numeroEndereco;
+    }
+
+    public void setNumeroEndereco(String numeroEndereco) {
+        this.numeroEndereco = numeroEndereco;
     }
 
     public String getCidade() {

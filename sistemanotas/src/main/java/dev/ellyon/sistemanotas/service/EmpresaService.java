@@ -22,7 +22,7 @@ public interface EmpresaService {
 
     // Buscas
     EmpresaResponseDTO findById(Long id, Authentication authentication); // Buscar empresa por ID
-    //List<EmpresaListResponseDTO> findAll(Authentication authentication); // Buscar todas as empresas
+    List<EmpresaListResponseDTO> findAll(Authentication authentication); // Buscar todas as empresas
     //Page<EmpresaListResponseDTO> findAllPaged(Pageable pageable, Authentication authentication); // Buscar todas as empresas com paginação
     EmpresaResponseDTO findByCnpj(String cnpj, Authentication authentication); // Buscar empresa por CNPJ
     List<EmpresaListResponseDTO> findByRazaoSocialContainingIgnoreCase(String razaoSocial, Authentication authentication); // Buscar empresas por razão social contendo um termo

@@ -12,3 +12,8 @@ login: joao@example2.com
 senha: Senha123
 empresaId: 1
 admin
+
+login: fabricio.rioslopes@gmail.com
+senha: Fabrios12361236
+empresaId: 1
+admin

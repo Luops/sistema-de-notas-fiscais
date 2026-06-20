@@ -18,11 +18,12 @@ public class ClienteMapper {
                 cliente.getEmail(),
                 FormatUtils.formatTelefone(cliente.getTelefone()),
                 cliente.getEnderecoCompleto(),
+                cliente.getNumeroEndereco(),
                 cliente.getCidade(),
                 cliente.getEstadoUF(),
                 FormatUtils.formatCep(cliente.getCep()),
                 cliente.getBairro(),
-                cliente.getAtivo(),
+                cliente.getIsAtivo(),
                 cliente.getCreatedAt(),
                 cliente.getUpdatedAt()
         );
@@ -32,13 +33,11 @@ public class ClienteMapper {
         return new ClienteListResponseDTO(
                 cliente.getId(),
                 cliente.getNome(),
-                cliente.getTipoPessoa().toString(),
-                FormatUtils.formatCpfCnpj(cliente.getCpfCnpj()),
                 FormatUtils.formatTelefone(cliente.getTelefone()),
+                cliente.getEnderecoCompleto(),
+                cliente.getNumeroEndereco(),
                 cliente.getCidade(),
-                cliente.getEstadoUF(),
-                cliente.getEmail(),
-                cliente.getAtivo()
+                cliente.getIsAtivo()
         );
     }
 }

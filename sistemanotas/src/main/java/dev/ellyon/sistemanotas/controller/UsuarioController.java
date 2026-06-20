@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -65,8 +66,9 @@ public class UsuarioController {
     // Rota para deletar um usuário
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id, Authentication authentication) {
-        usuarioService.delete(id, authentication);
+    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id,@RequestBody Map<String, String> body, Authentication authentication) {
+        String senha = body.get("senha");
+        usuarioService.delete(id, senha, authentication);
         SuccessResponseDTO successResponse = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Usuário deletado com sucesso",
@@ -105,6 +107,7 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<SuccessResponseDTO> login(@RequestBody @Valid LoginRequestDTO dto) {
         LoginResponseDTO loginResponse = authService.autenticar(dto);
+
         SuccessResponseDTO response = new SuccessResponseDTO(
                 HttpStatus.OK.value(),
                 "Login realizado com sucesso",
@@ -128,7 +131,7 @@ public class UsuarioController {
 
     // Rota para obter todos os usuários
     @GetMapping("/findAll")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findAll(Authentication authentication) {
         List<UsuarioResponseDTO> response = usuarioService.findAll(authentication);
         SuccessResponseDTO successResponse = new SuccessResponseDTO(

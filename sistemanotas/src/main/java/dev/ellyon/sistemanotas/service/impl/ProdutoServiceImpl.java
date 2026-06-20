@@ -92,6 +92,11 @@ public class ProdutoServiceImpl implements ProdutoService {
             errors.put("precoVenda", "Preço de venda deve ser maior que zero");
         }
 
+        // Validar se o produto tem preço de venda
+        if (dto.getPrecoVenda() == null || dto.getPrecoVenda().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Produto não possui preço de venda cadastrado");
+        }
+
         // Validar NCM se informado
         if (dto.getNcm() != null && !dto.getNcm().isBlank()) {
             if (!ncmService.validarNCM(dto.getNcm())) {
@@ -147,7 +152,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaPisPadrao(aliquotaPis != null ? aliquotaPis : BigDecimal.ZERO);
         produto.setAliquotaCofinsPadrao(aliquotaCofins != null ? aliquotaCofins : BigDecimal.ZERO);
         produto.setEmpresa(empresa);
-        produto.setAtivo(true);
+        produto.setIsAtivo(true);
 
         // Salva e retorna DTO de resposta
         Produto produtoSalvo = produtoRepository.save(produto);
@@ -271,7 +276,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setAliquotaIcmsPadrao(dto.getAliquotaIcmsPadrao());
         produto.setAliquotaPisPadrao(dto.getAliquotaPisPadrao());
         produto.setAliquotaCofinsPadrao(dto.getAliquotaCofinsPadrao());
-        produto.setAtivo(true);
+        produto.setIsAtivo(true);
 
         // Salva e retorna DTO de resposta
         Produto produtoAtualizado = produtoRepository.save(produto);
@@ -300,7 +305,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         Empresa empresa = empresasUsuario.get(0).getEmpresa();
 
         // Buscar o produto (lança EntityNotFoundException se não existir)
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByEmpresaIdAndId(empresa.getId(),id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
 
         // Verificar se o produto pertence à empresa do usuário logado
@@ -317,7 +322,7 @@ public class ProdutoServiceImpl implements ProdutoService {
             throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
-        produto.setAtivo(false);
+        produto.setIsAtivo(false);
         produtoRepository.save(produto);
 
     }
@@ -344,7 +349,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         Empresa empresa = empresasUsuario.get(0).getEmpresa();
 
         // Buscar o produto (lança EntityNotFoundException se não existir)
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByEmpresaIdAndId(empresa.getId(),id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto", id));
 
         // Verificar se o produto pertence à empresa do usuário logado
@@ -361,7 +366,7 @@ public class ProdutoServiceImpl implements ProdutoService {
             throw new ValidationException("Erro de validação nos dados do produto", errors);
         }
 
-        produto.setAtivo(true);
+        produto.setIsAtivo(true);
         produtoRepository.save(produto);
     }
 
