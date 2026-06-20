@@ -55,10 +55,10 @@ public class ClienteController {
     // Rota para deletar um cliente
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<SuccessResponseDTO> delete(@PathVariable Long id, String senha, Authentication authentication) {
 
         // Chamar serviço para deletar
-        clienteService.delete(id, authentication);
+        clienteService.delete(id, senha, authentication);
 
         // Montar resposta padrão
         SuccessResponseDTO successResponse = new SuccessResponseDTO(

@@ -14,7 +14,7 @@ public interface UsuarioService {
     // Create - Update - Delete - Soft Delete - Activate
     UsuarioResponseDTO create(UsuarioRequestDTO dto); // Criar um novo usuário
     UsuarioResponseDTO update(Long id, UsuarioUpdateRequestDTO dto, Authentication authentication); // Atualizar um usuário existente
-    void delete(Long id, Authentication authentication); // Deletar um usuário
+    void delete(Long id, String senha, Authentication authentication); // Deletar um usuário
     void softDelete(Long id, Authentication authentication); // Deletar um usuário logicamente
     void activate(Long id, Authentication authentication); // Ativar um usuário
 

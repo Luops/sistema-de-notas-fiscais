@@ -191,11 +191,11 @@ public class Produto extends Entidade{
         this.empresa = empresa;
     }
 
-    public Boolean getAtivo() {
+    public Boolean getIsAtivo() {
         return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
+    public void setIsAtivo(Boolean ativo) {
         isAtivo = ativo;
     }
 }

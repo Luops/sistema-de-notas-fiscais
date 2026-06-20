@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 // Repositório JPA para a entidade. Fazer operações de CRUD no banco de dados.
@@ -20,6 +21,11 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
     """)
     Integer findUltimoNumeroPorEmpresa(@Param("empresaId") Long empresaId);
     Nota findByNumeroAndEmpresaId(@Param("numero") String numero, @Param("empresaId") Long empresaId);
+
+    List<Nota> findByCreatedAtBetweenOrderByCreatedAtAsc(
+            LocalDateTime dataInicio,
+            LocalDateTime dataFim
+    );
 
     List<Nota> findByDataEmissaoBetweenOrderByDataEmissaoDesc(
             LocalDateTime dataInicio,
@@ -44,4 +50,5 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
     long countByCreatedById(Long usuarioId);
 
     List<Nota> findByEmpresaId(Long empresaId);
+
 }

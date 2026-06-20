@@ -1,6 +1,7 @@
 package dev.ellyon.sistemanotas.dto.nota;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jdk.jshell.Snippet;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +18,8 @@ public class NotaListResponseDTO {
     private LocalDateTime dataEmissao;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dataCancelamento;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime createdAt;
 
     // Construtor padrão
     public NotaListResponseDTO() {
@@ -24,7 +27,7 @@ public class NotaListResponseDTO {
     }
 
     // Construtor completo
-    public NotaListResponseDTO(Long id, String numero, String tipo, String status, String clienteNome, String tipoCliente, BigDecimal valorTotal, LocalDateTime dataEmissao, LocalDateTime dataCancelamento) {
+    public NotaListResponseDTO(Long id, String numero, String tipo, String status, String clienteNome, String tipoCliente, BigDecimal valorTotal, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, LocalDateTime createdAt) {
         this.id = id;
         this.numero = numero;
         this.tipo = tipo;
@@ -34,6 +37,7 @@ public class NotaListResponseDTO {
         this.valorTotal = valorTotal;
         this.dataEmissao = dataEmissao;
         this.dataCancelamento = dataCancelamento;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -106,5 +110,13 @@ public class NotaListResponseDTO {
 
     public void setDataCancelamento(LocalDateTime dataCancelamento) {
         this.dataCancelamento = dataCancelamento;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

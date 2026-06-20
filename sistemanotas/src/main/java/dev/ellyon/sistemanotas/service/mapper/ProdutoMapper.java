@@ -27,7 +27,7 @@ public class ProdutoMapper {
                 produto.getAliquotaIcmsPadrao(),
                 produto.getAliquotaPisPadrao(),
                 produto.getAliquotaCofinsPadrao(),
-                produto.getAtivo(),
+                produto.getIsAtivo(),
                 produto.getCreatedAt(),
                 produto.getUpdatedAt()
         );
@@ -41,7 +41,7 @@ public class ProdutoMapper {
                 produto.getTipoProduto().getNome(),
                 produto.getUnidade().toString(),
                 produto.getPrecoVenda(),
-                produto.getAtivo(),
+                produto.getIsAtivo(),
                 produto.getCreatedAt()
         );
     }

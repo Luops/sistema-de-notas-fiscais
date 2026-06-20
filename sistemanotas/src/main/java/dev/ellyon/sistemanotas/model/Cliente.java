@@ -38,6 +38,9 @@ public class Cliente extends Entidade{
     @Column(name = "endereco_completo", nullable = false, length = 500)
     private String enderecoCompleto;
 
+    @Column(name = "numero_endereco", nullable = false, length = 500)
+    private String numeroEndereco;
+
     @Column(name = "cidade", nullable = false, length = 100)
     private String cidade;
 
@@ -64,7 +67,7 @@ public class Cliente extends Entidade{
 
     // Construtor com todos atributos
     public Cliente(Long id, String nome, TipoPessoa tipoPessoa, String cpfCnpj, String inscricaoEstadual,
-                   String email, String telefone, String enderecoCompleto, String cidade,
+                   String email, String telefone, String enderecoCompleto, String numeroEndereco, String cidade,
                    String estadoUF, String cep, String bairro, Empresa empresa, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nome = nome;
@@ -74,6 +77,7 @@ public class Cliente extends Entidade{
         this.email = email;
         this.telefone = telefone;
         this.enderecoCompleto = enderecoCompleto;
+        this.numeroEndereco = numeroEndereco;
         this.cidade = cidade;
         this.estadoUF = estadoUF;
         this.cep = cep;
@@ -161,6 +165,22 @@ public class Cliente extends Entidade{
         this.enderecoCompleto = enderecoCompleto;
     }
 
+    public String getCpfCnpjHash() {
+        return cpfCnpjHash;
+    }
+
+    public void setCpfCnpjHash(String cpfCnpjHash) {
+        this.cpfCnpjHash = cpfCnpjHash;
+    }
+
+    public String getNumeroEndereco() {
+        return numeroEndereco;
+    }
+
+    public void setNumeroEndereco(String numeroEndereco) {
+        this.numeroEndereco = numeroEndereco;
+    }
+
     public String getCidade() {
         return cidade;
     }
@@ -201,11 +221,11 @@ public class Cliente extends Entidade{
         this.empresa = empresa;
     }
 
-    public Boolean getAtivo() {
+    public Boolean getIsAtivo() {
         return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
+    public void setIsAtivo(Boolean ativo) {
         isAtivo = ativo;
     }
 

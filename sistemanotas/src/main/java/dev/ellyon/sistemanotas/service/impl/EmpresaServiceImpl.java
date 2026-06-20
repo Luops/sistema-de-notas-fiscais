@@ -110,7 +110,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setTelefone(telefoneLimpo);
         empresa.setEmail(emailNormalizado);
         empresa.setLogoUrl(dto.getLogoUrl());
-        empresa.setAtivo(true); // Define como ativo por padrão
+        empresa.setIsAtivo(true); // Define como ativo por padrão
 
         // Salva a empresa no banco de dados
         Empresa empresaSalva = empresaRepository.save(empresa);
@@ -273,8 +273,8 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresaExistente.setTelefone(telefoneLimpo);
         empresaExistente.setEmail(emailNormalizado);
         empresaExistente.setLogoUrl(dto.getLogoUrl());
-        if (dto.getAtivo() != null) {
-            empresaExistente.setAtivo(dto.getAtivo());
+        if (dto.getIsAtivo() != null) {
+            empresaExistente.setIsAtivo(dto.getIsAtivo());
         }
 
         // Salva a empresa atualizada no banco de dados
@@ -316,7 +316,7 @@ public class EmpresaServiceImpl implements EmpresaService {
             throw new BusinessException("Usuário não tem permissão para desativar essa empresa");
         }
 
-        empresa.setAtivo(false);
+        empresa.setIsAtivo(false);
         empresaRepository.save(empresa);
     }
 
@@ -354,7 +354,7 @@ public class EmpresaServiceImpl implements EmpresaService {
             throw new BusinessException("Usuário não tem permissão para ativar essa empresa");
         }
 
-        empresa.setAtivo(true);
+        empresa.setIsAtivo(true);
         empresaRepository.save(empresa);
     }
 
@@ -623,7 +623,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     }
 
     // Buscar todas as empresas
-    /*@Override
+    @Override
     public List<EmpresaListResponseDTO> findAll(Authentication authentication) {
         // Validações das exceções
         Map<String, String> errors = new HashMap<>();
@@ -663,7 +663,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         return empresasDoUsuario.stream()
                 .map(empresaMapper::toListResponseDTO)
                 .collect(Collectors.toList());
-    }*/
+    }
 
     /*
     // Buscar todas as empresas com paginação

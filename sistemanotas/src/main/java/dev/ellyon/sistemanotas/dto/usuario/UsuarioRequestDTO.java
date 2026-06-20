@@ -21,6 +21,21 @@ public class UsuarioRequestDTO {
     )
     private String senha;
 
+    @NotBlank(message = "Telefone é obrigatório")
+    private String telefone;
+
+    @NotBlank(message = "Cidade é obrigatório")
+    private String cidade;
+
+    @NotBlank(message = "Endereço é obrigatório")
+    private String endereco;
+
+    @NotBlank(message = "CEP é obrigatório")
+    private String cep;
+
+    @NotBlank(message = "Número do endereço é obrigatório")
+    private String numeroEndereco;
+
     @NotNull(message = "Empresa é obrigatória")
     private Long empresaId;
 
@@ -32,10 +47,15 @@ public class UsuarioRequestDTO {
     }
 
     // Construtor completo
-    public UsuarioRequestDTO(String nome, String email, String senha, Long empresaId, String perfil) {
+    public UsuarioRequestDTO(String nome, String email, String senha, String telefone, String cidade, String endereco, String cep, String numeroEndereco, Long empresaId, String perfil) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
+        this.telefone = telefone;
+        this.cidade = cidade;
+        this.endereco = endereco;
+        this.cep = cep;
+        this.numeroEndereco = numeroEndereco;
         this.empresaId = empresaId;
         this.perfil = perfil;
     }
@@ -62,6 +82,46 @@ public class UsuarioRequestDTO {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getCidade() {
+        return cidade;
+    }
+
+    public void setCidade(String cidade) {
+        this.cidade = cidade;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getNumeroEndereco() {
+        return numeroEndereco;
+    }
+
+    public void setNumeroEndereco(String numeroEndereco) {
+        this.numeroEndereco = numeroEndereco;
     }
 
     public Long getEmpresaId() {

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 public class CertificadoResponseDTO {
 
-    private Boolean ativo;
+    private Boolean isAtivo;
     private String tipo;
     private String cnpj;
     private LocalDateTime validade;
@@ -23,8 +23,8 @@ public class CertificadoResponseDTO {
     public CertificadoResponseDTO() {}
 
     // Construtor completo
-    public CertificadoResponseDTO(Boolean ativo, String tipo, String cnpj, LocalDateTime validade, LocalDateTime dataUpload, Long diasParaVencer, Boolean vencido, Long tamanhoBytes) {
-        this.ativo = ativo;
+    public CertificadoResponseDTO(Boolean isAtivo, String tipo, String cnpj, LocalDateTime validade, LocalDateTime dataUpload, Long diasParaVencer, Boolean vencido, Long tamanhoBytes) {
+        this.isAtivo = isAtivo;
         this.tipo = tipo;
         this.cnpj = cnpj;
         this.validade = validade;
@@ -34,12 +34,12 @@ public class CertificadoResponseDTO {
         this.tamanhoBytes = tamanhoBytes;
     }
 
-    public Boolean getAtivo() {
-        return ativo;
+    public Boolean getIsAtivo() {
+        return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
-        this.ativo = ativo;
+    public void setIsAtivo(Boolean ativo) {
+        this.isAtivo = ativo;
     }
 
     public String getTipo() {

@@ -58,31 +58,31 @@ public class NotaServiceImpl implements NotaService {
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
 
         // Empresa é obrigatória
-        if (dto.getEmpresaId() == null) {
+        /*if (dto.getEmpresaId() == null) {
             errors.put("empresaId", "Empresa é obrigatória");
-        }
+        }*/
         // Verificar se a empresa está ativa
-        if (empresaRepository.findByIdAndIsAtivo(dto.getEmpresaId(), true).isEmpty()) {
-            errors.put("empresaId", "Empresa informada está inativa ou não existe");
+        if (empresaUsuarioRepository.findByUsuarioId(usuario.getId()).isEmpty()) {
+            errors.put("empresaId", "Empresa informada não existe");
         }
 
         // Usuário é obrigatório
-        if (dto.getUsuarioId() == null) {
+        if (usuario.getId() == null) {
             errors.put("usuarioId", "Usuário é obrigatório");
         }
         // Verificar se o usuário está ativo
-        if (usuarioRepository.findByIdAndIsAtivo(dto.getUsuarioId(), true).isEmpty()) {
+        if (usuarioRepository.findByIdAndIsAtivo(usuario.getId(), true).isEmpty()) {
             errors.put("usuarioId", "Usuário informado está inativo ou não existe");
         }
-
+        /*
         // Verificar se usuário tem acesso à empresa da nota
         boolean usuarioTemAcesso = empresaUsuarioRepository.existsByUsuarioIdAndEmpresaId(
                 dto.getUsuarioId(),
-                dto.getEmpresaId()
+                usuario.
         );
         if (!usuarioTemAcesso) {
             throw new BusinessException("Você não tem permissão para adicionar itens nesta nota. Nota pertence a outra empresa.");
-        }
+        }*/
 
         // Validar observações (se informado)
         if (dto.getObservacoes() != null && dto.getObservacoes().length() > 500) {
@@ -94,31 +94,28 @@ public class NotaServiceImpl implements NotaService {
             throw new ValidationException("Erro de validação nos dados da nota", errors);
         }
 
-        // ========================================
-        // BUSCAR EMPRESA
-        // ========================================
-        Empresa empresa = empresaRepository.findById(dto.getEmpresaId())
-                .orElseThrow(() -> new EntityNotFoundException("Empresa", dto.getEmpresaId()));
+        // Buscar empresa do usuário logado
+        EmpresaUsuario empresaUsuario = empresaUsuarioRepository.findFirstByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Empresa do usuário", usuario.getId()));
 
-        if (!empresa.getAtivo()) {
+        Empresa empresa = empresaRepository.findById(empresaUsuario.getEmpresa().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Empresa", empresaUsuario.getEmpresa().getId()));
+
+        if (!empresa.getIsAtivo()) {
             throw new BusinessException("Não é possível criar nota para empresa inativa");
         }
 
-        // ========================================
-        // BUSCAR USUÁRIO
-        // ========================================
-        Usuario usuarioId = usuarioRepository.findById(dto.getUsuarioId())
+        // Buscar usuário (criador da nota)
+        Usuario usuarioId = usuarioRepository.findById(usuario.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Usuário", dto.getUsuarioId()));
 
-        // ========================================
-        // BUSCAR CLIENTE (OPCIONAL)
-        // ========================================
+        // Buscar cliente (se informado)
         Cliente cliente = null;
         if (dto.getClienteId() != null) {
             cliente = clienteRepository.findById(dto.getClienteId())
                     .orElseThrow(() -> new EntityNotFoundException("Cliente", dto.getClienteId()));
 
-            if (!cliente.getAtivo()) {
+            if (!cliente.getIsAtivo()) {
                 throw new BusinessException("Não é possível criar nota para cliente inativo");
             }
         }
@@ -128,9 +125,7 @@ public class NotaServiceImpl implements NotaService {
         int proximoNumero = (ultimoNumero != null) ? ultimoNumero + 1 : 1;
         String numeroFormatado  = String.format("%06d", proximoNumero);
 
-        // ========================================
-        // CRIAR NOTA
-        // ========================================
+        // Criar nota com dados iniciais
         Nota nota = new Nota();
         nota.setEmpresa(empresa);
         nota.setCliente(cliente);
@@ -150,9 +145,7 @@ public class NotaServiceImpl implements NotaService {
         nota.setDataEmissao(null);
         nota.setDataCancelamento(null);
 
-        // ========================================
-        // SALVAR E RETORNAR
-        // ========================================
+        // Salvar e retornar
         Nota notaSalva = notaRepository.save(nota);
         return notaMapper.toResponseDTO(notaSalva);
     }
@@ -198,9 +191,10 @@ public class NotaServiceImpl implements NotaService {
         }
 
         // Validar preço unitário
-        if (itemNotaRequestDTO.getPrecoUnitario() == null || itemNotaRequestDTO.getPrecoUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+        if(itemNotaRequestDTO.getPrecoUnitario() != null && itemNotaRequestDTO.getPrecoUnitario().compareTo(BigDecimal.ZERO) <= 0) {
             errors.put("precoUnitario", "Preço unitário deve ser maior que zero");
         }
+
 
         // Se houver erros, lança exceção
         if (!errors.isEmpty()) {
@@ -634,6 +628,31 @@ public class NotaServiceImpl implements NotaService {
 
     }
 
+    // marcar nota como paga sem gerar nota fiscal eletrônica (NF-e)
+    @Override
+    @Transactional
+    public NotaResponseDTO marcarComoPagaSemNota(Long notaId, Authentication authentication) {
+        // Buscar nota
+        Nota nota = notaRepository.findById(notaId)
+                .orElseThrow(() -> new EntityNotFoundException("Nota", notaId));
+
+        // Validar se a nota pode ser marcada como paga sem nota
+        if (nota.getStatus() != StatusNota.RASCUNHO) {
+            throw new IllegalStateException(
+                    "Apenas notas em rascunho podem ser marcadas como pagas sem nota"
+            );
+        }
+
+        // Atualizar status
+        nota.setStatus(StatusNota.PAGA_SEM_NOTA);
+
+        // Salvar
+        Nota notaAtualizada = notaRepository.save(nota);
+
+        // Converter para DTO e retornar
+        return notaMapper.toResponseDTO(notaAtualizada);
+    }
+
     // buscar nota por ID
     @Override
     public NotaResponseDTO findById(Long notaId) {
@@ -664,21 +683,32 @@ public class NotaServiceImpl implements NotaService {
 
     // buscar nota por número e empresa
     @Override
-    public NotaResponseDTO findByNumeroAndEmpresaId(Long empresaId, String numero) {
+    public NotaResponseDTO findByNumero(String numero, Authentication authentication) {
         // Validações
         if (numero == null || numero.isBlank()) {
             throw new IllegalArgumentException("Número da nota é obrigatório");
         }
-        if (empresaId == null) {
-            throw new IllegalArgumentException("ID da empresa é obrigatório");
+
+        // Pegar usuário logado do JWT
+        String emailUsuario = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+
+        // Verificar se usuário tem acesso à empresa da nota
+        List<EmpresaUsuario> empresasDoUsuario = empresaUsuarioRepository.findByUsuarioId(usuario.getId());
+        if (empresasDoUsuario.isEmpty()) {
+            throw new BusinessException("Usuário não tem acesso a nenhuma empresa");
         }
 
-        Nota nota = notaRepository.findByNumeroAndEmpresaId(numero, empresaId);
+        // Buscar nota pelo número e empresa do usuário
+        Nota nota = notaRepository.findByNumeroAndEmpresaId(numero, empresasDoUsuario.get(0).getEmpresa().getId());
+
         if (nota == null) {
             throw new EntityNotFoundException(
-                    "Nota com número " + numero + " não encontrada para a empresa " + empresaId
+                    "Nota com número " + numero + " não encontrada para a empresa " + empresasDoUsuario.get(0).getId()
             );
         }
+
         return notaMapper.toResponseDTO(nota);
     }
 
@@ -787,6 +817,37 @@ public class NotaServiceImpl implements NotaService {
 
     }
 
+    // buscar notas por intervalo de datas de criacao
+    @Override
+    public List<NotaListResponseDTO> findByCreatedAtBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            throw new BusinessException("Data de início e data de fim são obrigatórias");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+
+        List<Nota> notas = notaRepository.findByCreatedAtBetweenOrderByCreatedAtAsc(dataInicio, dataFim);
+
+        // Formatação das datas para exibição na mensagem de erro
+        if (notas.isEmpty()) {
+            // Formata a data para o padrão brasileiro
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataInicioFormatada = dataInicio.format(formatter);
+            String dataFimFormatada = dataFim.format(formatter);
+
+            throw new EntityNotFoundException(
+                    String.format("Nenhuma nota encontrada entre %s e %s",
+                            dataInicioFormatada, dataFimFormatada)
+            );
+        }
+
+        return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
+
+    }
+
+
     // buscar notas por intervalo de datas de cancelamento
     @Override
     public List<NotaListResponseDTO> findByDataCancelamentoBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
@@ -857,4 +918,75 @@ public class NotaServiceImpl implements NotaService {
         }
         return notas.stream().map(notaMapper::toListResponseDTO).collect(Collectors.toList());
     }
+
+    // buscar notas por filtros combinados (período, status e tipo de data)
+    @Override
+    public List<NotaListResponseDTO> findByFilters(String periodo, String status, String tipoDeData) {
+        // Calcular data de início baseado no período
+        LocalDateTime dataFim = LocalDateTime.now();
+        LocalDateTime dataInicio;
+
+        switch (periodo.toLowerCase()) {
+            case "7days":
+            case "7dias":
+                dataInicio = dataFim.minusDays(7);
+                break;
+            case "15days":
+            case "15dias":
+                dataInicio = dataFim.minusDays(15);
+                break;
+            case "30days":
+            case "30dias":
+                dataInicio = dataFim.minusDays(30);
+                break;
+            case "90days":
+            case "90dias":
+                dataInicio = dataFim.minusDays(90);
+                break;
+            case "1year":
+            case "1ano":
+                dataInicio = dataFim.minusYears(1);
+                break;
+            default:
+                dataInicio = dataFim.minusDays(30); // Padrão 30 dias
+        }
+
+        // Buscar todas as notas
+        List<Nota> notas = notaRepository.findAll();
+
+        // Aplicar filtros
+        return notas.stream()
+                .filter(nota -> {
+                    // Filtro por data (createdAt ou dataEmissao)
+                    LocalDateTime dataReferencia;
+                    if ("criacao".equalsIgnoreCase(tipoDeData)) {
+                        dataReferencia = nota.getCreatedAt();
+                    } else if("emissao".equalsIgnoreCase(tipoDeData)) {
+                        dataReferencia = nota.getDataEmissao();
+                    } else if("cancelada".equalsIgnoreCase(tipoDeData)) {
+                        dataReferencia = nota.getDataCancelamento();
+                    } else {
+                        // Se tipo de data inválido, considera data de criação como referência
+                        dataReferencia = nota.getCreatedAt();
+                    }
+
+                    // Se não tem data de referência, ignora a nota
+                    if (dataReferencia == null) {
+                        return false;
+                    }
+
+                    // Verifica se está dentro do período
+                    boolean dentroDoRange = dataReferencia.isAfter(dataInicio) &&
+                            dataReferencia.isBefore(dataFim);
+
+                    // Filtro por status
+                    boolean statusMatch = "TODOS".equalsIgnoreCase(status) ||
+                            nota.getStatus().name().equalsIgnoreCase(status);
+
+                    return dentroDoRange && statusMatch;
+                })
+                .map(notaMapper::toListResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 }

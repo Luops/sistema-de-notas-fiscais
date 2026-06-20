@@ -7,6 +7,7 @@ public enum Unidade {
   UN("UN", "Unidade"),
   KG("KG", "Quilograma"),
   L("L", "Litro"),
+  ML("mL", "Mililitro"),
   M("M", "Metro"),
   CX("CX", "Caixa"),
   PC("PC", "Peça");
@@ -38,7 +39,7 @@ public enum Unidade {
         return unidade;
       }
     }
-    throw new IllegalArgumentException("Unidade inválida: " + codigo + ". Valores aceitos: UN, KG, L, M, CX, PC");
+    throw new IllegalArgumentException("Unidade inválida: " + codigo + ". Valores aceitos: UN, KG, mL, L, M, CX, PC");
   }
 
   @Override

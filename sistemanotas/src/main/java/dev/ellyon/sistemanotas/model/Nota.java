@@ -89,26 +89,26 @@ public class Nota extends Entidade{
     // Construtor com todos os atributos
     public Nota(Long id, LocalDateTime createdAt, LocalDateTime updatedAt, String numero, String serie, TipoNota tipo, StatusNota status, Empresa empresa, Cliente cliente, LocalDateTime dataEmissao, LocalDateTime dataCancelamento, List<ItemNota> itens, BigDecimal valorProdutos, BigDecimal valorImpostosTotal, BigDecimal valorTotal, String observacoes, String chaveAcesso, String protocoloAutorizacao, String protocoloCancelamento, String justificativaCancelamento, String xmlNfe, Usuario createdBy, BigDecimal frete) {
         super(id, createdAt, updatedAt);
-        this.numero = numero;
-        this.serie = serie;
-        this.tipo = tipo;
-        this.status = status;
-        this.empresa = empresa;
-        this.cliente = cliente;
-        this.dataEmissao = dataEmissao;
-        this.dataCancelamento = dataCancelamento;
-        this.itens = itens;
-        this.valorProdutos = valorProdutos;
-        this.valorImpostosTotal = valorImpostosTotal;
-        this.valorTotal = valorTotal;
-        this.observacoes = observacoes;
-        this.chaveAcesso = chaveAcesso;
-        this.protocoloAutorizacao = protocoloAutorizacao;
-        this.protocoloCancelamento = protocoloCancelamento;
-        this.justificativaCancelamento = justificativaCancelamento;
+        this.numero = numero;//
+        this.serie = serie;//
+        this.tipo = tipo;//
+        this.status = status;//
+        this.empresa = empresa;//
+        this.cliente = cliente;//
+        this.dataEmissao = dataEmissao;//
+        this.dataCancelamento = dataCancelamento;//
+        this.itens = itens;//
+        this.valorProdutos = valorProdutos;//
+        this.valorImpostosTotal = valorImpostosTotal;//
+        this.valorTotal = valorTotal;//
+        this.observacoes = observacoes;//
+        this.chaveAcesso = chaveAcesso;//
+        this.protocoloAutorizacao = protocoloAutorizacao;//
+        this.protocoloCancelamento = protocoloCancelamento;//
+        this.justificativaCancelamento = justificativaCancelamento;//
         this.xmlNfe = xmlNfe;
-        this.createdBy = createdBy;
-        this.frete = frete;
+        this.createdBy = createdBy;//
+        this.frete = frete;//
     }
 
     // Construtor sem id e timestamps

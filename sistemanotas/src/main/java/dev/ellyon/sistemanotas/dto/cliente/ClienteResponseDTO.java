@@ -13,6 +13,7 @@ public class ClienteResponseDTO {
     private String email;
     private String telefone;
     private String enderecoCompleto;
+    private String numeroEndereco;
     private String cidade;
     private String estadoUF;
     private String cep;
@@ -28,7 +29,7 @@ public class ClienteResponseDTO {
     }
 
     // Construtor completo
-    public ClienteResponseDTO(Long id, String nome, String tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ClienteResponseDTO(Long id, String nome, String tipoPessoa, String cpfCnpj, String inscricaoEstadual, String email, String telefone, String enderecoCompleto, String numeroEndereco, String cidade, String estadoUF, String cep, String bairro, Boolean isAtivo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nome = nome;
         this.tipoPessoa = tipoPessoa;
@@ -37,6 +38,7 @@ public class ClienteResponseDTO {
         this.email = email;
         this.telefone = telefone;
         this.enderecoCompleto = enderecoCompleto;
+        this.numeroEndereco = numeroEndereco;
         this.cidade = cidade;
         this.estadoUF = estadoUF;
         this.cep = cep;
@@ -110,6 +112,14 @@ public class ClienteResponseDTO {
         this.enderecoCompleto = enderecoCompleto;
     }
 
+    public String getNumeroEndereco() {
+        return numeroEndereco;
+    }
+
+    public void setNumeroEndereco(String numeroEndereco) {
+        this.numeroEndereco = numeroEndereco;
+    }
+
     public String getCidade() {
         return cidade;
     }
@@ -142,11 +152,11 @@ public class ClienteResponseDTO {
         this.bairro = bairro;
     }
 
-    public Boolean getAtivo() {
+    public Boolean getIsAtivo() {
         return isAtivo;
     }
 
-    public void setAtivo(Boolean ativo) {
+    public void setIsAtivo(Boolean ativo) {
         isAtivo = ativo;
     }
 

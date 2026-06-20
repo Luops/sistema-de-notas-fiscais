@@ -88,7 +88,8 @@ public class NotaMapper {
                 nota.getCliente().getTipoPessoa().toString(),
                 nota.getValorTotal(),
                 nota.getDataEmissao(),
-                nota.getDataCancelamento()
+                nota.getDataCancelamento(),
+                nota.getCreatedAt()
         );
     }
 }

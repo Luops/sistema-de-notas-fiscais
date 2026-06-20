@@ -90,7 +90,7 @@ public class EmpresaUsuarioController {
 
     // Rota para obter empresas por usuario
     @GetMapping("/findByUsuarioId/{usuarioId}")
-    @PreAuthorize("hasRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByUsuarioId(@PathVariable Long usuarioId, Authentication authentication) {
         List<EmpresaUsuarioResponseDTO> response = empresaUsuarioService.findByUsuarioId(usuarioId, authentication);
         SuccessResponseDTO successResponse = new SuccessResponseDTO(
@@ -105,7 +105,7 @@ public class EmpresaUsuarioController {
     // Rota para obter o vinculo entre empresa e usuario especifico
     @GetMapping("/vinculo")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<SuccessResponseDTO> findByUsuarioIdAndEmpresaId(@Valid
             @RequestParam  Long empresaId,
             @RequestParam  Long usuarioId, Authentication authentication) {

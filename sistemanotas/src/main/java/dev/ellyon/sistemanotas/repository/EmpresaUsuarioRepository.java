@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface EmpresaUsuarioRepository extends JpaRepository<EmpresaUsuario, Long> {
     List<EmpresaUsuario> findByUsuarioId(Long usuarioId);
 
+    Optional<EmpresaUsuario> findFirstByUsuarioId(Long usuarioId);
+
     List<EmpresaUsuario> findByEmpresaId(Long empresaId);
 
     Optional<EmpresaUsuario> findByUsuarioIdAndEmpresaId(Long usuarioId, Long empresaId);

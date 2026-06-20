@@ -15,7 +15,7 @@ public interface ClienteService {
     // "Contratos" - O que esse serviço deve oferecer
     // Create - Update - Delete - Soft Delete - Activate
     ClienteResponseDTO create(ClienteRequestDTO dto, Authentication authentication); // Criar um novo cliente
-    void delete(Long id, Authentication authentication); // Deletar um cliente por ID
+    void delete(Long id, String senha, Authentication authentication); // Deletar um cliente por ID
     ClienteResponseDTO update(Long id, ClienteRequestDTO dto, Authentication authentication); // Atualizar um cliente por ID
     void softDelete(Long id, Authentication authentication); // Desativar um cliente por ID
     void activate(Long id, Authentication authentication); // Ativar um cliente por ID
