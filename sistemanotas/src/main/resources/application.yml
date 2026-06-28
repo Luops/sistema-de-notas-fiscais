@@ -3,9 +3,9 @@ spring:
     name: sistema_notas
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/db_sistema_notas
+    url: jdbc:postgresql://localhost:5432/notas_fiscais
     username: postgres
-    password: postgres
+    password: 1234
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -14,6 +14,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+server:
+  address: 10.42.0.238
+  port: 8080
 
 jwt:
   secret: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
