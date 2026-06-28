@@ -197,7 +197,7 @@ class NFeCancelamentoServiceTest {
         nota.setId(1L);
         nota.setNumero("123");
         nota.setSerie("1");
-        nota.setTipo(TipoNota.VENDA);
+        nota.setTipo(TipoNota.SAIDA);
         nota.setStatus(StatusNota.EMITIDA);
         nota.setChaveAcesso("35230211234567000001550010000123451234567890");
         nota.setProtocoloAutorizacao("352350001234567");
